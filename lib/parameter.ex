@@ -128,7 +128,6 @@ defmodule Parameter do
         end
       end
     end)
-    |> IO.inspect()
     |> parse_loaded_input()
   end
 
@@ -149,39 +148,4 @@ defmodule Parameter do
   end
 
   defp parse_loaded_input(result), do: result
-
-  # def load(schema, input, opts) do
-  #   Enum.reduce(schema, {%{}, nil}, fn {_key, %Field{} = field}, {result, errors} = acc ->
-  #     case Map.get(input, field.key) do
-  #       nil ->
-  #         if field.required do
-  #           {result, add_error(errors, field, "is required")}
-  #         else
-  #           acc
-  #         end
-
-  #       value ->
-  #         case Field.load(field, value) do
-  #           {:error, error} ->
-  #             {result, add_error(errors, field, error)}
-
-  #           value ->
-  #             result = Map.put(result, field.name, value)
-  #             {result, errors}
-  #         end
-  #     end
-  #   end)
-  #   |> case do
-  #     {result, nil} -> {:ok, result}
-  #     {_result, errors} -> {:error, errors}
-  #   end
-  # end
-
-  # defp add_error(nil, key, value) do
-  #   add_error(Map.new(), key, value)
-  # end
-
-  # defp add_error(map, %Field{key: key, name: name}, value) do
-  #   Map.put(map, name, [value, key: key])
-  # end
 end
