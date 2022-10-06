@@ -10,7 +10,6 @@ defmodule Parameter do
   @load_opts [:unknown_field]
   @unknown_field_opts [:error, :exclude]
 
-  @spec load(module(), map(), keyword()) :: map() | {:error, map()}
   def load(module_schema, input, opts \\ [])
 
   def load(module_schema, input, opts) when is_map(input) do
@@ -57,9 +56,19 @@ defmodule Parameter do
   end
 
   defp load_type_value(%Field{type: {:array, inner_module}}, values, opts) when is_list(values) do
-    Enum.map(values, fn value ->
+    values
+    |> Enum.with_index()
+    |> Enum.reduce({[], []}, fn {value, index}, {acc_list, errors} ->
       load(inner_module, value, opts)
+      |> case do
+        {:error, reason} ->
+          {acc_list, Keyword.put(errors, :"#{index}", reason)}
+
+        result ->
+          {[result | acc_list], errors}
+      end
     end)
+    |> parse_list_values()
   end
 
   defp load_type_value(%Field{type: {:array, _inner_module}}, _value, _opts) do
@@ -68,6 +77,14 @@ defmodule Parameter do
 
   defp load_type_value(field, value, _opts) do
     Field.load(field, value)
+  end
+
+  defp parse_list_values({result, errors}) do
+    if errors == [] do
+      Enum.reverse(result)
+    else
+      {:error, Enum.reverse(errors)}
+    end
   end
 
   defp parse_loaded_input({result, _unknown_fields, errors}) do
