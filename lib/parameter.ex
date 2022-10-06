@@ -122,6 +122,10 @@ defmodule Parameter do
             errors = Map.put(errors, field.name, error)
             {result, unknown_fields, errors}
 
+          {:ok, loaded_value} ->
+            result = Map.put(result, field.name, loaded_value)
+            {result, unknown_fields, errors}
+
           loaded_value ->
             result = Map.put(result, field.name, loaded_value)
             {result, unknown_fields, errors}
