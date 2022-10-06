@@ -7,25 +7,25 @@ defmodule Parameter do
   alias Parameter.Field
   alias Parameter.Types
 
-  @load_opts [:unknown_field]
   @unknown_field_opts [:error, :exclude]
 
-  def load(module_schema, input, opts \\ [])
+  def load(schema, input, opts \\ [])
 
-  def load(module_schema, input, opts) when is_map(input) do
-    if opts !== [] and opts not in @load_opts,
-      do: raise("load options should be #{inspect(@load_opts)}")
-
+  def load(schema, input, opts) when is_map(input) do
     unknown_field = Keyword.get(opts, :unknown_field, :exclude)
 
     if unknown_field not in @unknown_field_opts,
       do: raise("unknown field options should be #{inspect(@unknown_field_opts)}")
 
-    schema_keys = module_schema.__param__(:fields, :keys)
+    return_struct? = Keyword.get(opts, :struct, false)
+
+    Types.validate!(:boolean, return_struct?)
+
+    schema_keys = schema.__param__(:fields, :keys)
 
     Enum.reduce(input, {%{}, [], %{}}, fn {key, value}, {result, unknown_fields, errors} ->
       if key in schema_keys do
-        field = module_schema.__param__(:field, key)
+        field = schema.__param__(:field, key)
 
         case load_type_value(field, value, opts) |> parse_loaded_input() do
           {:error, error} ->
@@ -41,6 +41,7 @@ defmodule Parameter do
       end
     end)
     |> parse_loaded_input()
+    |> parse_to_struct_or_map(schema, struct: return_struct?)
   end
 
   def load(type, input, _opts) do
@@ -96,4 +97,12 @@ defmodule Parameter do
   end
 
   defp parse_loaded_input(result), do: result
+
+  defp parse_to_struct_or_map({:error, _error} = result, _schema, _opts), do: result
+
+  defp parse_to_struct_or_map(result, _schema, struct: false), do: result
+
+  defp parse_to_struct_or_map(result, schema, struct: true) do
+    struct!(schema, result)
+  end
 end

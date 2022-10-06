@@ -54,15 +54,17 @@ defmodule Parameter.Types do
     time: Parameter.Types.Time
   }
 
-  @spec get_by_atom_name(atom) :: nil | module()
-  def get_by_atom_name(name) do
-    Map.get(@types_mod, name)
-  end
-
   def load(type, value) do
-    case get_by_atom_name(type) do
+    case Map.get(@types_mod, type) do
       nil -> {:error, "#{inspect(type)} is not a valid type"}
       module -> module.load(value)
+    end
+  end
+
+  def validate!(type, value) do
+    case validate(type, value) do
+      {:error, error} -> raise ArgumentError, message: error
+      result -> result
     end
   end
 
