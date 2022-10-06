@@ -80,5 +80,35 @@ defmodule ParameterTest do
               }} ==
                Parameter.load(UserTestSchema, params)
     end
+
+    test "load user schema with struct true" do
+      params = %{
+        "firstName" => "Paulo",
+        "lastName" => "Curado",
+        "age" => "32",
+        "mainAddress" => %{"city" => "Some City", "street" => "Some street", "number" => "15"},
+        "otherAddresses" => [
+          %{"city" => "Some City", "street" => "Some street", "number" => 15},
+          %{"city" => "Other city", "street" => "Other street", "number" => 10}
+        ],
+        "numbers" => ["1", 2, 5, "10"]
+      }
+
+      assert %UserTestSchema{
+               first_name: "Paulo",
+               last_name: "Curado",
+               age: 32,
+               main_address: %AddressTestSchema{
+                 city: "Some City",
+                 street: "Some street",
+                 number: 15
+               },
+               other_addresses: [
+                 %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
+                 %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
+               ],
+               numbers: [1, 2, 5, 10]
+             } == Parameter.load(UserTestSchema, params, struct: true)
+    end
   end
 end

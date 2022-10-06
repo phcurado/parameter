@@ -118,8 +118,6 @@ end
 - Required key: Return error when keys are not passed on a required field. Error should be: "is required".
 - Default key: Implement the default validation and load option when no key are sent in the input data.
 - Make the errors be returned on a list instead of single string.
-- Load returns struct: When loading input data with `Parameter.load/3` it should have a option return a struct instead of map. The API can be: `Parameter.load(Schema, params, struct: true)`.
 - Custom types: For now the types are fixed to the ones implemented on this library but it should be able to extend to custom types if it's passed on the schema.
 - Validator: Schema should have a validator option where it can send a function with validation that returns `:ok | {:error, reason}`. Validation errors will be returned when loading the structure.
-- Add CircleCI for testing and linter checks on branches.
 - Dump: Opposite of load.
