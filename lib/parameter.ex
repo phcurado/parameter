@@ -24,9 +24,7 @@ defmodule Parameter do
     schema_keys = module_schema.__param__(:fields, :keys)
 
     Enum.reduce(input, {%{}, [], %{}}, fn {key, value}, {result, unknown_fields, errors} ->
-      if key not in schema_keys do
-        {result, [key | unknown_fields], errors}
-      else
+      if key in schema_keys do
         field = module_schema.__param__(:field, key)
 
         case load_type_value(field, value, opts) |> parse_loaded_input() do
@@ -38,6 +36,8 @@ defmodule Parameter do
             result = Map.put(result, field.name, loaded_value)
             {result, unknown_fields, errors}
         end
+      else
+        {result, [key | unknown_fields], errors}
       end
     end)
     |> parse_loaded_input()
