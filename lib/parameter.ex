@@ -1,15 +1,19 @@
 defmodule Parameter do
   @moduledoc "README.md"
-  |> File.read!()
-  |> String.split("<!-- MDOC !-->")
-  |> Enum.fetch!(1)
+             |> File.read!()
+             |> String.split("<!-- MDOC !-->")
+             |> Enum.fetch!(1)
 
   alias Parameter.Field
+  alias Parameter.Types
 
   @load_opts [:unknown_field]
   @unknown_field_opts [:error, :exclude]
 
-  def load(module_schema, input, opts \\ []) when is_map(input) do
+  @spec load(module(), map(), keyword()) :: map() | {:error, map()}
+  def load(module_schema, input, opts \\ [])
+
+  def load(module_schema, input, opts) when is_map(input) do
     if opts !== [] and opts not in @load_opts,
       do: raise("load options should be #{inspect(@load_opts)}")
 
@@ -31,10 +35,6 @@ defmodule Parameter do
             errors = Map.put(errors, field.name, error)
             {result, unknown_fields, errors}
 
-          {:ok, loaded_value} ->
-            result = Map.put(result, field.name, loaded_value)
-            {result, unknown_fields, errors}
-
           loaded_value ->
             result = Map.put(result, field.name, loaded_value)
             {result, unknown_fields, errors}
@@ -44,8 +44,26 @@ defmodule Parameter do
     |> parse_loaded_input()
   end
 
-  defp load_type_value(%Field{type: {_type, inner_module}}, value, opts) do
+  def load(type, input, _opts) do
+    Types.load(type, input)
+  end
+
+  defp load_type_value(%Field{type: {:map, inner_module}}, value, opts) when is_map(value) do
     load(inner_module, value, opts)
+  end
+
+  defp load_type_value(%Field{type: {:map, _inner_module}}, _value, _opts) do
+    {:error, "is not a valid map"}
+  end
+
+  defp load_type_value(%Field{type: {:array, inner_module}}, values, opts) when is_list(values) do
+    Enum.map(values, fn value ->
+      load(inner_module, value, opts)
+    end)
+  end
+
+  defp load_type_value(%Field{type: {:array, _inner_module}}, _value, _opts) do
+    {:error, "is not a valid array"}
   end
 
   defp load_type_value(field, value, _opts) do
@@ -54,7 +72,7 @@ defmodule Parameter do
 
   defp parse_loaded_input({result, _unknown_fields, errors}) do
     if errors == %{} do
-      {:ok, result}
+      result
     else
       {:error, errors}
     end

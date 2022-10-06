@@ -79,14 +79,12 @@
         "lastName" => "Curado"
       }
   ...> Parameter.load(UserSchema, params)
-  {:ok,
     %{
       address: %{city: "Tallinn"},
       age: 32,
       first_name: "Paulo",
       last_name: "Curado"
     }
-  }
   ```
 
   Adding invalid data should return validation errors:

@@ -50,9 +50,6 @@ defmodule Parameter.Field do
     default = Keyword.get(opts, :default)
     required = Keyword.get(opts, :required, false)
 
-    # TODO: Create validation module
-    # This module can validate types and do
-    # validation composition
     default_valid? =
       if default do
         Types.validate(type, default)

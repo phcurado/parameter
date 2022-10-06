@@ -2,7 +2,6 @@ defmodule Parameter.Schema do
   @moduledoc false
 
   alias Parameter.Field
-  alias Parameter.Types
 
   @doc false
   defmacro __using__(_) do

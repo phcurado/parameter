@@ -1,4 +1,7 @@
 defmodule Parameter.Types do
+  @moduledoc """
+  Type behavour for implementing new types for parameters.
+  """
   @type t :: base_types | composite_types
 
   @type base_types ::
@@ -51,11 +54,42 @@ defmodule Parameter.Types do
     time: Parameter.Types.Time
   }
 
+  @spec get_by_atom_name(atom) :: nil | module()
+  def get_by_atom_name(name) do
+    Map.get(@types_mod, name)
+  end
+
   def load(type, value) do
-    case Map.get(@types_mod, type) do
+    case get_by_atom_name(type) do
       nil -> {:error, "#{inspect(type)} is not a valid type"}
       module -> module.load(value)
     end
+  end
+
+  def validate({:map, inner_type}, values) when is_map(values) do
+    Enum.reduce_while(values, :ok, fn {_key, value}, acc ->
+      case validate(inner_type, value) do
+        :ok -> {:cont, acc}
+        error -> {:halt, error}
+      end
+    end)
+  end
+
+  def validate({:map, _inner_type}, _values) do
+    {:error, "not a map type"}
+  end
+
+  def validate({:array, inner_type}, values) when is_list(values) do
+    Enum.reduce_while(values, :ok, fn value, acc ->
+      case validate(inner_type, value) do
+        :ok -> {:cont, acc}
+        error -> {:halt, error}
+      end
+    end)
+  end
+
+  def validate({:array, _inner_type}, _values) do
+    {:error, "not an array type"}
   end
 
   def validate(type, value) do
@@ -64,23 +98,4 @@ defmodule Parameter.Types do
       module -> module.validate(value)
     end
   end
-
-  # TODO validating composite types
-  # defp validate({:array, inner_type}, values) when is_list(values) do
-  #   Enum.reduce_while(values, :ok, fn value, acc ->
-  #     case validate(inner_type, value) do
-  #       :ok -> {:cont, acc}
-  #       error -> {:halt, error}
-  #     end
-  #   end)
-  # end
-
-  # defp validate({:map, inner_type}, values) when is_map(values) do
-  #   Enum.reduce_while(values, :ok, fn {_key, value}, acc ->
-  #     case validate(inner_type, value) do
-  #       :ok -> {:cont, acc}
-  #       error -> {:halt, error}
-  #     end
-  #   end)
-  # end
 end
