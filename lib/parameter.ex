@@ -15,22 +15,30 @@ defmodule Parameter do
   def load(schema, input, opts) when is_map(input) do
     unknown_field = Keyword.get(opts, :unknown_field, :exclude)
 
-    if unknown_field not in @unknown_field_opts,
-      do: raise("unknown field options should be #{inspect(@unknown_field_opts)}")
+    if unknown_field not in @unknown_field_opts do
+      raise("unknown field options should be #{inspect(@unknown_field_opts)}")
+    end
 
     return_struct? = Keyword.get(opts, :struct, false)
 
     Types.validate!(:boolean, return_struct?)
 
-    schema_keys = schema.__param__(:fields, :keys)
+    schema_keys = schema.__param__(:field_keys)
 
     Enum.reduce(input, {%{}, [], %{}}, fn {key, value}, {result, unknown_fields, errors} ->
       if key in schema_keys do
         field = schema.__param__(:field, key)
 
-        case field
-             |> load_type_value(value, opts)
-             |> parse_loaded_input() do
+        loaded_result =
+          if is_nil(value) do
+            {:ok, field.default}
+          else
+            field
+            |> load_type_value(value, opts)
+            |> parse_loaded_input()
+          end
+
+        case loaded_result do
           {:error, error} ->
             errors = Map.put(errors, field.name, error)
             {result, unknown_fields, errors}

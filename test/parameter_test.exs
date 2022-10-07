@@ -112,5 +112,21 @@ defmodule ParameterTest do
                 numbers: [1, 2, 5, 10]
               }} == Parameter.load(UserTestSchema, params, struct: true)
     end
+
+    test "uses default value if value is nil" do
+      params = %{
+        "firstName" => "Paulo",
+        "lastName" => nil,
+        "age" => "32",
+        "mainAddress" => %{"city" => "Some City", "street" => "Some street", "number" => "15"},
+        "otherAddresses" => [
+          %{"city" => "Some City", "street" => "Some street", "number" => 15},
+          %{"city" => "Other city", "street" => "Other street", "number" => 10}
+        ],
+        "numbers" => ["1", 2, 5, "10"]
+      }
+
+      Parameter.load(UserTestSchema, params, struct: true) |> IO.inspect()
+    end
   end
 end

@@ -8,6 +8,8 @@ defmodule Parameter.Types.Atom do
   @impl true
   def load(value, opts \\ [])
 
+  def load(nil, _opt), do: error_tuple()
+
   def load(value, _opts) when is_atom(value) do
     {:ok, value}
   end
@@ -25,6 +27,8 @@ defmodule Parameter.Types.Atom do
 
   @impl true
   def validate(value, opts \\ [])
+
+  def validate(nil, _opts), do: error_tuple()
 
   def validate(value, _opts) when is_atom(value) do
     :ok
