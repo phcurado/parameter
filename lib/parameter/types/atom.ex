@@ -3,28 +3,34 @@ defmodule Parameter.Types.Atom do
   Atom parameter type
   """
 
-  use Parameter.Types
+  @behaviour Parameter.Parametrizable
 
-  def load(value) when is_atom(value) do
-    value
+  @impl true
+  def load(value, opts \\ [])
+
+  def load(value, _opts) when is_atom(value) do
+    {:ok, value}
   end
 
-  def load(value) when is_binary(value) do
-    String.to_existing_atom(value)
+  def load(value, _opts) when is_binary(value) do
+    {:ok, String.to_existing_atom(value)}
   rescue
     _error ->
-      String.to_atom(value)
+      {:ok, String.to_atom(value)}
   end
 
-  def load(_value) do
+  def load(_value, _opts) do
     error_tuple()
   end
 
-  def validate(value) when is_atom(value) do
+  @impl true
+  def validate(value, opts \\ [])
+
+  def validate(value, _opts) when is_atom(value) do
     :ok
   end
 
-  def validate(_value) do
+  def validate(_value, _opts) do
     error_tuple()
   end
 

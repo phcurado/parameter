@@ -3,17 +3,23 @@ defmodule Parameter.Types.String do
   String parameter type
   """
 
-  use Parameter.Types
+  @behaviour Parameter.Parametrizable
 
-  def load(value) do
-    to_string(value)
+  @impl true
+  def load(date, opts \\ [])
+
+  def load(value, _opts) do
+    {:ok, to_string(value)}
   end
 
-  def validate(value) when is_binary(value) do
+  @impl true
+  def validate(date, opts \\ [])
+
+  def validate(value, _opts) when is_binary(value) do
     :ok
   end
 
-  def validate(_value) do
+  def validate(_value, _opts) do
     {:error, "invalid string type"}
   end
 end

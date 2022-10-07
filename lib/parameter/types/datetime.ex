@@ -3,28 +3,34 @@ defmodule Parameter.Types.DateTime do
   DateTime parameter type
   """
 
-  use Parameter.Types
+  @behaviour Parameter.Parametrizable
 
-  def load(%DateTime{} = value) do
-    value
+  @impl true
+  def load(date, opts \\ [])
+
+  def load(%DateTime{} = value, _opts) do
+    {:ok, value}
   end
 
-  def load(value) when is_binary(value) do
+  def load(value, _opts) when is_binary(value) do
     case DateTime.from_iso8601(value) do
       {:error, _reason} -> error_tuple()
-      {:ok, date, _offset} -> date
+      {:ok, date, _offset} -> {:ok, date}
     end
   end
 
-  def load(_value) do
+  def load(_value, _opts) do
     error_tuple()
   end
 
-  def validate(%DateTime{}) do
+  @impl true
+  def validate(date, opts \\ [])
+
+  def validate(%DateTime{}, _opts) do
     :ok
   end
 
-  def validate(_value) do
+  def validate(_value, _opts) do
     error_tuple()
   end
 

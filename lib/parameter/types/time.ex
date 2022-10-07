@@ -3,35 +3,41 @@ defmodule Parameter.Types.Time do
   Time parameter type
   """
 
-  use Parameter.Types
+  @behaviour Parameter.Parametrizable
 
-  def load(%Time{} = value) do
-    value
+  @impl true
+  def load(date, opts \\ [])
+
+  def load(%Time{} = value, _opts) do
+    {:ok, value}
   end
 
-  def load({_hour, _min, _sec} = value) do
+  def load({_hour, _min, _sec} = value, _opts) do
     case Time.from_erl(value) do
       {:error, _reason} -> error_tuple()
-      {:ok, date} -> date
+      {:ok, date} -> {:ok, date}
     end
   end
 
-  def load(value) when is_binary(value) do
+  def load(value, _opts) when is_binary(value) do
     case Time.from_iso8601(value) do
       {:error, _reason} -> error_tuple()
-      {:ok, date} -> date
+      {:ok, date} -> {:ok, date}
     end
   end
 
-  def load(_value) do
+  def load(_value, _opts) do
     error_tuple()
   end
 
-  def validate(%Time{}) do
+  @impl true
+  def validate(date, opts \\ [])
+
+  def validate(%Time{}, _opts) do
     :ok
   end
 
-  def validate(_value) do
+  def validate(_value, _opts) do
     error_tuple()
   end
 

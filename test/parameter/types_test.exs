@@ -5,70 +5,72 @@ defmodule Parameter.TypesTest do
 
   describe "load/2" do
     test "load string type" do
-      assert Types.load(:string, "Test") == "Test"
-      assert Types.load(:string, 1) == "1"
-      assert Types.load(:string, true) == "true"
-      assert Types.load(:string, "true") == "true"
+      assert Types.load(:string, "Test") == {:ok, "Test"}
+      assert Types.load(:string, 1) == {:ok, "1"}
+      assert Types.load(:string, true) == {:ok, "true"}
+      assert Types.load(:string, "true") == {:ok, "true"}
     end
 
     test "load atom type" do
-      assert Types.load(:atom, :test) == :test
+      assert Types.load(:atom, :test) == {:ok, :test}
       assert Types.load(:atom, 1) == {:error, "invalid atom type"}
-      assert Types.load(:atom, true) == true
-      assert Types.load(:atom, :SomeValue) == :SomeValue
-      assert Types.load(:atom, "string type") == :"string type"
+      assert Types.load(:atom, true) == {:ok, true}
+      assert Types.load(:atom, :SomeValue) == {:ok, :SomeValue}
+      assert Types.load(:atom, "string type") == {:ok, :"string type"}
     end
 
     test "load boolean type" do
-      assert Types.load(:boolean, true) == true
-      assert Types.load(:boolean, false) == false
-      assert Types.load(:boolean, "True") == true
-      assert Types.load(:boolean, "FalsE") == false
-      assert Types.load(:boolean, 1) == true
-      assert Types.load(:boolean, 0) == false
+      assert Types.load(:boolean, true) == {:ok, true}
+      assert Types.load(:boolean, false) == {:ok, false}
+      assert Types.load(:boolean, "True") == {:ok, true}
+      assert Types.load(:boolean, "FalsE") == {:ok, false}
+      assert Types.load(:boolean, 1) == {:ok, true}
+      assert Types.load(:boolean, 0) == {:ok, false}
       assert Types.load(:boolean, "other value") == {:error, "invalid boolean type"}
     end
 
     test "load integer type" do
-      assert Types.load(:integer, 1) == 1
-      assert Types.load(:integer, "1") == 1
+      assert Types.load(:integer, 1) == {:ok, 1}
+      assert Types.load(:integer, "1") == {:ok, 1}
       assert Types.load(:integer, "other value") == {:error, "invalid integer type"}
       assert Types.load(:integer, 1.5) == {:error, "invalid integer type"}
     end
 
     test "load float type" do
-      assert Types.load(:float, 1.5) == 1.5
-      assert Types.load(:float, "1.2") == 1.2
+      assert Types.load(:float, 1.5) == {:ok, 1.5}
+      assert Types.load(:float, "1.2") == {:ok, 1.2}
       assert Types.load(:float, "other value") == {:error, "invalid float type"}
-      assert Types.load(:float, 1) == 1.0
-      assert Types.load(:float, "1") == 1.0
+      assert Types.load(:float, 1) == {:ok, 1.0}
+      assert Types.load(:float, "1") == {:ok, 1.0}
     end
 
     test "load date types" do
-      assert Types.load(:date, %Date{year: 2020, month: 10, day: 5}) == ~D[2020-10-05]
-      assert Types.load(:date, {2020, 11, 2}) == ~D[2020-11-02]
-      assert Types.load(:date, ~D[2000-01-01]) == ~D[2000-01-01]
-      assert Types.load(:date, "2000-01-01") == ~D[2000-01-01]
+      assert Types.load(:date, %Date{year: 2020, month: 10, day: 5}) == {:ok, ~D[2020-10-05]}
+      assert Types.load(:date, {2020, 11, 2}) == {:ok, ~D[2020-11-02]}
+      assert Types.load(:date, ~D[2000-01-01]) == {:ok, ~D[2000-01-01]}
+      assert Types.load(:date, "2000-01-01") == {:ok, ~D[2000-01-01]}
       assert Types.load(:date, "some value") == {:error, "invalid date type"}
 
       {:ok, time} = Time.new(0, 0, 0, 0)
-      assert Types.load(:time, time) == ~T[00:00:00.000000]
-      assert Types.load(:time, ~T[00:00:00.000000]) == ~T[00:00:00.000000]
-      assert Types.load(:time, {22, 30, 10}) == ~T[22:30:10]
-      assert Types.load(:time, "23:50:07") == ~T[23:50:07]
+      assert Types.load(:time, time) == {:ok, ~T[00:00:00.000000]}
+      assert Types.load(:time, ~T[00:00:00.000000]) == {:ok, ~T[00:00:00.000000]}
+      assert Types.load(:time, {22, 30, 10}) == {:ok, ~T[22:30:10]}
+      assert Types.load(:time, "23:50:07") == {:ok, ~T[23:50:07]}
       assert Types.load(:time, ~D[2000-01-01]) == {:error, "invalid time type"}
       assert Types.load(:time, "some value") == {:error, "invalid time type"}
 
-      assert Types.load(:datetime, ~U[2018-11-15 10:00:00Z]) == ~U[2018-11-15 10:00:00Z]
+      assert Types.load(:datetime, ~U[2018-11-15 10:00:00Z]) == {:ok, ~U[2018-11-15 10:00:00Z]}
       assert Types.load(:datetime, ~D[2000-01-01]) == {:error, "invalid datetime type"}
       assert Types.load(:datetime, "some value") == {:error, "invalid datetime type"}
 
       naive_now = NaiveDateTime.local_now()
-      assert Types.load(:naive_datetime, naive_now) == naive_now
-      assert Types.load(:naive_datetime, ~N[2000-01-01 23:00:07]) == ~N[2000-01-01 23:00:07]
+      assert Types.load(:naive_datetime, naive_now) == {:ok, naive_now}
+
+      assert Types.load(:naive_datetime, ~N[2000-01-01 23:00:07]) ==
+               {:ok, ~N[2000-01-01 23:00:07]}
 
       assert Types.load(:naive_datetime, {{2021, 05, 11}, {22, 30, 10}}) ==
-               ~N[2021-05-11 22:30:10]
+               {:ok, ~N[2021-05-11 22:30:10]}
 
       assert Types.load(:naive_datetime, ~D[2000-01-01]) ==
                {:error, "invalid naive_datetime type"}
