@@ -159,7 +159,7 @@ defmodule ParameterTest do
                 ],
                 numbers: [1, 2, 5, 10],
                 metadata: %{"key" => "value", "other_key" => "value"},
-                hex_amount: 1087573706314634443003985449474964098995406820908
+                hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908
               }} == Parameter.load(UserTestSchema, params, struct: true)
     end
 
