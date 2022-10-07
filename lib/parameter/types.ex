@@ -37,15 +37,14 @@ defmodule Parameter.Types do
     integer: Parameter.Types.Integer,
     naive_datetime: Parameter.Types.NaiveDateTime,
     string: Parameter.Types.String,
-    time: Parameter.Types.Time
+    time: Parameter.Types.Time,
+    map: Parameter.Types.Map
   }
 
   @spec load(atom(), any(), Keyword.t()) :: {:ok, any()} | {:error, any()}
   def load(type, value, opts \\ []) do
-    case Map.get(@types_mod, type) do
-      nil -> {:error, "#{inspect(type)} is not a valid type"}
-      module -> module.load(value, opts)
-    end
+    type_module = Map.get(@types_mod, type) || type
+    type_module.load(value, opts)
   end
 
   @spec validate!(atom(), any(), Keyword.t()) :: :ok | no_return()

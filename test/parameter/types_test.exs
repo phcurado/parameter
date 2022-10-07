@@ -36,6 +36,14 @@ defmodule Parameter.TypesTest do
       assert Types.load(:integer, 1.5) == {:error, "invalid integer type"}
     end
 
+    test "load map type" do
+      assert Types.load(:map, %{}) == {:ok, %{}}
+      assert Types.load(:map, %{"meta" => "data"}) == {:ok, %{"meta" => "data"}}
+      assert Types.load(:map, %{meta: :data}) == {:ok, %{meta: :data}}
+      assert Types.load(:map, nil) == {:error, "invalid map type"}
+      assert Types.load(:map, []) == {:error, "invalid map type"}
+    end
+
     test "load float type" do
       assert Types.load(:float, 1.5) == {:ok, 1.5}
       assert Types.load(:float, "1.2") == {:ok, 1.2}
@@ -77,13 +85,6 @@ defmodule Parameter.TypesTest do
 
       assert Types.load(:naive_datetime, "some value") == {:error, "invalid naive_datetime type"}
     end
-
-    test "return error when invalid type" do
-      assert Types.load(:decimal, 1.5) == {:error, ":decimal is not a valid type"}
-
-      assert Types.load("random type", 1.5) ==
-               {:error, "\"random type\" is not a valid type"}
-    end
   end
 
   describe "validate/2" do
@@ -112,6 +113,14 @@ defmodule Parameter.TypesTest do
       assert Types.validate(:integer, 1) == :ok
       assert Types.validate(:integer, "1") == {:error, "invalid integer type"}
       assert Types.validate(:integer, 1.5) == {:error, "invalid integer type"}
+    end
+
+    test "validate map type" do
+      assert Types.validate(:map, %{}) == :ok
+      assert Types.validate(:map, %{"meta" => "data"}) == :ok
+      assert Types.validate(:map, %{meta: :data}) == :ok
+      assert Types.validate(:map, nil) == {:error, "invalid map type"}
+      assert Types.validate(:map, []) == {:error, "invalid map type"}
     end
 
     test "validate float type" do
