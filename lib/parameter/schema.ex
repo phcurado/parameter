@@ -45,8 +45,8 @@ defmodule Parameter.Schema do
         defstruct Enum.reverse(@param_struct_fields)
 
         def __param__(:fields), do: unquote(Macro.escape(fields))
-        def __param__(:fields, :names), do: unquote(Enum.map(fields, & &1.name))
-        def __param__(:fields, :keys), do: unquote(Enum.map(fields, & &1.key))
+        def __param__(:field_names), do: unquote(Enum.map(fields, & &1.name))
+        def __param__(:field_keys), do: unquote(Enum.map(fields, & &1.key))
 
         def __param__(:field, key) do
           Enum.find(__param__(:fields), &(&1.key == key))

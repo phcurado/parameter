@@ -99,6 +99,7 @@ defmodule Parameter.TypesTest do
       assert Types.validate(:atom, 1) == {:error, "invalid atom type"}
       assert Types.validate(:atom, true) == :ok
       assert Types.validate(:atom, :SomeValue) == :ok
+      assert Types.validate(:atom, nil) == {:error, "invalid atom type"}
     end
 
     test "validate boolean type" do

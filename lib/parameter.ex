@@ -15,32 +15,27 @@ defmodule Parameter do
   def load(schema, input, opts) when is_map(input) do
     unknown_field = Keyword.get(opts, :unknown_field, :exclude)
 
-    if unknown_field not in @unknown_field_opts,
-      do: raise("unknown field options should be #{inspect(@unknown_field_opts)}")
+    if unknown_field not in @unknown_field_opts do
+      raise("unknown field options should be #{inspect(@unknown_field_opts)}")
+    end
 
     return_struct? = Keyword.get(opts, :struct, false)
 
     Types.validate!(:boolean, return_struct?)
 
-    schema_keys = schema.__param__(:fields, :keys)
+    schema_keys = schema.__param__(:field_keys)
 
-    Enum.reduce(input, {%{}, [], %{}}, fn {key, value}, {result, unknown_fields, errors} ->
-      if key in schema_keys do
-        field = schema.__param__(:field, key)
+    Enum.reduce(schema_keys, {%{}, [], %{}}, fn schema_key, {result, unknown_fields, errors} ->
+      field = schema.__param__(:field, schema_key)
 
-        case field
-             |> load_type_value(value, opts)
-             |> parse_loaded_input() do
-          {:error, error} ->
-            errors = Map.put(errors, field.name, error)
-            {result, unknown_fields, errors}
+      case load_map_value(input, field, opts) do
+        {:error, error} ->
+          errors = Map.put(errors, field.name, error)
+          {result, unknown_fields, errors}
 
-          {:ok, loaded_value} ->
-            result = Map.put(result, field.name, loaded_value)
-            {result, unknown_fields, errors}
-        end
-      else
-        {result, [key | unknown_fields], errors}
+        {:ok, loaded_value} ->
+          result = Map.put(result, field.name, loaded_value)
+          {result, unknown_fields, errors}
       end
     end)
     |> parse_loaded_input()
@@ -49,6 +44,30 @@ defmodule Parameter do
 
   def load(type, input, opts) do
     Types.load(type, input, opts)
+  end
+
+  defp load_map_value(input, field, opts) do
+    value =
+      case Enum.find(input, fn {key, _value} -> key == field.key end) do
+        {_key, value} -> value
+        nil -> nil
+      end
+
+    cond do
+      is_nil(value) && !is_nil(field.default) ->
+        {:ok, field.default}
+
+      is_nil(value) && field.required ->
+        {:error, "is missing"}
+
+      is_nil(value) ->
+        {:ok, nil}
+
+      true ->
+        field
+        |> load_type_value(value, opts)
+        |> parse_loaded_input()
+    end
   end
 
   defp load_type_value(%Field{type: {:map, inner_module}}, value, opts) when is_map(value) do
