@@ -6,11 +6,11 @@ defmodule Parameter.Types.Boolean do
   @behaviour Parameter.Parametrizable
 
   @impl true
-  def load(value, _opts) when is_boolean(value) do
+  def load(value) when is_boolean(value) do
     {:ok, value}
   end
 
-  def load(value, _opts) when is_binary(value) do
+  def load(value) when is_binary(value) do
     case String.downcase(value) do
       "true" ->
         {:ok, true}
@@ -23,24 +23,24 @@ defmodule Parameter.Types.Boolean do
     end
   end
 
-  def load(1, _opts) do
+  def load(1) do
     {:ok, true}
   end
 
-  def load(0, _opts) do
+  def load(0) do
     {:ok, false}
   end
 
-  def load(_value, _opts) do
+  def load(_value) do
     error_tuple()
   end
 
   @impl true
-  def validate(value, _opts) when is_boolean(value) do
+  def validate(value) when is_boolean(value) do
     :ok
   end
 
-  def validate(_value, _opts) do
+  def validate(_value) do
     error_tuple()
   end
 

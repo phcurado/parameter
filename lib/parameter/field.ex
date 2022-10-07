@@ -86,8 +86,8 @@ defmodule Parameter.Field do
   end
 
   defp custom_type_valid?(custom_type) do
-    if Kernel.function_exported?(custom_type, :load, 2) and
-         Kernel.function_exported?(custom_type, :validate, 2) do
+    if Kernel.function_exported?(custom_type, :load, 1) and
+         Kernel.function_exported?(custom_type, :validate, 1) do
       :ok
     else
       {:error,
