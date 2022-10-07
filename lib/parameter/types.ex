@@ -22,7 +22,10 @@ defmodule Parameter.Types do
   @base_types ~w(string atom integer float boolean map array date time datetime naive_datetime)a
   @composite_types ~w(map array)a
 
+  @spec base_types() :: [atom()]
   def base_types, do: @base_types
+
+  @spec composite_types() :: [atom()]
   def composite_types, do: @composite_types
 
   @types_mod %{
@@ -53,7 +56,7 @@ defmodule Parameter.Types do
     end
   end
 
-  @spec load(atom(), any(), Keyword.t()) :: :ok | {:error, any()}
+  @spec validate(atom(), any(), Keyword.t()) :: :ok | {:error, any()}
   def validate(type, values, opts \\ [])
 
   def validate({:map, inner_type}, values, opts) when is_map(values) do
