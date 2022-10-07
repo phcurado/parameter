@@ -1,6 +1,6 @@
 defmodule Parameter.Parametrizable do
   @moduledoc """
-  Behavour for implementing new parameter types.
+  Behaviour for implementing new parameter types.
   """
 
   @callback load(any(), Keyword.t()) :: {:ok, any()} | {:error, any()}
