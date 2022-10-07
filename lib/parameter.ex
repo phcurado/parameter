@@ -25,30 +25,40 @@ defmodule Parameter do
 
     schema_keys = schema.__param__(:field_keys)
 
-    Enum.reduce(input, {%{}, [], %{}}, fn {key, value}, {result, unknown_fields, errors} ->
-      if key in schema_keys do
-        field = schema.__param__(:field, key)
+    Enum.reduce(schema_keys, {%{}, [], %{}}, fn schema_key, {result, unknown_fields, errors} ->
+      value =
+        case Enum.find(input, fn {key, _value} -> key == schema_key end) do
+          {_key, value} -> value
+          nil -> nil
+        end
 
-        loaded_result =
-          if is_nil(value) do
+      field = schema.__param__(:field, schema_key)
+
+      loaded_result =
+        cond do
+          is_nil(value) && !is_nil(field.default) ->
             {:ok, field.default}
-          else
+
+          is_nil(value) && field.required ->
+            {:error, "#{schema_key} is missing"}
+
+          is_nil(value) ->
+            {:ok, nil}
+
+          true ->
             field
             |> load_type_value(value, opts)
             |> parse_loaded_input()
-          end
-
-        case loaded_result do
-          {:error, error} ->
-            errors = Map.put(errors, field.name, error)
-            {result, unknown_fields, errors}
-
-          {:ok, loaded_value} ->
-            result = Map.put(result, field.name, loaded_value)
-            {result, unknown_fields, errors}
         end
-      else
-        {result, [key | unknown_fields], errors}
+
+      case loaded_result do
+        {:error, error} ->
+          errors = Map.put(errors, field.name, error)
+          {result, unknown_fields, errors}
+
+        {:ok, loaded_value} ->
+          result = Map.put(result, field.name, loaded_value)
+          {result, unknown_fields, errors}
       end
     end)
     |> parse_loaded_input()

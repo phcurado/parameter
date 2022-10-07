@@ -126,7 +126,22 @@ defmodule ParameterTest do
         "numbers" => ["1", 2, 5, "10"]
       }
 
-      Parameter.load(UserTestSchema, params, struct: true) |> IO.inspect()
+      assert {:ok, %{last_name: ""}} = Parameter.load(UserTestSchema, params, struct: true)
+    end
+
+    test "fails a required value is not set" do
+      params = %{
+        "age" => "32",
+        "mainAddress" => %{"city" => "Some City", "street" => "Some street", "number" => "15"},
+        "otherAddresses" => [
+          %{"city" => "Some City", "street" => "Some street", "number" => 15},
+          %{"city" => "Other city", "street" => "Other street", "number" => 10}
+        ],
+        "numbers" => ["1", 2, 5, "10"]
+      }
+
+      assert {:error, %{first_name: "firstName is missing"}} =
+               Parameter.load(UserTestSchema, params, struct: true)
     end
   end
 end
