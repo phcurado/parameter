@@ -26,32 +26,9 @@ defmodule Parameter do
     schema_keys = schema.__param__(:field_keys)
 
     Enum.reduce(schema_keys, {%{}, [], %{}}, fn schema_key, {result, unknown_fields, errors} ->
-      value =
-        case Enum.find(input, fn {key, _value} -> key == schema_key end) do
-          {_key, value} -> value
-          nil -> nil
-        end
-
       field = schema.__param__(:field, schema_key)
 
-      loaded_result =
-        cond do
-          is_nil(value) && !is_nil(field.default) ->
-            {:ok, field.default}
-
-          is_nil(value) && field.required ->
-            {:error, "#{schema_key} is missing"}
-
-          is_nil(value) ->
-            {:ok, nil}
-
-          true ->
-            field
-            |> load_type_value(value, opts)
-            |> parse_loaded_input()
-        end
-
-      case loaded_result do
+      case load_map_value(input, field, opts) do
         {:error, error} ->
           errors = Map.put(errors, field.name, error)
           {result, unknown_fields, errors}
@@ -67,6 +44,30 @@ defmodule Parameter do
 
   def load(type, input, opts) do
     Types.load(type, input, opts)
+  end
+
+  defp load_map_value(input, field, opts) do
+    value =
+      case Enum.find(input, fn {key, _value} -> key == field.key end) do
+        {_key, value} -> value
+        nil -> nil
+      end
+
+    cond do
+      is_nil(value) && !is_nil(field.default) ->
+        {:ok, field.default}
+
+      is_nil(value) && field.required ->
+        {:error, "is missing"}
+
+      is_nil(value) ->
+        {:ok, nil}
+
+      true ->
+        field
+        |> load_type_value(value, opts)
+        |> parse_loaded_input()
+    end
   end
 
   defp load_type_value(%Field{type: {:map, inner_module}}, value, opts) when is_map(value) do

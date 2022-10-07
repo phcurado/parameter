@@ -140,7 +140,7 @@ defmodule ParameterTest do
         "numbers" => ["1", 2, 5, "10"]
       }
 
-      assert {:error, %{first_name: "firstName is missing"}} =
+      assert {:error, %{first_name: "is missing"}} =
                Parameter.load(UserTestSchema, params, struct: true)
     end
   end
