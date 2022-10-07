@@ -14,11 +14,17 @@ defmodule Parameter.Types.Atom do
     {:ok, value}
   end
 
-  def load(value, _opts) when is_binary(value) do
-    {:ok, String.to_existing_atom(value)}
+  def load(value, opts) when is_binary(value) do
+    only_existing_atoms? = Keyword.get(opts, :only_exisiting_atoms, true)
+
+    if only_existing_atoms? do
+      {:ok, String.to_existing_atom(value)}
+    else
+      {:ok, String.to_atom(value)}
+    end
   rescue
     _error ->
-      {:ok, String.to_atom(value)}
+      error_tuple()
   end
 
   def load(_value, _opts) do

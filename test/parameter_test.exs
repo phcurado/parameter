@@ -18,8 +18,13 @@ defmodule ParameterTest do
       param :first_name, :string, key: "firstName", required: true
       param :last_name, :string, key: "lastName", required: true, default: ""
       param :age, :integer
-      param :main_address, {:map, AddressTestSchema}, key: "mainAddress", required: true
-      param :other_addresses, {:array, AddressTestSchema}, key: "otherAddresses"
+
+      param :main_address, {:map, AddressTestSchema},
+        key: "mainAddress",
+        required: true,
+        struct: true
+
+      param :other_addresses, {:array, AddressTestSchema}, key: "otherAddresses", struct: true
       param :numbers, {:array, :integer}
     end
   end
@@ -43,10 +48,14 @@ defmodule ParameterTest do
                 first_name: "Paulo",
                 last_name: "Curado",
                 age: 32,
-                main_address: %{city: "Some City", street: "Some street", number: 15},
+                main_address: %AddressTestSchema{
+                  city: "Some City",
+                  street: "Some street",
+                  number: 15
+                },
                 other_addresses: [
-                  %{city: "Some City", street: "Some street", number: 15},
-                  %{city: "Other city", street: "Other street", number: 10}
+                  %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
+                  %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
                 ],
                 numbers: [1, 2, 5, 10]
               }} == Parameter.load(UserTestSchema, params)

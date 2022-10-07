@@ -28,7 +28,7 @@ defmodule Parameter do
     Enum.reduce(schema_keys, {%{}, [], %{}}, fn schema_key, {result, unknown_fields, errors} ->
       field = schema.__param__(:field, schema_key)
 
-      case load_map_value(input, field, opts) do
+      case load_map_value(input, field) do
         {:error, error} ->
           errors = Map.put(errors, field.name, error)
           {result, unknown_fields, errors}
@@ -46,7 +46,7 @@ defmodule Parameter do
     Types.load(type, input, opts)
   end
 
-  defp load_map_value(input, field, opts) do
+  defp load_map_value(input, field) do
     value =
       case Enum.find(input, fn {key, _value} -> key == field.key end) do
         {_key, value} -> value
@@ -65,20 +65,22 @@ defmodule Parameter do
 
       true ->
         field
-        |> load_type_value(value, opts)
+        |> load_type_value(value)
         |> parse_loaded_input()
     end
   end
 
-  defp load_type_value(%Field{type: {:map, inner_module}}, value, opts) when is_map(value) do
+  defp load_type_value(%Field{type: {:map, inner_module}, opts: opts}, value)
+       when is_map(value) do
     load(inner_module, value, opts)
   end
 
-  defp load_type_value(%Field{type: {:map, _inner_module}}, _value, _opts) do
+  defp load_type_value(%Field{type: {:map, _inner_module}}, _value) do
     {:error, "is not a valid map"}
   end
 
-  defp load_type_value(%Field{type: {:array, inner_module}}, values, opts) when is_list(values) do
+  defp load_type_value(%Field{type: {:array, inner_module}, opts: opts}, values)
+       when is_list(values) do
     values
     |> Enum.with_index()
     |> Enum.reduce({[], []}, fn {value, index}, {acc_list, errors} ->
@@ -95,11 +97,11 @@ defmodule Parameter do
     |> parse_list_values()
   end
 
-  defp load_type_value(%Field{type: {:array, _inner_module}}, _value, _opts) do
+  defp load_type_value(%Field{type: {:array, _inner_module}}, _value) do
     {:error, "is not a valid array"}
   end
 
-  defp load_type_value(field, value, _opts) do
+  defp load_type_value(field, value) do
     Field.load(field, value)
   end
 

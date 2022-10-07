@@ -33,5 +33,26 @@ defmodule Parameter.FieldTest do
 
       assert {:error, "invalid float type"} = Field.new(opts)
     end
+
+    test "puts remaining opts into `opts` key" do
+      opts = [
+        name: :main_address,
+        type: :string,
+        key: "mainAddress",
+        required: true,
+        default: "Hello",
+        values: [1, 5, 8],
+        random_key: :hello
+      ]
+
+      assert %Parameter.Field{
+               default: "Hello",
+               key: "mainAddress",
+               name: :main_address,
+               opts: [values: [1, 5, 8], random_key: :hello],
+               required: true,
+               type: :string
+             } = Field.new(opts)
+    end
   end
 end

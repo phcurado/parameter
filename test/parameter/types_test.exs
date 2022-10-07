@@ -17,6 +17,13 @@ defmodule Parameter.TypesTest do
       assert Types.load(:atom, true) == {:ok, true}
       assert Types.load(:atom, :SomeValue) == {:ok, :SomeValue}
       assert Types.load(:atom, "string type") == {:ok, :"string type"}
+      assert Types.load(:atom, nil) == {:error, "invalid atom type"}
+
+      assert Types.load(:atom, "hello") ==
+               {:error, "invalid atom type"}
+
+      assert Types.load(:atom, "hello", only_existing_atoms: false) ==
+               {:error, "invalid atom type"}
     end
 
     test "load boolean type" do

@@ -5,14 +5,15 @@ defmodule Parameter.Field do
 
   alias Parameter.Types
 
-  defstruct [:name, :key, :default, type: :string, required: false]
+  defstruct [:name, :key, :default, :opts, type: :string, required: false]
 
   @type t :: %__MODULE__{
           name: atom(),
           key: binary(),
           default: any(),
           type: Types.t(),
-          required: boolean()
+          required: boolean(),
+          opts: Keyword.t()
         }
 
   @spec new!(Keyword.t()) :: t() | no_return()
@@ -41,15 +42,16 @@ defmodule Parameter.Field do
   end
 
   @spec load(t(), any()) :: {:ok, any} | {:error, binary()}
-  def load(%__MODULE__{type: type}, value) do
-    Types.load(type, value)
+  def load(%__MODULE__{type: type, opts: opts}, value) do
+    Types.load(type, value, opts)
   end
 
   defp do_new(opts) do
-    key = Keyword.fetch!(opts, :key)
-    type = Keyword.get(opts, :type, :string)
-    default = Keyword.get(opts, :default)
-    required = Keyword.get(opts, :required, false)
+    {key, updated_opts} = Keyword.pop!(opts, :key)
+    {name, updated_opts} = Keyword.pop!(updated_opts, :name)
+    {type, updated_opts} = Keyword.pop(updated_opts, :type, :string)
+    {default, updated_opts} = Keyword.pop(updated_opts, :default)
+    {required, updated_opts} = Keyword.pop(updated_opts, :required, false)
 
     default_valid? =
       if default do
@@ -65,7 +67,16 @@ defmodule Parameter.Field do
          :ok <- type_valid?,
          :ok <- Types.validate(:string, key),
          :ok <- Types.validate(:boolean, required) do
-      struct!(__MODULE__, opts)
+      params = %{
+        key: key,
+        type: type,
+        default: default,
+        required: required,
+        name: name,
+        opts: updated_opts
+      }
+
+      struct!(__MODULE__, params)
     end
   end
 
