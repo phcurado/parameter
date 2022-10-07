@@ -9,20 +9,20 @@ defmodule Parameter.Types.Time do
   def load(date, opts \\ [])
 
   def load(%Time{} = value, _opts) do
-    value
+    {:ok, value}
   end
 
   def load({_hour, _min, _sec} = value, _opts) do
     case Time.from_erl(value) do
       {:error, _reason} -> error_tuple()
-      {:ok, date} -> date
+      {:ok, date} -> {:ok, date}
     end
   end
 
   def load(value, _opts) when is_binary(value) do
     case Time.from_iso8601(value) do
       {:error, _reason} -> error_tuple()
-      {:ok, date} -> date
+      {:ok, date} -> {:ok, date}
     end
   end
 

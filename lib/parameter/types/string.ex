@@ -9,7 +9,7 @@ defmodule Parameter.Types.String do
   def load(date, opts \\ [])
 
   def load(value, _opts) do
-    to_string(value)
+    {:ok, to_string(value)}
   end
 
   @impl true

@@ -9,14 +9,14 @@ defmodule Parameter.Types.Atom do
   def load(value, opts \\ [])
 
   def load(value, _opts) when is_atom(value) do
-    value
+    {:ok, value}
   end
 
   def load(value, _opts) when is_binary(value) do
-    String.to_existing_atom(value)
+    {:ok, String.to_existing_atom(value)}
   rescue
     _error ->
-      String.to_atom(value)
+      {:ok, String.to_atom(value)}
   end
 
   def load(_value, _opts) do

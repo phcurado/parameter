@@ -9,18 +9,18 @@ defmodule Parameter.Types.Float do
   def load(date, opts \\ [])
 
   def load(value, _opts) when is_float(value) do
-    value
+    {:ok, value}
   end
 
   def load(value, _opts) when is_binary(value) do
     case Float.parse(value) do
-      {float, ""} -> float
+      {float, ""} -> {:ok, float}
       _error -> error_tuple()
     end
   end
 
   def load(value, _opts) when is_integer(value) do
-    value / 1
+    {:ok, value / 1}
   end
 
   def load(_value, _opts) do

@@ -9,13 +9,13 @@ defmodule Parameter.Types.DateTime do
   def load(date, opts \\ [])
 
   def load(%DateTime{} = value, _opts) do
-    value
+    {:ok, value}
   end
 
   def load(value, _opts) when is_binary(value) do
     case DateTime.from_iso8601(value) do
       {:error, _reason} -> error_tuple()
-      {:ok, date, _offset} -> date
+      {:ok, date, _offset} -> {:ok, date}
     end
   end
 

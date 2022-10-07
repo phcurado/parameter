@@ -9,20 +9,20 @@ defmodule Parameter.Types.Date do
   def load(date, opts \\ [])
 
   def load(%Date{} = value, _opts) do
-    value
+    {:ok, value}
   end
 
   def load({_year, _month, _day} = value, _opts) do
     case Date.from_erl(value) do
       {:error, _reason} -> error_tuple()
-      {:ok, date} -> date
+      {:ok, date} -> {:ok, date}
     end
   end
 
   def load(value, _opts) when is_binary(value) do
     case Date.from_iso8601(value) do
       {:error, _reason} -> error_tuple()
-      {:ok, date} -> date
+      {:ok, date} -> {:ok, date}
     end
   end
 

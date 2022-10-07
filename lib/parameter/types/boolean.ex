@@ -7,16 +7,16 @@ defmodule Parameter.Types.Boolean do
 
   @impl true
   def load(value, _opts) when is_boolean(value) do
-    value
+    {:ok, value}
   end
 
   def load(value, _opts) when is_binary(value) do
     case String.downcase(value) do
       "true" ->
-        true
+        {:ok, true}
 
       "false" ->
-        false
+        {:ok, false}
 
       _not_boolean ->
         error_tuple()
@@ -24,11 +24,11 @@ defmodule Parameter.Types.Boolean do
   end
 
   def load(1, _opts) do
-    true
+    {:ok, true}
   end
 
   def load(0, _opts) do
-    false
+    {:ok, false}
   end
 
   def load(_value, _opts) do

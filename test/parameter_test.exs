@@ -38,17 +38,18 @@ defmodule ParameterTest do
         "numbers" => ["1", 2, 5, "10"]
       }
 
-      assert %{
-               first_name: "Paulo",
-               last_name: "Curado",
-               age: 32,
-               main_address: %{city: "Some City", street: "Some street", number: 15},
-               other_addresses: [
-                 %{city: "Some City", street: "Some street", number: 15},
-                 %{city: "Other city", street: "Other street", number: 10}
-               ],
-               numbers: [1, 2, 5, 10]
-             } == Parameter.load(UserTestSchema, params)
+      assert {:ok,
+              %{
+                first_name: "Paulo",
+                last_name: "Curado",
+                age: 32,
+                main_address: %{city: "Some City", street: "Some street", number: 15},
+                other_addresses: [
+                  %{city: "Some City", street: "Some street", number: 15},
+                  %{city: "Other city", street: "Other street", number: 10}
+                ],
+                numbers: [1, 2, 5, 10]
+              }} == Parameter.load(UserTestSchema, params)
     end
 
     test "load user schema with invalid input shoud return an error" do
@@ -94,21 +95,22 @@ defmodule ParameterTest do
         "numbers" => ["1", 2, 5, "10"]
       }
 
-      assert %UserTestSchema{
-               first_name: "Paulo",
-               last_name: "Curado",
-               age: 32,
-               main_address: %AddressTestSchema{
-                 city: "Some City",
-                 street: "Some street",
-                 number: 15
-               },
-               other_addresses: [
-                 %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
-                 %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
-               ],
-               numbers: [1, 2, 5, 10]
-             } == Parameter.load(UserTestSchema, params, struct: true)
+      assert {:ok,
+              %UserTestSchema{
+                first_name: "Paulo",
+                last_name: "Curado",
+                age: 32,
+                main_address: %AddressTestSchema{
+                  city: "Some City",
+                  street: "Some street",
+                  number: 15
+                },
+                other_addresses: [
+                  %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
+                  %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
+                ],
+                numbers: [1, 2, 5, 10]
+              }} == Parameter.load(UserTestSchema, params, struct: true)
     end
   end
 end

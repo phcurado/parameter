@@ -9,12 +9,12 @@ defmodule Parameter.Types.Integer do
   def load(date, opts \\ [])
 
   def load(value, _opts) when is_integer(value) do
-    value
+    {:ok, value}
   end
 
   def load(value, _opts) when is_binary(value) do
     case Integer.parse(value) do
-      {integer, ""} -> integer
+      {integer, ""} -> {:ok, integer}
       _error -> error_tuple()
     end
   end

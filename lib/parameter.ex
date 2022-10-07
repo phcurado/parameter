@@ -28,12 +28,12 @@ defmodule Parameter do
       if key in schema_keys do
         field = schema.__param__(:field, key)
 
-        case load_type_value(field, value, opts) |> parse_loaded_input() do
+        case field |> load_type_value(value, opts) |> parse_loaded_input() do
           {:error, error} ->
             errors = Map.put(errors, field.name, error)
             {result, unknown_fields, errors}
 
-          loaded_value ->
+          {:ok, loaded_value} ->
             result = Map.put(result, field.name, loaded_value)
             {result, unknown_fields, errors}
         end
@@ -66,7 +66,7 @@ defmodule Parameter do
         {:error, reason} ->
           {acc_list, Keyword.put(errors, :"#{index}", reason)}
 
-        result ->
+        {:ok, result} ->
           {[result | acc_list], errors}
       end
     end)
@@ -83,7 +83,7 @@ defmodule Parameter do
 
   defp parse_list_values({result, errors}) do
     if errors == [] do
-      Enum.reverse(result)
+      {:ok, Enum.reverse(result)}
     else
       {:error, Enum.reverse(errors)}
     end
@@ -101,9 +101,9 @@ defmodule Parameter do
 
   defp parse_to_struct_or_map({:error, _error} = result, _schema, _opts), do: result
 
-  defp parse_to_struct_or_map(result, _schema, struct: false), do: result
+  defp parse_to_struct_or_map(result, _schema, struct: false), do: {:ok, result}
 
   defp parse_to_struct_or_map(result, schema, struct: true) do
-    struct!(schema, result)
+    {:ok, struct!(schema, result)}
   end
 end
