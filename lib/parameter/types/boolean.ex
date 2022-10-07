@@ -3,13 +3,14 @@ defmodule Parameter.Types.Boolean do
   Boolean parameter type
   """
 
-  use Parameter.Types
+  @behaviour Parameter.Parametrizable
 
-  def load(value) when is_boolean(value) do
+  @impl true
+  def load(value, _opts) when is_boolean(value) do
     value
   end
 
-  def load(value) when is_binary(value) do
+  def load(value, _opts) when is_binary(value) do
     case String.downcase(value) do
       "true" ->
         true
@@ -22,23 +23,24 @@ defmodule Parameter.Types.Boolean do
     end
   end
 
-  def load(1) do
+  def load(1, _opts) do
     true
   end
 
-  def load(0) do
+  def load(0, _opts) do
     false
   end
 
-  def load(_value) do
+  def load(_value, _opts) do
     error_tuple()
   end
 
-  def validate(value) when is_boolean(value) do
+  @impl true
+  def validate(value, _opts) when is_boolean(value) do
     :ok
   end
 
-  def validate(_value) do
+  def validate(_value, _opts) do
     error_tuple()
   end
 

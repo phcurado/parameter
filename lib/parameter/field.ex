@@ -15,6 +15,7 @@ defmodule Parameter.Field do
           required: boolean()
         }
 
+  @spec new!(Keyword.t()) :: t() | no_return()
   def new!(opts \\ []) do
     case new(opts) do
       {:error, error} -> raise ArgumentError, message: error

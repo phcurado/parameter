@@ -20,24 +20,7 @@ defmodule Parameter.Types do
   @type composite_types :: {:array, t()} | {:map, t()}
 
   @base_types ~w(string atom integer float boolean map array date time datetime naive_datetime)a
-
   @composite_types ~w(map array)a
-
-  @callback load(any()) :: any()
-  @callback dump(any()) :: any()
-  @callback validate(any()) :: :ok | {:error, binary()}
-
-  defmacro __using__(_opts) do
-    quote do
-      @behaviour Parameter.Types
-
-      def load(value), do: value
-      def dump(value), do: value
-      def validate(value), do: :ok
-
-      defoverridable(Parameter.Types)
-    end
-  end
 
   def base_types, do: @base_types
   def composite_types, do: @composite_types
@@ -54,50 +37,55 @@ defmodule Parameter.Types do
     time: Parameter.Types.Time
   }
 
-  def load(type, value) do
+  @spec load(atom(), any(), Keyword.t()) :: {:ok, any()} | {:error, any()}
+  def load(type, value, opts \\ []) do
     case Map.get(@types_mod, type) do
       nil -> {:error, "#{inspect(type)} is not a valid type"}
-      module -> module.load(value)
+      module -> module.load(value, opts)
     end
   end
 
-  def validate!(type, value) do
-    case validate(type, value) do
+  @spec validate!(atom(), any(), Keyword.t()) :: :ok | no_return()
+  def validate!(type, value, opts \\ []) do
+    case validate(type, value, opts) do
       {:error, error} -> raise ArgumentError, message: error
       result -> result
     end
   end
 
-  def validate({:map, inner_type}, values) when is_map(values) do
+  @spec load(atom(), any(), Keyword.t()) :: :ok | {:error, any()}
+  def validate(type, values, opts \\ [])
+
+  def validate({:map, inner_type}, values, opts) when is_map(values) do
     Enum.reduce_while(values, :ok, fn {_key, value}, acc ->
-      case validate(inner_type, value) do
+      case validate(inner_type, value, opts) do
         :ok -> {:cont, acc}
         error -> {:halt, error}
       end
     end)
   end
 
-  def validate({:map, _inner_type}, _values) do
+  def validate({:map, _inner_type}, _values, _opts) do
     {:error, "not a map type"}
   end
 
-  def validate({:array, inner_type}, values) when is_list(values) do
+  def validate({:array, inner_type}, values, opts) when is_list(values) do
     Enum.reduce_while(values, :ok, fn value, acc ->
-      case validate(inner_type, value) do
+      case validate(inner_type, value, opts) do
         :ok -> {:cont, acc}
         error -> {:halt, error}
       end
     end)
   end
 
-  def validate({:array, _inner_type}, _values) do
+  def validate({:array, _inner_type}, _values, _opts) do
     {:error, "not an array type"}
   end
 
-  def validate(type, value) do
+  def validate(type, value, opts) do
     case Map.get(@types_mod, type) do
       nil -> {:error, "#{inspect(type)} is not a valid type"}
-      module -> module.validate(value)
+      module -> module.validate(value, opts)
     end
   end
 end

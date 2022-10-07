@@ -9,6 +9,7 @@ defmodule Parameter do
 
   @unknown_field_opts [:error, :exclude]
 
+  @spec load(module() | atom(), map(), Keyword.t()) :: {:ok, any()} | {:error, any()}
   def load(schema, input, opts \\ [])
 
   def load(schema, input, opts) when is_map(input) do
@@ -44,8 +45,8 @@ defmodule Parameter do
     |> parse_to_struct_or_map(schema, struct: return_struct?)
   end
 
-  def load(type, input, _opts) do
-    Types.load(type, input)
+  def load(type, input, opts) do
+    Types.load(type, input, opts)
   end
 
   defp load_type_value(%Field{type: {:map, inner_module}}, value, opts) when is_map(value) do

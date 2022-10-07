@@ -3,35 +3,41 @@ defmodule Parameter.Types.NaiveDateTime do
   NaiveDateTime parameter type
   """
 
-  use Parameter.Types
+  @behaviour Parameter.Parametrizable
 
-  def load(%NaiveDateTime{} = value) do
+  @impl true
+  def load(date, opts \\ [])
+
+  def load(%NaiveDateTime{} = value, _opts) do
     value
   end
 
-  def load({{_year, _month, _day}, {_hour, _min, _sec}} = value) do
+  def load({{_year, _month, _day}, {_hour, _min, _sec}} = value, _opts) do
     case NaiveDateTime.from_erl(value) do
       {:error, _reason} -> error_tuple()
       {:ok, date} -> date
     end
   end
 
-  def load(value) when is_binary(value) do
+  def load(value, _opts) when is_binary(value) do
     case NaiveDateTime.from_iso8601(value) do
       {:error, _reason} -> error_tuple()
       {:ok, date} -> date
     end
   end
 
-  def load(_value) do
+  def load(_value, _opts) do
     error_tuple()
   end
 
-  def validate(%NaiveDateTime{}) do
+  @impl true
+  def validate(date, opts \\ [])
+
+  def validate(%NaiveDateTime{}, _opts) do
     :ok
   end
 
-  def validate(_value) do
+  def validate(_value, _opts) do
     error_tuple()
   end
 
