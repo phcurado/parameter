@@ -1,6 +1,42 @@
 defmodule ParameterTest do
   use ExUnit.Case
 
+  defmodule CustomTypeHexToDecimal do
+    @behaviour Parameter.Parametrizable
+
+    @impl true
+    def load(value, opts \\ [])
+
+    def load(value, _opts) when value in ["", nil], do: {:ok, nil}
+
+    def load("0x0", _opts), do: {:ok, 0}
+
+    def load("0x" <> hex, _opts) do
+      case Integer.parse(hex, 16) do
+        {dec, ""} ->
+          {:ok, dec}
+
+        _ ->
+          {:error, "invalid hex"}
+      end
+    end
+
+    def load(_value, _opts) do
+      {:error, "invalid hex"}
+    end
+
+    @impl true
+    def validate(value, opts \\ [])
+
+    def validate(value, _opts) when is_binary(value) do
+      :ok
+    end
+
+    def validate(_value, _opts) do
+      {:error, "not a string"}
+    end
+  end
+
   defmodule AddressTestSchema do
     use Parameter.Schema
 
@@ -21,6 +57,8 @@ defmodule ParameterTest do
       param :main_address, {:map, AddressTestSchema}, key: "mainAddress", required: true
       param :other_addresses, {:array, AddressTestSchema}, key: "otherAddresses"
       param :numbers, {:array, :integer}
+      param :metadata, :map
+      param :hex_amount, CustomTypeHexToDecimal, key: "hexAmount"
     end
   end
 
@@ -35,7 +73,9 @@ defmodule ParameterTest do
           %{"city" => "Some City", "street" => "Some street", "number" => 15},
           %{"city" => "Other city", "street" => "Other street", "number" => 10}
         ],
-        "numbers" => ["1", 2, 5, "10"]
+        "numbers" => ["1", 2, 5, "10"],
+        "metadata" => %{"key" => "value", "other_key" => "value"},
+        "hexAmount" => "0x0"
       }
 
       assert {:ok,
@@ -48,7 +88,9 @@ defmodule ParameterTest do
                   %{city: "Some City", street: "Some street", number: 15},
                   %{city: "Other city", street: "Other street", number: 10}
                 ],
-                numbers: [1, 2, 5, 10]
+                numbers: [1, 2, 5, 10],
+                metadata: %{"key" => "value", "other_key" => "value"},
+                hex_amount: 0
               }} == Parameter.load(UserTestSchema, params)
     end
 
@@ -66,7 +108,9 @@ defmodule ParameterTest do
           %{"city" => "Some City", "street" => "Some street", "number" => 15},
           %{"city" => "Other city", "street" => "Other street", "number" => "not a number"}
         ],
-        "numbers" => ["number", 2, 5, "10", "invalid data"]
+        "numbers" => ["number", 2, 5, "10", "invalid data"],
+        "metadata" => "not a map",
+        "hexAmount" => 12
       }
 
       assert {:error,
@@ -77,7 +121,9 @@ defmodule ParameterTest do
                 numbers: [
                   "0": "invalid integer type",
                   "4": "invalid integer type"
-                ]
+                ],
+                metadata: "invalid map type",
+                hex_amount: "invalid hex"
               }} ==
                Parameter.load(UserTestSchema, params)
     end
@@ -92,7 +138,9 @@ defmodule ParameterTest do
           %{"city" => "Some City", "street" => "Some street", "number" => 15},
           %{"city" => "Other city", "street" => "Other street", "number" => 10}
         ],
-        "numbers" => ["1", 2, 5, "10"]
+        "numbers" => ["1", 2, 5, "10"],
+        "metadata" => %{"key" => "value", "other_key" => "value"},
+        "hexAmount" => "0xbe807dddb074639cd9fa61b47676c064fc50d62c"
       }
 
       assert {:ok,
@@ -109,7 +157,9 @@ defmodule ParameterTest do
                   %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
                   %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
                 ],
-                numbers: [1, 2, 5, 10]
+                numbers: [1, 2, 5, 10],
+                metadata: %{"key" => "value", "other_key" => "value"},
+                hex_amount: 1087573706314634443003985449474964098995406820908
               }} == Parameter.load(UserTestSchema, params, struct: true)
     end
 
