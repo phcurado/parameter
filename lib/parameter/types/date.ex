@@ -6,38 +6,34 @@ defmodule Parameter.Types.Date do
   @behaviour Parameter.Parametrizable
 
   @impl true
-  def load(date, opts \\ [])
-
-  def load(%Date{} = value, _opts) do
+  def load(%Date{} = value) do
     {:ok, value}
   end
 
-  def load({_year, _month, _day} = value, _opts) do
+  def load({_year, _month, _day} = value) do
     case Date.from_erl(value) do
       {:error, _reason} -> error_tuple()
       {:ok, date} -> {:ok, date}
     end
   end
 
-  def load(value, _opts) when is_binary(value) do
+  def load(value) when is_binary(value) do
     case Date.from_iso8601(value) do
       {:error, _reason} -> error_tuple()
       {:ok, date} -> {:ok, date}
     end
   end
 
-  def load(_value, _opts) do
+  def load(_value) do
     error_tuple()
   end
 
   @impl true
-  def validate(date, opts \\ [])
-
-  def validate(%Date{}, _opts) do
+  def validate(%Date{}) do
     :ok
   end
 
-  def validate(_value, _opts) do
+  def validate(_value) do
     error_tuple()
   end
 

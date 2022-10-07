@@ -42,8 +42,8 @@ defmodule Parameter do
     |> parse_to_struct_or_map(schema, struct: return_struct?)
   end
 
-  def load(type, input, opts) do
-    Types.load(type, input, opts)
+  def load(type, input, _opts) do
+    Types.load(type, input)
   end
 
   defp load_map_value(input, field, opts) do
