@@ -73,7 +73,7 @@ defmodule Parameter.Field do
     if type in Types.composite_types() do
       :ok
     else
-      {:error, "#{inspect(type)} is not a valid type"}
+      custom_type_valid?(type)
     end
   end
 
@@ -81,7 +81,17 @@ defmodule Parameter.Field do
     if type in Types.base_types() do
       :ok
     else
-      {:error, "#{inspect(type)} is not a valid type"}
+      custom_type_valid?(type)
+    end
+  end
+
+  defp custom_type_valid?(custom_type) do
+    if Kernel.function_exported?(custom_type, :load, 2) and
+         Kernel.function_exported?(custom_type, :validate, 2) do
+      :ok
+    else
+      {:error,
+       "#{inspect(custom_type)} is not a valid custom type, implement the `Parameter.Parametrizable` on custom modules"}
     end
   end
 end
