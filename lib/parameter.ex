@@ -28,7 +28,9 @@ defmodule Parameter do
       if key in schema_keys do
         field = schema.__param__(:field, key)
 
-        case field |> load_type_value(value, opts) |> parse_loaded_input() do
+        case field
+             |> load_type_value(value, opts)
+             |> parse_loaded_input() do
           {:error, error} ->
             errors = Map.put(errors, field.name, error)
             {result, unknown_fields, errors}
@@ -61,7 +63,8 @@ defmodule Parameter do
     values
     |> Enum.with_index()
     |> Enum.reduce({[], []}, fn {value, index}, {acc_list, errors} ->
-      load(inner_module, value, opts)
+      inner_module
+      |> load(value, opts)
       |> case do
         {:error, reason} ->
           {acc_list, Keyword.put(errors, :"#{index}", reason)}
