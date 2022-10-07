@@ -15,7 +15,7 @@ defmodule Parameter.Types.Atom do
   end
 
   def load(value, opts) when is_binary(value) do
-    only_existing_atoms? = Keyword.get(opts, :only_exisiting_atoms, true)
+    only_existing_atoms? = Keyword.get(opts, :only_existing_atoms, true)
 
     if only_existing_atoms? do
       {:ok, String.to_existing_atom(value)}
