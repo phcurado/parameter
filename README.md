@@ -8,8 +8,9 @@
 
 ## Schema
 
-First step for building the schema of your data is creating the schema definition.
-This can be achived by using the `Parameter.Schema` macro.
+The first step for building a schema for your data is to create a schema definition.
+This can be achieved by using the `Parameter.Schema` macro.
+
 ```elixir
 defmodule UserSchema do
   use Parameter.Schema
@@ -37,7 +38,7 @@ defmodule AddressSchema do
 end
 ```
 
-Each field needs to define the type that will be parsed and the options (if any). The types available are:
+Each field needs to define the type that will be parsed and the options (if any). The available types are:
 
 - `:string`
 - `:atom`
@@ -54,21 +55,21 @@ Each field needs to define the type that will be parsed and the options (if any)
 - `:naive_datetime`
 - `module`*
 
-\\* Any module that implements the `Parameter.Field` behaviour is elegible to be a field in the schema definition.
+\\* Any module that implements the `Parameter.Field` behaviour is eligible to be a field in the schema definition.
 
 The options available for the field definition are:
 - `key`: This is the key on the external source that will be converted to the param definition.
-As an example, if you receive data from an external source that uses snake case for mapping `first_name`, this flag should be `key: "firstName"`.
+As an example, if you receive data from an external source that uses a snake case for mapping `first_name`, this flag should be `key: "firstName"`.
 If this parameter is not set it will default to the field name.
 - `default`: default value of the field.
 - `required`: defines if the field needs to be present when parsing the input.
 
-After the definition the schema can be validate and parsed against external parameters using the `Parameter.load/3` function.
+After the definition, the schema can be validated and parsed against external parameters using the `Parameter.load/3` function.
 
 ## Data Deserialization
 
-This is a common requirement when you receive data from an external source and wants to
-validate and deserialize this data to an Elixir definition. This can be achived using `Parameter.load/2` or `Parameter.load/3` functions:
+This is a common requirement when you receive data from an external source and want to
+validate and deserialize this data to an Elixir definition. This can be achieved using `Parameter.load/2` or `Parameter.load/3` functions:
 
 ```elixir
 iex> params = %{
@@ -114,7 +115,7 @@ defmodule IntegerCustomType do
   @behaviour Parameter.Parametrizable
 
   @impl true
-  # `load/1` is evaluatign when parsing the parameters, you can do validations here and transform the data
+  # `load/1` is evaluated when parsing the parameters, you can do validations here and transform the data
   def load(value) when is_integer(value) do
     {:ok, value}
   end
@@ -131,7 +132,7 @@ defmodule IntegerCustomType do
   end
 
   @impl true
-  # `validate/1` is checked during compile time and verifies if default value is passed on the schema an validating using this function
+  # `validate/1` checks the schema during compile time. It verifies the default value if it's passed to the schema validating its type
   def validate(value) when is_integer(value) do
     :ok
   end
@@ -144,7 +145,7 @@ defmodule IntegerCustomType do
 end
 ```
 
-Custom modules can be used on `Parameter.Schema` referencing the module:
+Custom modules can be used in `Parameter.Schema`
 
 ```Elixir
 defmodule UserSchema do
