@@ -6,6 +6,10 @@
   - Deserialization
   - Serialization
 
+## Motivation
+
+Offer a similar Schema model from the library `Ecto` to deal with complex data schemas. The main use case is to parse response from external apis. `Parameter` provides a well structured schema model which tries it's best to parse the external data.
+
 ## Schema
 
 The first step for building a schema for your data is to create a schema definition.
@@ -19,7 +23,8 @@ defmodule UserSchema do
     param :first_name, :string, key: "firstName", required: true
     param :last_name, :string, key: "lastName", required: true, default: ""
     param :age, :integer
-    param :address, {:map, AddressSchema}, required: true
+    has_one :main_address, AddressSchema, key: "mainAddress", required: true
+    has_many :addresses, AddressSchema
   end
 end
 ```
@@ -45,8 +50,6 @@ Each field needs to define the type that will be parsed and the options (if any)
 - `:integer`
 - `:float`
 - `:boolean`
-- `{:map, inner_type}`
-- `{:array, inner_type}`
 - `:map`
 - `:array`
 - `:date`
@@ -73,31 +76,53 @@ validate and deserialize this data to an Elixir definition. This can be achieved
 
 ```elixir
 iex> params = %{
-      "address" => %{"city" => "Tallinn"},
+      "mainAddress" => %{"city" => "New York"},
+      "addresses" => [%{"city" => "Rio de Janeiro"}],
       "age" => "32",
-      "firstName" => "Paulo",
-      "lastName" => "Curado"
+      "firstName" => "John",
+      "lastName" => "Doe",
+      "ASdf" => "asdf"
     }
 ...> Parameter.load(UserSchema, params)
-  %{
-    address: %{city: "Tallinn"},
-    age: 32,
-    first_name: "Paulo",
-    last_name: "Curado"
-  }
+{:ok,
+ %{
+   addresses: [%{city: "Rio de Janeiro"],
+   age: 32,
+   first_name: "John",
+   last_name: "Doe",
+   main_address: %{city: "New York"
+ }}
 ```
 
 Adding invalid data should return validation errors:
 
 ```elixir
 iex> params = %{
-      "address" => %{"city" => "Tallinn", "number" => "123AB"},
+      "mainAddress" => %{"city" => "New York", "number" => "123AB"},
+      "addresses" => [
+        %{
+          "city" => "New York", 
+          "number" => "123AB"
+        }, 
+        %{
+          "city" => "Rio de Janeiro", 
+          "number" => "Not number"
+        }
+      ],
       "age" => "AA",
-      "firstName" => "Paulo",
-      "lastName" => "Curado"
+      "firstName" => "John",
+      "lastName" => "Doe"
     }
 ...> Parameter.load(UserSchema, params)
-{:error, %{address: %{number: "invalid integer type"}, age: "invalid integer type"}}
+{:error,
+ %{
+   addresses: [
+     "0": %{number: "invalid integer type"},
+     "1": %{number: "invalid integer type"}
+   ],
+   age: "invalid integer type",
+   main_address: %{number: "invalid integer type"}
+ }}
 ```
 
 ## Custom Types

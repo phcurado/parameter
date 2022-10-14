@@ -154,24 +154,24 @@ defmodule Parameter.TypesTest do
                {:error, "\"random type\" is not a valid type"}
     end
 
-    test "validate array with inner type" do
-      assert Types.validate({:array, :string}, []) == :ok
-      assert Types.validate({:array, :string}, ["hello", "world"]) == :ok
+    test "validate has_many with inner type" do
+      assert Types.validate({:has_many, :string}, []) == :ok
+      assert Types.validate({:has_many, :string}, ["hello", "world"]) == :ok
 
-      assert Types.validate({:array, :string}, ["hello", :world]) ==
+      assert Types.validate({:has_many, :string}, ["hello", :world]) ==
                {:error, "invalid string type"}
 
-      assert Types.validate({:array, :string}, 3) == {:error, "not an array type"}
+      assert Types.validate({:has_many, :string}, 3) == {:error, "not a list type"}
     end
 
-    test "validate map with inner type" do
-      assert Types.validate({:map, :string}, %{}) == :ok
-      assert Types.validate({:map, :string}, %{key: "value", other_key: "other value"}) == :ok
+    test "validate has_one with inner type" do
+      assert Types.validate({:has_one, :string}, %{}) == :ok
+      assert Types.validate({:has_one, :string}, %{key: "value", other_key: "other value"}) == :ok
 
-      assert Types.validate({:map, :string}, %{key: "value", other_key: 22}) ==
+      assert Types.validate({:has_one, :string}, %{key: "value", other_key: 22}) ==
                {:error, "invalid string type"}
 
-      assert Types.validate({:map, :float}, "21") == {:error, "not a map type"}
+      assert Types.validate({:has_one, :float}, "21") == {:error, "not a inner type"}
     end
   end
 end

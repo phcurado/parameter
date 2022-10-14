@@ -15,6 +15,18 @@ defmodule Parameter.Schema do
     mount_schema(__CALLER__, block)
   end
 
+  defmacro has_one(name, type, opts \\ []) do
+    quote bind_quoted: [name: name, type: type, opts: opts] do
+      param(name, {:has_one, type}, opts)
+    end
+  end
+
+  defmacro has_many(name, type, opts \\ []) do
+    quote bind_quoted: [name: name, type: type, opts: opts] do
+      param(name, {:has_many, type}, opts)
+    end
+  end
+
   defmacro param(name, type, opts \\ []) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
       main_attrs = [name: name, type: type]

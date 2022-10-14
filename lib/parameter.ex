@@ -33,6 +33,9 @@ defmodule Parameter do
           errors = Map.put(errors, field.name, error)
           {result, unknown_fields, errors}
 
+        {:ok, nil} ->
+          {result, unknown_fields, errors}
+
         {:ok, loaded_value} ->
           result = Map.put(result, field.name, loaded_value)
           {result, unknown_fields, errors}
@@ -47,38 +50,44 @@ defmodule Parameter do
   end
 
   defp load_map_value(input, field, opts) do
-    value =
-      case Enum.find(input, fn {key, _value} -> key == field.key end) do
-        {_key, value} -> value
-        nil -> nil
-      end
+    case Map.fetch(input, field.key) do
+      :error ->
+        check_required(field)
 
-    cond do
-      is_nil(value) && !is_nil(field.default) ->
-        {:ok, field.default}
+      {:ok, nil} ->
+        # add nullable check
+        check_required(field)
 
-      is_nil(value) && field.required ->
-        {:error, "is missing"}
-
-      is_nil(value) ->
-        {:ok, nil}
-
-      true ->
+      {:ok, value} ->
         field
         |> load_type_value(value, opts)
         |> parse_loaded_input()
     end
   end
 
-  defp load_type_value(%Field{type: {:map, inner_module}}, value, opts) when is_map(value) do
+  defp check_required(field) do
+    cond do
+      !is_nil(field.default) ->
+        {:ok, field.default}
+
+      field.required ->
+        {:error, "is missing"}
+
+      true ->
+        {:ok, nil}
+    end
+  end
+
+  defp load_type_value(%Field{type: {:has_one, inner_module}}, value, opts) when is_map(value) do
     load(inner_module, value, opts)
   end
 
-  defp load_type_value(%Field{type: {:map, _inner_module}}, _value, _opts) do
-    {:error, "is not a valid map"}
+  defp load_type_value(%Field{type: {:has_one, _inner_module}}, _value, _opts) do
+    {:error, "is not a valid inner data"}
   end
 
-  defp load_type_value(%Field{type: {:array, inner_module}}, values, opts) when is_list(values) do
+  defp load_type_value(%Field{type: {:has_many, inner_module}}, values, opts)
+       when is_list(values) do
     values
     |> Enum.with_index()
     |> Enum.reduce({[], []}, fn {value, index}, {acc_list, errors} ->
@@ -95,8 +104,8 @@ defmodule Parameter do
     |> parse_list_values()
   end
 
-  defp load_type_value(%Field{type: {:array, _inner_module}}, _value, _opts) do
-    {:error, "is not a valid array"}
+  defp load_type_value(%Field{type: {:has_many, _inner_module}}, _value, _opts) do
+    {:error, "is not a valid list"}
   end
 
   defp load_type_value(field, value, _opts) do
