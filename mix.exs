@@ -1,17 +1,24 @@
 defmodule Parameter.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/phcurado/parameter"
+  @version "0.1.1"
+
   def project do
     [
       app: :parameter,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
-      description: "Schema creation, validation with serialization for input data",
-      package: package(),
       deps: deps(),
+
+      # Hex
+      description: "Schema creation, validation with serialization for input data",
+      source_url: @source_url,
+      package: package(),
+      # Docs
       name: "Parameter",
-      source_url: "https://github.com/phcurado/parameter"
+      docs: docs()
     ]
   end
 
@@ -33,7 +40,16 @@ defmodule Parameter.MixProject do
     [
       files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
       licenses: ["Apache-2.0"],
-      links: %{"GitHub" => "https://github.com/phcurado/parameter"}
+      links: %{"GitHub" => @source_url}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "Parameter",
+      source_ref: "v#{@version}",
+      canonical: "https://hexdocs.pm/parameter",
+      source_url: @source_url
     ]
   end
 end

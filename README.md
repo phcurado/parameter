@@ -8,7 +8,7 @@
 
 ## Motivation
 
-Offer a similar Schema model from the library `Ecto` to deal with complex data schemas. The main use case is to parse response from external apis. `Parameter` provides a well structured schema model which tries it's best to parse the external data.
+Offer a similar Schema model from [Ecto](https://github.com/elixir-ecto/ecto) library to deal with complex data schemas. The main use case is to parse response from external apis. `Parameter` provides a well structured schema model which tries it's best to parse the external data.
 
 ## Schema
 
@@ -58,7 +58,7 @@ Each field needs to define the type that will be parsed and the options (if any)
 - `:naive_datetime`
 - `module`*
 
-\\* Any module that implements the `Parameter.Field` behaviour is eligible to be a field in the schema definition.
+\* Any module that implements the `Parameter.Parametrizable` behaviour is eligible to be a field in the schema definition.
 
 The options available for the field definition are:
 - `key`: This is the key on the external source that will be converted to the param definition.
@@ -90,8 +90,8 @@ iex> params = %{
    age: 32,
    first_name: "John",
    last_name: "Doe",
-   main_address: %{city: "New York"
- }}
+   main_address: %{city: "New York"}
+  }}
 ```
 
 Adding invalid data should return validation errors:
@@ -131,7 +131,7 @@ For implementing custom types create a module that implements the  `Parameter.Pa
 
 Check the following example on how `Integer` parameter was implemented:
 
-```Elixir
+```elixir
 defmodule IntegerCustomType do
   @moduledoc """
   Integer parameter type
@@ -172,7 +172,7 @@ end
 
 Custom modules can be used in `Parameter.Schema`
 
-```Elixir
+```elixir
 defmodule UserSchema do
   use Parameter.Schema
 
@@ -182,6 +182,12 @@ defmodule UserSchema do
 end
 ```
 
+## Unknown fields
+Loading will ignore fields that does not have a matching key in the schema.
+This behaviour can be changed with the following options:
+
+- `:ignore` (default): ignore unknown fields 
+- `:error`: return an error with the unknown fields
 
 ## Installation
 
@@ -191,9 +197,15 @@ Add `parameter` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:parameter, "~> 0.1.0"}
+    {:parameter, "~> 0.1.1"}
   ]
 end
+```
+
+Also for add this depedency inside `.formatter.exs` file:
+
+```elixir
+import_deps: [:ecto, :phoenix, :parameter],
 ```
 
 ## Roadmap

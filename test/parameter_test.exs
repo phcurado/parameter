@@ -193,5 +193,54 @@ defmodule ParameterTest do
       assert {:error, %{first_name: "is missing"}} =
                Parameter.load(UserTestSchema, params, struct: true)
     end
+
+    test "if unknown field set as error, it should fail when parsing unkown fields" do
+      params = %{
+        "firstName" => "John",
+        "unknownField" => "some value",
+        "age" => "32",
+        "mainAddress" => %{"city" => "Some City", "street" => "Some street", "number" => "15"},
+        "otherAddresses" => [
+          %{"city" => "Some City", "street" => "Some street", "number" => 15},
+          %{"city" => "Other city", "street" => "Other street", "number" => 10}
+        ],
+        "otherInvalidField" => "invalid value",
+        "numbers" => ["1", 2, 5, "10"]
+      }
+
+      assert {:error,
+              %{"otherInvalidField" => "unknown field", "unknownField" => "unknown field"}} ==
+               Parameter.load(UserTestSchema, params, unknown_field: :error)
+    end
+
+    test "if unknown field set as exclude, it should ignore the unknown fields" do
+      params = %{
+        "firstName" => "John",
+        "unknownField" => "some value",
+        "age" => "32",
+        "mainAddress" => %{"city" => "Some City", "street" => "Some street", "number" => "15"},
+        "otherAddresses" => [
+          %{"city" => "Some City", "street" => "Some street", "number" => 15},
+          %{"city" => "Other city", "street" => "Other street", "number" => 10}
+        ],
+        "otherInvalidField" => "invalid value",
+        "numbers" => ["1", 2, 5, "10"]
+      }
+
+      assert {
+               :ok,
+               %{
+                 first_name: "John",
+                 age: 32,
+                 last_name: "",
+                 main_address: %{city: "Some City", number: 15, street: "Some street"},
+                 numbers: [1, 2, 5, 10],
+                 other_addresses: [
+                   %{city: "Some City", number: 15, street: "Some street"},
+                   %{city: "Other city", number: 10, street: "Other street"}
+                 ]
+               }
+             } == Parameter.load(UserTestSchema, params, unknown_field: :ignore)
+    end
   end
 end
