@@ -154,14 +154,14 @@ defmodule Parameter.TypesTest do
                {:error, "\"random type\" is not a valid type"}
     end
 
-    test "validate have_many with inner type" do
-      assert Types.validate({:have_many, :string}, []) == :ok
-      assert Types.validate({:have_many, :string}, ["hello", "world"]) == :ok
+    test "validate has_many with inner type" do
+      assert Types.validate({:has_many, :string}, []) == :ok
+      assert Types.validate({:has_many, :string}, ["hello", "world"]) == :ok
 
-      assert Types.validate({:have_many, :string}, ["hello", :world]) ==
+      assert Types.validate({:has_many, :string}, ["hello", :world]) ==
                {:error, "invalid string type"}
 
-      assert Types.validate({:have_many, :string}, 3) == {:error, "not a list type"}
+      assert Types.validate({:has_many, :string}, 3) == {:error, "not a list type"}
     end
 
     test "validate has_one with inner type" do

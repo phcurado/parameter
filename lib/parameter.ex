@@ -32,8 +32,10 @@ defmodule Parameter do
         {:error, error} ->
           errors = Map.put(errors, field.name, error)
           {result, unknown_fields, errors}
+
         {:ok, nil} ->
           {result, unknown_fields, errors}
+
         {:ok, loaded_value} ->
           result = Map.put(result, field.name, loaded_value)
           {result, unknown_fields, errors}
@@ -84,7 +86,7 @@ defmodule Parameter do
     {:error, "is not a valid inner data"}
   end
 
-  defp load_type_value(%Field{type: {:have_many, inner_module}}, values, opts)
+  defp load_type_value(%Field{type: {:has_many, inner_module}}, values, opts)
        when is_list(values) do
     values
     |> Enum.with_index()
@@ -102,7 +104,7 @@ defmodule Parameter do
     |> parse_list_values()
   end
 
-  defp load_type_value(%Field{type: {:have_many, _inner_module}}, _value, _opts) do
+  defp load_type_value(%Field{type: {:has_many, _inner_module}}, _value, _opts) do
     {:error, "is not a valid list"}
   end
 

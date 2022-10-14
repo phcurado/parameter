@@ -21,9 +21,9 @@ defmodule Parameter.Schema do
     end
   end
 
-  defmacro have_many(name, type, opts \\ []) do
+  defmacro has_many(name, type, opts \\ []) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
-      param(name, {:have_many, type}, opts)
+      param(name, {:has_many, type}, opts)
     end
   end
 

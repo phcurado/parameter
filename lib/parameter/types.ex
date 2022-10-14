@@ -16,10 +16,10 @@ defmodule Parameter.Types do
           | :datetime
           | :naive_datetime
 
-  @type composite_types :: {:have_many, t()} | {:has_one, t()}
+  @type composite_types :: {:has_many, t()} | {:has_one, t()}
 
   @base_types ~w(string atom integer float boolean map date time datetime naive_datetime)a
-  @composite_types ~w(has_one have_many)a
+  @composite_types ~w(has_one has_many)a
 
   @spec base_types() :: [atom()]
   def base_types, do: @base_types
@@ -70,7 +70,7 @@ defmodule Parameter.Types do
     {:error, "not a inner type"}
   end
 
-  def validate({:have_many, inner_type}, values) when is_list(values) do
+  def validate({:has_many, inner_type}, values) when is_list(values) do
     Enum.reduce_while(values, :ok, fn value, acc ->
       case validate(inner_type, value) do
         :ok -> {:cont, acc}
@@ -79,7 +79,7 @@ defmodule Parameter.Types do
     end)
   end
 
-  def validate({:have_many, _inner_type}, _values) do
+  def validate({:has_many, _inner_type}, _values) do
     {:error, "not a list type"}
   end
 

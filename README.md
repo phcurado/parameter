@@ -8,7 +8,7 @@
 
 ## Motivation
 
-Offer a similar Schema model from the library `Ecto` to deal with complex data schemas. The main use case is to parse response from external apis. `Parameter` provides a well structured schema model which will try it's best to parse the external data.
+Offer a similar Schema model from the library `Ecto` to deal with complex data schemas. The main use case is to parse response from external apis. `Parameter` provides a well structured schema model which tries it's best to parse the external data.
 
 ## Schema
 
@@ -24,7 +24,7 @@ defmodule UserSchema do
     param :last_name, :string, key: "lastName", required: true, default: ""
     param :age, :integer
     has_one :main_address, AddressSchema, key: "mainAddress", required: true
-    have_many :addresses, AddressSchema
+    has_many :addresses, AddressSchema
   end
 end
 ```
@@ -80,7 +80,8 @@ iex> params = %{
       "addresses" => [%{"city" => "Rio de Janeiro"}],
       "age" => "32",
       "firstName" => "John",
-      "lastName" => "Doe"
+      "lastName" => "Doe",
+      "ASdf" => "asdf"
     }
 ...> Parameter.load(UserSchema, params)
 {:ok,

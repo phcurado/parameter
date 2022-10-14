@@ -3,8 +3,8 @@ locals_without_parens = [
   param: 3,
   has_one: 2,
   has_one: 3,
-  have_many: 2,
-  have_many: 3
+  has_many: 2,
+  has_many: 3
 ]
 
 [

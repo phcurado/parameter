@@ -55,8 +55,8 @@ defmodule ParameterTest do
       param :last_name, :string, key: "lastName", required: true, default: ""
       param :age, :integer
       has_one :main_address, AddressTestSchema, key: "mainAddress", required: true
-      have_many :other_addresses, AddressTestSchema, key: "otherAddresses"
-      have_many :numbers, :integer
+      has_many :other_addresses, AddressTestSchema, key: "otherAddresses"
+      has_many :numbers, :integer
       param :metadata, :map
       param :hex_amount, CustomTypeHexToDecimal, key: "hexAmount"
     end
