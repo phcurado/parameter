@@ -32,7 +32,8 @@ defmodule Parameter do
         {:error, error} ->
           errors = Map.put(errors, field.name, error)
           {result, unknown_fields, errors}
-
+        {:ok, nil} ->
+          {result, unknown_fields, errors}
         {:ok, loaded_value} ->
           result = Map.put(result, field.name, loaded_value)
           {result, unknown_fields, errors}
@@ -47,26 +48,31 @@ defmodule Parameter do
   end
 
   defp load_map_value(input, field, opts) do
-    value =
-      case Enum.find(input, fn {key, _value} -> key == field.key end) do
-        {_key, value} -> value
-        nil -> nil
-      end
+    case Map.fetch(input, field.key) do
+      :error ->
+        check_required(field)
 
-    cond do
-      is_nil(value) && !is_nil(field.default) ->
-        {:ok, field.default}
+      {:ok, nil} ->
+        # TODO: add nullable check
+        check_required(field)
 
-      is_nil(value) && field.required ->
-        {:error, "is missing"}
-
-      is_nil(value) ->
-        {:ok, nil}
-
-      true ->
+      {:ok, value} ->
         field
         |> load_type_value(value, opts)
         |> parse_loaded_input()
+    end
+  end
+
+  defp check_required(field) do
+    cond do
+      !is_nil(field.default) ->
+        {:ok, field.default}
+
+      field.required ->
+        {:error, "is missing"}
+
+      true ->
+        {:ok, nil}
     end
   end
 
