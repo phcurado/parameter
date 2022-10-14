@@ -53,7 +53,7 @@ defmodule Parameter do
         check_required(field)
 
       {:ok, nil} ->
-        # TODO: add nullable check
+        # add nullable check
         check_required(field)
 
       {:ok, value} ->
