@@ -11,16 +11,15 @@ defmodule Parameter.Types do
           | :float
           | :boolean
           | :map
-          | :array
           | :date
           | :time
           | :datetime
           | :naive_datetime
 
-  @type composite_types :: {:array, t()} | {:map, t()}
+  @type composite_types :: {:have_many, t()} | {:has_one, t()}
 
-  @base_types ~w(string atom integer float boolean map array date time datetime naive_datetime)a
-  @composite_types ~w(map array)a
+  @base_types ~w(string atom integer float boolean map date time datetime naive_datetime)a
+  @composite_types ~w(has_one have_many)a
 
   @spec base_types() :: [atom()]
   def base_types, do: @base_types
@@ -58,7 +57,7 @@ defmodule Parameter.Types do
   @spec validate(atom(), any()) :: :ok | {:error, any()}
   def validate(type, values)
 
-  def validate({:map, inner_type}, values) when is_map(values) do
+  def validate({:has_one, inner_type}, values) when is_map(values) do
     Enum.reduce_while(values, :ok, fn {_key, value}, acc ->
       case validate(inner_type, value) do
         :ok -> {:cont, acc}
@@ -67,11 +66,11 @@ defmodule Parameter.Types do
     end)
   end
 
-  def validate({:map, _inner_type}, _values) do
-    {:error, "not a map type"}
+  def validate({:has_one, _inner_type}, _values) do
+    {:error, "not a inner type"}
   end
 
-  def validate({:array, inner_type}, values) when is_list(values) do
+  def validate({:have_many, inner_type}, values) when is_list(values) do
     Enum.reduce_while(values, :ok, fn value, acc ->
       case validate(inner_type, value) do
         :ok -> {:cont, acc}
@@ -80,8 +79,8 @@ defmodule Parameter.Types do
     end)
   end
 
-  def validate({:array, _inner_type}, _values) do
-    {:error, "not an array type"}
+  def validate({:have_many, _inner_type}, _values) do
+    {:error, "not a list type"}
   end
 
   def validate(type, value) do

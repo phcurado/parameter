@@ -70,15 +70,16 @@ defmodule Parameter do
     end
   end
 
-  defp load_type_value(%Field{type: {:map, inner_module}}, value, opts) when is_map(value) do
+  defp load_type_value(%Field{type: {:has_one, inner_module}}, value, opts) when is_map(value) do
     load(inner_module, value, opts)
   end
 
-  defp load_type_value(%Field{type: {:map, _inner_module}}, _value, _opts) do
-    {:error, "is not a valid map"}
+  defp load_type_value(%Field{type: {:has_one, _inner_module}}, _value, _opts) do
+    {:error, "is not a valid inner data"}
   end
 
-  defp load_type_value(%Field{type: {:array, inner_module}}, values, opts) when is_list(values) do
+  defp load_type_value(%Field{type: {:have_many, inner_module}}, values, opts)
+       when is_list(values) do
     values
     |> Enum.with_index()
     |> Enum.reduce({[], []}, fn {value, index}, {acc_list, errors} ->
@@ -95,8 +96,8 @@ defmodule Parameter do
     |> parse_list_values()
   end
 
-  defp load_type_value(%Field{type: {:array, _inner_module}}, _value, _opts) do
-    {:error, "is not a valid array"}
+  defp load_type_value(%Field{type: {:have_many, _inner_module}}, _value, _opts) do
+    {:error, "is not a valid list"}
   end
 
   defp load_type_value(field, value, _opts) do

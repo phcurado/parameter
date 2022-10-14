@@ -54,9 +54,9 @@ defmodule ParameterTest do
       param :first_name, :string, key: "firstName", required: true
       param :last_name, :string, key: "lastName", required: true, default: ""
       param :age, :integer
-      param :main_address, {:map, AddressTestSchema}, key: "mainAddress", required: true
-      param :other_addresses, {:array, AddressTestSchema}, key: "otherAddresses"
-      param :numbers, {:array, :integer}
+      has_one :main_address, AddressTestSchema, key: "mainAddress", required: true
+      have_many :other_addresses, AddressTestSchema, key: "otherAddresses"
+      have_many :numbers, :integer
       param :metadata, :map
       param :hex_amount, CustomTypeHexToDecimal, key: "hexAmount"
     end
@@ -65,8 +65,8 @@ defmodule ParameterTest do
   describe "load/3" do
     test "load user schema with correct input on all fields" do
       params = %{
-        "firstName" => "Paulo",
-        "lastName" => "Curado",
+        "firstName" => "John",
+        "lastName" => "Doe",
         "age" => "32",
         "mainAddress" => %{"city" => "Some City", "street" => "Some street", "number" => "15"},
         "otherAddresses" => [
@@ -80,8 +80,8 @@ defmodule ParameterTest do
 
       assert {:ok,
               %{
-                first_name: "Paulo",
-                last_name: "Curado",
+                first_name: "John",
+                last_name: "Doe",
                 age: 32,
                 main_address: %{city: "Some City", street: "Some street", number: 15},
                 other_addresses: [
@@ -96,8 +96,8 @@ defmodule ParameterTest do
 
     test "load user schema with invalid input shoud return an error" do
       params = %{
-        "firstName" => "Paulo",
-        "lastName" => "Curado",
+        "firstName" => "John",
+        "lastName" => "Doe",
         "age" => "not a age number",
         "mainAddress" => %{
           "city" => "Some City",
@@ -130,8 +130,8 @@ defmodule ParameterTest do
 
     test "load user schema with struct true" do
       params = %{
-        "firstName" => "Paulo",
-        "lastName" => "Curado",
+        "firstName" => "John",
+        "lastName" => "Doe",
         "age" => "32",
         "mainAddress" => %{"city" => "Some City", "street" => "Some street", "number" => "15"},
         "otherAddresses" => [
@@ -145,8 +145,8 @@ defmodule ParameterTest do
 
       assert {:ok,
               %UserTestSchema{
-                first_name: "Paulo",
-                last_name: "Curado",
+                first_name: "John",
+                last_name: "Doe",
                 age: 32,
                 main_address: %AddressTestSchema{
                   city: "Some City",
@@ -165,7 +165,7 @@ defmodule ParameterTest do
 
     test "uses default value if value is nil" do
       params = %{
-        "firstName" => "Paulo",
+        "firstName" => "John",
         "lastName" => nil,
         "age" => "32",
         "mainAddress" => %{"city" => "Some City", "street" => "Some street", "number" => "15"},
