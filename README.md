@@ -20,9 +20,9 @@ defmodule UserSchema do
   use Parameter.Schema
 
   param do
-    param :first_name, :string, key: "firstName", required: true
-    param :last_name, :string, key: "lastName", required: true, default: ""
-    param :age, :integer
+    field :first_name, :string, key: "firstName", required: true
+    field :last_name, :string, key: "lastName", required: true, default: ""
+    field :age, :integer
     has_one :main_address, AddressSchema, key: "mainAddress", required: true
     has_many :addresses, AddressSchema
   end
@@ -36,12 +36,32 @@ defmodule AddressSchema do
   use Parameter.Schema
 
   param do
-    param :city, :string, required: true
-    param :street, :string
-    param :number, :integer
+    field :city, :string, required: true
+    field :street, :string
+    field :number, :integer
   end
 end
 ```
+
+It's also possible to avoid creating modules for nested types by using the following api:
+
+```elixir
+defmodule UserSchema do
+  use Parameter.Schema
+
+  param do
+    field :first_name, :string, key: "firstName", required: true
+    field :last_name, :string, key: "lastName", required: true, default: ""
+    field :age, :integer
+    param :main_address, key: "mainAddress", required: true  do
+      field :city, :string, required: true
+      field :street, :string
+      field :number, :integer
+    end
+  end
+end
+```
+
 
 Each field needs to define the type that will be parsed and the options (if any). The available types are:
 
@@ -80,8 +100,7 @@ iex> params = %{
       "addresses" => [%{"city" => "Rio de Janeiro"}],
       "age" => "32",
       "firstName" => "John",
-      "lastName" => "Doe",
-      "ASdf" => "asdf"
+      "lastName" => "Doe"
     }
 ...> Parameter.load(UserSchema, params)
 {:ok,
@@ -110,7 +129,6 @@ iex> params = %{
         }
       ],
       "age" => "AA",
-      "firstName" => "John",
       "lastName" => "Doe"
     }
 ...> Parameter.load(UserSchema, params)
@@ -121,6 +139,7 @@ iex> params = %{
      "1": %{number: "invalid integer type"}
    ],
    age: "invalid integer type",
+   first_name: "is missing",
    main_address: %{number: "invalid integer type"}
  }}
 ```
@@ -177,7 +196,7 @@ defmodule UserSchema do
   use Parameter.Schema
 
   param do
-    param :age, IntegerCustomType, required: true
+    field :age, IntegerCustomType, required: true
   end
 end
 ```
@@ -188,6 +207,14 @@ This behaviour can be changed with the following options:
 
 - `:ignore` (default): ignore unknown fields 
 - `:error`: return an error with the unknown fields
+
+Using the same user schema, adding unknow field option to error should return an error:
+
+```elixir
+iex> params = %{"unknownField" => "unknown value"}
+...> Parameter.load(UserSchema, params, unknown_field: :error)
+{:error, %{"unknownField" => "unknown field"}}
+```
 
 ## Installation
 

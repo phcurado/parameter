@@ -1,6 +1,8 @@
 locals_without_parens = [
+  param: 1,
   param: 2,
-  param: 3,
+  field: 2,
+  field: 3,
   has_one: 2,
   has_one: 3,
   has_many: 2,

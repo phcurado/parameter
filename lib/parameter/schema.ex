@@ -15,24 +15,50 @@ defmodule Parameter.Schema do
     mount_schema(__CALLER__, block)
   end
 
-  defmacro has_one(name, type, opts \\ []) do
-    quote bind_quoted: [name: name, type: type, opts: opts] do
-      param(name, {:has_one, type}, opts)
+  defmacro param(name, do: block) do
+    quote do
+      module_name =
+        Parameter.Schema.__mount_nested_schema__(
+          unquote(name),
+          __ENV__,
+          unquote(Macro.escape(block))
+        )
+
+      has_one unquote(name), module_name
     end
   end
 
-  defmacro has_many(name, type, opts \\ []) do
-    quote bind_quoted: [name: name, type: type, opts: opts] do
-      param(name, {:has_many, type}, opts)
+  defmacro param(name, opts, do: block) do
+    quote do
+      module_name =
+        Parameter.Schema.__mount_nested_schema__(
+          unquote(name),
+          __ENV__,
+          unquote(Macro.escape(block))
+        )
+
+      has_one unquote(name), module_name, unquote(opts)
     end
   end
 
-  defmacro param(name, type, opts \\ []) do
+  defmacro field(name, type, opts \\ []) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
       main_attrs = [name: name, type: type]
       field = Field.new!(main_attrs ++ opts)
       Module.put_attribute(__MODULE__, :param_fields, field)
       Module.put_attribute(__MODULE__, :param_struct_fields, field.name)
+    end
+  end
+
+  defmacro has_one(name, type, opts \\ []) do
+    quote bind_quoted: [name: name, type: type, opts: opts] do
+      field(name, {:has_one, type}, opts)
+    end
+  end
+
+  defmacro has_many(name, type, opts \\ []) do
+    quote bind_quoted: [name: name, type: type, opts: opts] do
+      field(name, {:has_many, type}, opts)
     end
   end
 
@@ -69,5 +95,22 @@ defmodule Parameter.Schema do
       unquote(prelude)
       unquote(postlude)
     end
+  end
+
+  def __mount_nested_schema__(name, env, block) do
+    block =
+      quote do
+        use Parameter.Schema
+
+        param do
+          unquote(block)
+        end
+      end
+
+    camelize_name = name |> to_string() |> Macro.camelize()
+    module_name = Module.concat(env.module, camelize_name)
+
+    Module.create(module_name, block, env)
+    module_name
   end
 end

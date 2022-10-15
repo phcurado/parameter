@@ -41,9 +41,9 @@ defmodule ParameterTest do
     use Parameter.Schema
 
     param do
-      param :city, :string, required: true
-      param :street, :string
-      param :number, :integer
+      field :city, :string, required: true
+      field :street, :string
+      field :number, :integer
     end
   end
 
@@ -51,14 +51,19 @@ defmodule ParameterTest do
     use Parameter.Schema
 
     param do
-      param :first_name, :string, key: "firstName", required: true
-      param :last_name, :string, key: "lastName", required: true, default: ""
-      param :age, :integer
+      field :first_name, :string, key: "firstName", required: true
+      field :last_name, :string, key: "lastName", required: true, default: ""
+      field :age, :integer
+      field :metadata, :map
+      field :hex_amount, CustomTypeHexToDecimal, key: "hexAmount"
       has_one :main_address, AddressTestSchema, key: "mainAddress", required: true
       has_many :other_addresses, AddressTestSchema, key: "otherAddresses"
       has_many :numbers, :integer
-      param :metadata, :map
-      param :hex_amount, CustomTypeHexToDecimal, key: "hexAmount"
+
+      param :id_info, key: "idInfo" do
+        field :number, :integer
+        field :type, :string
+      end
     end
   end
 
@@ -75,7 +80,11 @@ defmodule ParameterTest do
         ],
         "numbers" => ["1", 2, 5, "10"],
         "metadata" => %{"key" => "value", "other_key" => "value"},
-        "hexAmount" => "0x0"
+        "hexAmount" => "0x0",
+        "idInfo" => %{
+          "number" => 123_456,
+          "type" => "identity"
+        }
       }
 
       assert {:ok,
@@ -90,7 +99,8 @@ defmodule ParameterTest do
                 ],
                 numbers: [1, 2, 5, 10],
                 metadata: %{"key" => "value", "other_key" => "value"},
-                hex_amount: 0
+                hex_amount: 0,
+                id_info: %{number: 123_456, type: "identity"}
               }} == Parameter.load(UserTestSchema, params)
     end
 
@@ -110,7 +120,11 @@ defmodule ParameterTest do
         ],
         "numbers" => ["number", 2, 5, "10", "invalid data"],
         "metadata" => "not a map",
-        "hexAmount" => 12
+        "hexAmount" => 12,
+        "idInfo" => %{
+          "number" => "random",
+          "type" => "identity"
+        }
       }
 
       assert {:error,
@@ -123,7 +137,8 @@ defmodule ParameterTest do
                   "4": "invalid integer type"
                 ],
                 metadata: "invalid map type",
-                hex_amount: "invalid hex"
+                hex_amount: "invalid hex",
+                id_info: %{number: "invalid integer type"}
               }} ==
                Parameter.load(UserTestSchema, params)
     end
