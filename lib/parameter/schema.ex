@@ -63,37 +63,32 @@ defmodule Parameter.Schema do
   end
 
   defp mount_schema(caller, block) do
-    prelude =
-      quote do
-        if line = Module.get_attribute(__MODULE__, :param_schema_defined) do
-          raise "schema already defined for #{inspect(__MODULE__)} on line #{line}"
-        end
-
-        @param_schema_defined unquote(caller.line)
-
-        Module.register_attribute(__MODULE__, :param_struct_fields, accumulate: true)
-
-        unquote(block)
-      end
-
-    postlude =
-      quote unquote: false do
-        fields = Enum.reverse(@param_fields)
-
-        defstruct Enum.reverse(@param_struct_fields)
-
-        def __param__(:fields), do: unquote(Macro.escape(fields))
-        def __param__(:field_names), do: unquote(Enum.map(fields, & &1.name))
-        def __param__(:field_keys), do: unquote(Enum.map(fields, & &1.key))
-
-        def __param__(:field, key) do
-          Enum.find(__param__(:fields), &(&1.key == key))
-        end
-      end
-
     quote do
-      unquote(prelude)
-      unquote(postlude)
+      if line = Module.get_attribute(__MODULE__, :param_schema_defined) do
+        raise "param already defined for #{inspect(__MODULE__)} on line #{line}"
+      end
+
+      @param_schema_defined unquote(caller.line)
+
+      Module.register_attribute(__MODULE__, :param_struct_fields, accumulate: true)
+
+      unquote(block)
+
+      defstruct Enum.reverse(@param_struct_fields)
+
+      def __param__(:fields), do: Enum.reverse(@param_fields)
+
+      def __param__(:field_names) do
+        Enum.map(__param__(:fields), & &1.name)
+      end
+
+      def __param__(:field_keys) do
+        Enum.map(__param__(:fields), & &1.key)
+      end
+
+      def __param__(:field, key) do
+        Enum.find(__param__(:fields), &(&1.key == key))
+      end
     end
   end
 

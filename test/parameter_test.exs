@@ -155,7 +155,8 @@ defmodule ParameterTest do
         ],
         "numbers" => ["1", 2, 5, "10"],
         "metadata" => %{"key" => "value", "other_key" => "value"},
-        "hexAmount" => "0xbe807dddb074639cd9fa61b47676c064fc50d62c"
+        "hexAmount" => "0xbe807dddb074639cd9fa61b47676c064fc50d62c",
+        "idInfo" => %{"number" => "25"}
       }
 
       assert {:ok,
@@ -174,7 +175,8 @@ defmodule ParameterTest do
                 ],
                 numbers: [1, 2, 5, 10],
                 metadata: %{"key" => "value", "other_key" => "value"},
-                hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908
+                hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908,
+                id_info: %UserTestSchema.IdInfo{number: 25, type: nil}
               }} == Parameter.load(UserTestSchema, params, struct: true)
     end
 

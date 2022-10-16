@@ -53,10 +53,10 @@ defmodule Parameter do
 
     unknow_fields =
       Enum.reduce(input, %{}, fn {key, _value}, acc ->
-        if key not in schema_keys do
-          Map.put(acc, key, "unknown field")
-        else
+        if key in schema_keys do
           acc
+        else
+          Map.put(acc, key, "unknown field")
         end
       end)
 
