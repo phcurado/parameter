@@ -45,8 +45,6 @@ defmodule Parameter.Schema do
           unquote(Macro.escape(block))
         )
 
-      IO.inspect(module_name)
-
       has_one unquote(name), module_name, unquote(opts)
     end
   end
