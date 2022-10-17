@@ -53,13 +53,35 @@ defmodule UserSchema do
     field :first_name, :string, key: "firstName", required: true
     field :last_name, :string, key: "lastName", required: true, default: ""
     field :age, :integer
-    param :main_address, key: "mainAddress", required: true  do
+    has_one :main_address, AddressSchema, key: "mainAddress", required: true  do
       field :city, :string, required: true
       field :street, :string
       field :number, :integer
     end
   end
 end
+```
+
+Another possibility is avoiding creating files for a schema at all. This can be done by importing `Parameter.Schema` and using the `param/2` macro. This is useful for adding params in Phoenix controllers. For example:
+
+```elixir
+defmodule MyProjectWeb.UserController do
+  use MyProjectWeb, :controller
+  import Parameter.Schema
+
+  alias MyProject.Users
+
+  param UserParams do
+    field :first_name, :string, required: true
+    field :last_name, :string, required: true
+  end
+
+  def create(conn, params) do
+    with {:ok, user_params} <- Parameter.load(UserParams, params),
+         {:ok, user} <- Users.create_user(user_params) do
+      render(conn, "user.json", %{user: user})
+    end
+  end
 ```
 
 
@@ -138,7 +160,7 @@ iex> params = %{
      "1": %{number: "invalid integer type"}
    ],
    age: "invalid integer type",
-   first_name: "is missing",
+   first_name: "is required",
    main_address: %{number: "invalid integer type"}
  }}
 ```
@@ -213,6 +235,7 @@ iex> params = %{"user_token" => "3hgj81312312"}
 {:error, %{"user_token" => "unknown field"}}
 ```
 
+
 ## Installation
 
 
@@ -221,7 +244,7 @@ Add `parameter` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:parameter, "~> 0.2.0"}
+    {:parameter, "~> 0.3.0"}
   ]
 end
 ```

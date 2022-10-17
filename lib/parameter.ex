@@ -103,7 +103,7 @@ defmodule Parameter do
         {:ok, field.default}
 
       field.required ->
-        {:error, "is missing"}
+        {:error, "is required"}
 
       true ->
         {:ok, nil}
