@@ -82,6 +82,7 @@ defmodule MyProjectWeb.UserController do
       render(conn, "user.json", %{user: user})
     end
   end
+end
 ```
 
 
