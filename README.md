@@ -62,7 +62,7 @@ defmodule UserSchema do
 end
 ```
 
-Another possibility is avoiding creating files for schema at all. This can be done by importing `Parameter.Schema` and use the `param/2` macro. This is useful for adding params on Phoenix Controllers for example:
+Another possibility is avoiding creating files for a schema at all. This can be done by importing `Parameter.Schema` and using the `param/2` macro. This is useful for adding params in Phoenix controllers. For example:
 
 ```elixir
 defmodule MyProjectWeb.UserController do
@@ -234,11 +234,6 @@ iex> params = %{"user_token" => "3hgj81312312"}
 ...> Parameter.load(UserSchema, params, unknown_field: :error)
 {:error, %{"user_token" => "unknown field"}}
 ```
-
-## Phoenix
-
-
-`Parameter` works 
 
 
 ## Installation
