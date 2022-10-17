@@ -77,7 +77,7 @@ defmodule MyProjectWeb.UserController do
   end
 
   def create(conn, params) do
-    with {:ok, user_params} <- Parameter.load(UserParams, params),
+    with {:ok, user_params} <- Parameter.load(__MODULE__.UserParams, params),
          {:ok, user} <- Users.create_user(user_params) do
       render(conn, "user.json", %{user: user})
     end
