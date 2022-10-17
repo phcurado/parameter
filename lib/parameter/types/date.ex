@@ -3,7 +3,7 @@ defmodule Parameter.Types.Date do
   Date parameter type
   """
 
-  @behaviour Parameter.Parametrizable
+  use Parameter.Parametrizable
 
   @impl true
   def load(%Date{} = value) do

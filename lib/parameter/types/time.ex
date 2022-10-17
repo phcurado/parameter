@@ -3,7 +3,7 @@ defmodule Parameter.Types.Time do
   Time parameter type
   """
 
-  @behaviour Parameter.Parametrizable
+  use Parameter.Parametrizable
 
   @impl true
   def load(%Time{} = value) do

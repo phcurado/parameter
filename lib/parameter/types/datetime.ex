@@ -3,7 +3,7 @@ defmodule Parameter.Types.DateTime do
   DateTime parameter type
   """
 
-  @behaviour Parameter.Parametrizable
+  use Parameter.Parametrizable
 
   @impl true
   def load(%DateTime{} = value) do

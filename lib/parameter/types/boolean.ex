@@ -3,7 +3,7 @@ defmodule Parameter.Types.Boolean do
   Boolean parameter type
   """
 
-  @behaviour Parameter.Parametrizable
+  use Parameter.Parametrizable
 
   @impl true
   def load(value) when is_boolean(value) do
@@ -16,6 +16,12 @@ defmodule Parameter.Types.Boolean do
         {:ok, true}
 
       "false" ->
+        {:ok, false}
+
+      "1" ->
+        {:ok, true}
+
+      "0" ->
         {:ok, false}
 
       _not_boolean ->
@@ -32,6 +38,15 @@ defmodule Parameter.Types.Boolean do
   end
 
   def load(_value) do
+    error_tuple()
+  end
+
+  @impl true
+  def dump(value) when is_boolean(value) do
+    {:ok, value}
+  end
+
+  def dump(_value) do
     error_tuple()
   end
 

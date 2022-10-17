@@ -89,4 +89,10 @@ defmodule Parameter.Types do
       module -> module.validate(value)
     end
   end
+
+  @spec dump(atom(), any()) :: {:ok, any()} | {:error, any()}
+  def dump(type, value) do
+    type_module = Map.get(@types_mod, type) || type
+    type_module.dump(value)
+  end
 end

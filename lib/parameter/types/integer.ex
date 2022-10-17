@@ -3,7 +3,7 @@ defmodule Parameter.Types.Integer do
   Integer parameter type
   """
 
-  @behaviour Parameter.Parametrizable
+  use Parameter.Parametrizable
 
   @impl true
   def load(value) when is_integer(value) do

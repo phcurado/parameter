@@ -2,7 +2,7 @@ defmodule ParameterTest do
   use ExUnit.Case
 
   defmodule CustomTypeHexToDecimal do
-    @behaviour Parameter.Parametrizable
+    use Parameter.Parametrizable
 
     @impl true
     def load(value, opts \\ [])

@@ -3,7 +3,7 @@ defmodule Parameter.Types.Atom do
   Atom parameter type
   """
 
-  @behaviour Parameter.Parametrizable
+  use Parameter.Parametrizable
 
   @impl true
   def load(nil), do: error_tuple()

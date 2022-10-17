@@ -87,6 +87,72 @@ defmodule Parameter.TypesTest do
     end
   end
 
+  describe "dump/2" do
+    test "dump string type" do
+      assert Types.dump(:string, "Test") == {:ok, "Test"}
+      assert Types.dump(:string, 1) == {:error, "invalid string type"}
+      assert Types.dump(:string, true) == {:error, "invalid string type"}
+      assert Types.dump(:string, "true") == {:ok, "true"}
+    end
+
+    test "dump atom type" do
+      assert Types.dump(:atom, :test) == {:ok, :test}
+      assert Types.dump(:atom, 1) == {:error, "invalid atom type"}
+      assert Types.dump(:atom, true) == {:ok, true}
+      assert Types.dump(:atom, :SomeValue) == {:ok, :SomeValue}
+      assert Types.dump(:atom, nil) == {:error, "invalid atom type"}
+    end
+
+    test "dump boolean type" do
+      assert Types.dump(:boolean, true) == {:ok, true}
+      assert Types.dump(:boolean, "true") == {:error, "invalid boolean type"}
+      assert Types.dump(:boolean, 2.5) == {:error, "invalid boolean type"}
+    end
+
+    test "dump integer type" do
+      assert Types.dump(:integer, 1) == {:ok, 1}
+      assert Types.dump(:integer, "1") == {:error, "invalid integer type"}
+      assert Types.dump(:integer, 1.5) == {:error, "invalid integer type"}
+    end
+
+    test "dump map type" do
+      assert Types.dump(:map, %{}) == {:ok, %{}}
+      assert Types.dump(:map, %{"meta" => "data"}) == {:ok, %{"meta" => "data"}}
+      assert Types.dump(:map, %{meta: :data}) == {:ok, %{meta: :data}}
+      assert Types.dump(:map, nil) == {:error, "invalid map type"}
+      assert Types.dump(:map, []) == {:error, "invalid map type"}
+    end
+
+    test "dump float type" do
+      assert Types.dump(:float, 1.5) == {:ok, 1.5}
+      assert Types.dump(:float, 1) == {:error, "invalid float type"}
+    end
+
+    test "dump date types" do
+      assert Types.dump(:date, %Date{year: 2020, month: 10, day: 5}) ==
+               {:ok, %Date{year: 2020, month: 10, day: 5}}
+
+      assert Types.dump(:date, ~D[2000-01-01]) == {:ok, ~D[2000-01-01]}
+      assert Types.dump(:date, "2000-01-01") == {:error, "invalid date type"}
+
+      {:ok, time} = Time.new(0, 0, 0, 0)
+      assert Types.dump(:time, time) == {:ok, time}
+      assert Types.dump(:time, ~D[2000-01-01]) == {:error, "invalid time type"}
+
+      assert Types.dump(:datetime, ~U[2018-11-15 10:00:00Z]) == {:ok, ~U[2018-11-15 10:00:00Z]}
+      assert Types.dump(:datetime, ~D[2000-01-01]) == {:error, "invalid datetime type"}
+
+      local_now = NaiveDateTime.local_now()
+      assert Types.dump(:naive_datetime, local_now) == {:ok, local_now}
+
+      assert Types.dump(:naive_datetime, ~N[2000-01-01 23:00:07]) ==
+               {:ok, ~N[2000-01-01 23:00:07]}
+
+      assert Types.dump(:naive_datetime, ~D[2000-01-01]) ==
+               {:error, "invalid naive_datetime type"}
+    end
+  end
+
   describe "validate/2" do
     test "validate string type" do
       assert Types.validate(:string, "Test") == :ok

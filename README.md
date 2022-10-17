@@ -105,7 +105,7 @@ Each field needs to define the type that will be parsed and the options (if any)
 
 The options available for the field definition are:
 - `key`: This is the key on the external source that will be converted to the param definition.
-As an example, if you receive data from an external source that uses a snake case for mapping `first_name`, this flag should be `key: "firstName"`.
+As an example, if you receive data from an external source that uses a camel case for mapping `first_name`, this flag should be `key: "firstName"`.
 If this parameter is not set it will default to the field name.
 - `default`: default value of the field.
 - `required`: defines if the field needs to be present when parsing the input.
@@ -132,6 +132,15 @@ iex> params = %{
    first_name: "John",
    last_name: "Doe",
    main_address: %{city: "New York"}
+  }}
+...> Parameter.load(UserSchema, params, struct: true)
+{:ok,
+ %UserSchema{
+   addresses: [%AddressSchema{city: "Rio de Janeiro"],
+   age: 32,
+   first_name: "John",
+   last_name: "Doe",
+   main_address: %AddressSchema{city: "New York"}
   }}
 ```
 
@@ -178,10 +187,10 @@ defmodule IntegerCustomType do
   Integer parameter type
   """
 
-  @behaviour Parameter.Parametrizable
+  use Parameter.Parametrizable
 
   @impl true
-  # `load/1` is evaluated when parsing the parameters, you can do validations here and transform the data
+  # `load/1` should handle deserialization of a value
   def load(value) when is_integer(value) do
     {:ok, value}
   end
@@ -195,6 +204,15 @@ defmodule IntegerCustomType do
 
   def load(_value) do
     {:error, "invalid integer type"}
+  end
+
+  @impl true
+  # `dump/1` should handle serialization of a value
+  def dump(value) do
+    case validate(value) do
+      :ok -> {:ok, value}
+      error -> error
+    end
   end
 
   @impl true
@@ -232,7 +250,7 @@ Using the same user schema, adding unknow field option to error should return an
 
 ```elixir
 iex> params = %{"user_token" => "3hgj81312312"}
-...> Parameter.load(UserSchema, params, unknown_field: :error)
+...> Parameter.load(UserSchema, params, unknown: :error)
 {:error, %{"user_token" => "unknown field"}}
 ```
 
