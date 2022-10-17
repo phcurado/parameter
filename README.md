@@ -91,8 +91,7 @@ After the definition, the schema can be validated and parsed against external pa
 
 ## Data Deserialization
 
-This is a common requirement when you receive data from an external source and want to
-validate and deserialize this data to an Elixir definition. This can be achieved using `Parameter.load/2` or `Parameter.load/3` functions:
+This is a common requirement when receiving data from an external source that needs validation and deserialization of data to an Elixir definition. This can be achieved using `Parameter.load/2` or `Parameter.load/3` functions:
 
 ```elixir
 iex> params = %{
@@ -172,7 +171,7 @@ defmodule IntegerCustomType do
   end
 
   def load(_value) do
-    error_tuple()
+    {:error, "invalid integer type"}
   end
 
   @impl true
@@ -182,14 +181,12 @@ defmodule IntegerCustomType do
   end
 
   def validate(_value) do
-    error_tuple()
+    {:error, "invalid integer type"}
   end
-
-  defp error_tuple, do: {:error, "invalid integer type"}
 end
 ```
 
-Custom modules can be used in `Parameter.Schema`
+Add the custom module on the schema definition:
 
 ```elixir
 defmodule UserSchema do
@@ -211,9 +208,9 @@ This behaviour can be changed with the following options:
 Using the same user schema, adding unknow field option to error should return an error:
 
 ```elixir
-iex> params = %{"unknownField" => "unknown value"}
+iex> params = %{"user_token" => "3hgj81312312"}
 ...> Parameter.load(UserSchema, params, unknown_field: :error)
-{:error, %{"unknownField" => "unknown field"}}
+{:error, %{"user_token" => "unknown field"}}
 ```
 
 ## Installation
@@ -224,7 +221,7 @@ Add `parameter` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:parameter, "~> 0.1.1"}
+    {:parameter, "~> 0.2.0"}
   ]
 end
 ```
