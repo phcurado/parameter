@@ -60,9 +60,31 @@ defmodule ParameterTest do
       has_many :other_addresses, AddressTestSchema, key: "otherAddresses"
       has_many :numbers, :integer
 
-      param :id_info, key: "idInfo" do
+      has_one :id_info, IdInfo, key: "idInfo" do
         field :number, :integer
         field :type, :string
+      end
+
+      has_many :info, Info do
+        field :id, :string
+      end
+    end
+  end
+
+  defmodule Custom do
+    import Parameter.Schema
+
+    param User do
+      field :first_name, :string, key: "firstName", required: true
+      field :last_name, :string, key: "lastName", required: true
+
+      has_many :phones, Phone, key: "phone", required: true do
+        has_one :country, Country do
+          field :code, :string
+          field :name, :string
+        end
+
+        field :number, :integer, required: true
       end
     end
   end
@@ -156,7 +178,8 @@ defmodule ParameterTest do
         "numbers" => ["1", 2, 5, "10"],
         "metadata" => %{"key" => "value", "other_key" => "value"},
         "hexAmount" => "0xbe807dddb074639cd9fa61b47676c064fc50d62c",
-        "idInfo" => %{"number" => "25"}
+        "idInfo" => %{"number" => "25"},
+        "info" => [%{"id" => "1"}]
       }
 
       assert {:ok,
@@ -176,7 +199,8 @@ defmodule ParameterTest do
                 numbers: [1, 2, 5, 10],
                 metadata: %{"key" => "value", "other_key" => "value"},
                 hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908,
-                id_info: %UserTestSchema.IdInfo{number: 25, type: nil}
+                id_info: %UserTestSchema.IdInfo{number: 25, type: nil},
+                info: [%UserTestSchema.Info{id: "1"}]
               }} == Parameter.load(UserTestSchema, params, struct: true)
     end
 
@@ -207,7 +231,7 @@ defmodule ParameterTest do
         "numbers" => ["1", 2, 5, "10"]
       }
 
-      assert {:error, %{first_name: "is missing"}} =
+      assert {:error, %{first_name: "is required"}} =
                Parameter.load(UserTestSchema, params, struct: true)
     end
 
@@ -258,6 +282,111 @@ defmodule ParameterTest do
                  ]
                }
              } == Parameter.load(UserTestSchema, params, unknown_field: :ignore)
+    end
+
+    test "load custom module schema with param/2 macro" do
+      params = %{
+        "firstName" => "John",
+        "lastName" => "Doe",
+        "phone" => [
+          %{
+            "number" => "123456",
+            "country" => %{
+              "code" => "JP",
+              "name" => "Japan"
+            }
+          },
+          %{
+            "number" => "222222",
+            "country" => %{
+              "code" => "BR",
+              "name" => "Brazil"
+            }
+          }
+        ]
+      }
+
+      assert {:ok,
+              %{
+                first_name: "John",
+                last_name: "Doe",
+                phones: [
+                  %{country: %{code: "JP", name: "Japan"}, number: 123_456},
+                  %{country: %{code: "BR", name: "Brazil"}, number: 222_222}
+                ]
+              }} == Parameter.load(Custom.User, params)
+    end
+
+    test "load custom module schema with param/2 macro  with struct true" do
+      params = %{
+        "firstName" => "John",
+        "lastName" => "Doe",
+        "phone" => [
+          %{
+            "number" => "123456",
+            "country" => %{
+              "code" => "JP",
+              "name" => "Japan"
+            }
+          },
+          %{
+            "number" => "222222",
+            "country" => %{
+              "code" => "BR",
+              "name" => "Brazil"
+            }
+          }
+        ]
+      }
+
+      assert {
+               :ok,
+               %Custom.User{
+                 first_name: "John",
+                 last_name: "Doe",
+                 phones: [
+                   %Custom.User.Phone{
+                     country: %Custom.User.Phone.Country{code: "JP", name: "Japan"},
+                     number: 123_456
+                   },
+                   %Custom.User.Phone{
+                     country: %Custom.User.Phone.Country{code: "BR", name: "Brazil"},
+                     number: 222_222
+                   }
+                 ]
+               }
+             } == Parameter.load(Custom.User, params, struct: true)
+    end
+
+    test "load custom module with param/2 macro with invalid input shoud return an error" do
+      params = %{
+        "firstName" => "John",
+        "phone" => [
+          %{
+            "number" => "asdf",
+            "country" => %{
+              "code" => "JP",
+              "name" => "Japan"
+            }
+          },
+          %{
+            "number" => "asdf",
+            "country" => %{
+              "code" => "BR",
+              "name" => "Brazil"
+            }
+          }
+        ]
+      }
+
+      assert {:error,
+              %{
+                last_name: "is required",
+                phones: [
+                  {:"0", %{number: "invalid integer type"}},
+                  {:"1", %{number: "invalid integer type"}}
+                ]
+              }} == Parameter.load(Custom.User, params)
     end
   end
 end

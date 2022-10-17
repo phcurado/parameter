@@ -15,29 +15,13 @@ defmodule Parameter.Schema do
     mount_schema(__CALLER__, block)
   end
 
-  defmacro param(name, do: block) do
+  defmacro param(module_name, do: block) do
     quote do
-      module_name =
-        Parameter.Schema.__mount_nested_schema__(
-          unquote(name),
-          __ENV__,
-          unquote(Macro.escape(block))
-        )
-
-      has_one unquote(name), module_name
-    end
-  end
-
-  defmacro param(name, opts, do: block) do
-    quote do
-      module_name =
-        Parameter.Schema.__mount_nested_schema__(
-          unquote(name),
-          __ENV__,
-          unquote(Macro.escape(block))
-        )
-
-      has_one unquote(name), module_name, unquote(opts)
+      Parameter.Schema.__mount_nested_schema__(
+        unquote(module_name),
+        __ENV__,
+        unquote(Macro.escape(block))
+      )
     end
   end
 
@@ -50,15 +34,73 @@ defmodule Parameter.Schema do
     end
   end
 
-  defmacro has_one(name, type, opts \\ []) do
-    quote bind_quoted: [name: name, type: type, opts: opts] do
-      field(name, {:has_one, type}, opts)
+  defmacro has_one(name, module_name, opts \\ [])
+
+  defmacro has_one(name, module_name, opts, do: block) do
+    quote do
+      module_name =
+        Parameter.Schema.__mount_nested_schema__(
+          unquote(module_name),
+          __ENV__,
+          unquote(Macro.escape(block))
+        )
+
+      IO.inspect(module_name)
+
+      has_one unquote(name), module_name, unquote(opts)
     end
   end
 
-  defmacro has_many(name, type, opts \\ []) do
+  defmacro has_one(name, module_name, do: block) do
+    quote do
+      module_name =
+        Parameter.Schema.__mount_nested_schema__(
+          unquote(module_name),
+          __ENV__,
+          unquote(Macro.escape(block))
+        )
+
+      has_one unquote(name), module_name
+    end
+  end
+
+  defmacro has_one(name, type, opts) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
-      field(name, {:has_many, type}, opts)
+      field name, {:has_one, type}, opts
+    end
+  end
+
+  defmacro has_many(name, module_name, opts \\ [])
+
+  defmacro has_many(name, module_name, opts, do: block) do
+    quote do
+      module_name =
+        Parameter.Schema.__mount_nested_schema__(
+          unquote(module_name),
+          __ENV__,
+          unquote(Macro.escape(block))
+        )
+
+      has_many unquote(name), module_name, unquote(opts)
+    end
+  end
+
+  defmacro has_many(name, module_name, do: block) do
+    quote do
+      module_name =
+        Parameter.Schema.__mount_nested_schema__(
+          unquote(module_name),
+          __ENV__,
+          unquote(Macro.escape(block))
+        )
+
+      has_many unquote(name), module_name
+    end
+  end
+
+  defmacro has_many(name, type, opts) do
+    quote bind_quoted: [name: name, type: type, opts: opts] do
+      field name, {:has_many, type}, opts
     end
   end
 
@@ -92,7 +134,7 @@ defmodule Parameter.Schema do
     end
   end
 
-  def __mount_nested_schema__(name, env, block) do
+  def __mount_nested_schema__(module_name, env, block) do
     block =
       quote do
         use Parameter.Schema
@@ -102,8 +144,7 @@ defmodule Parameter.Schema do
         end
       end
 
-    camelize_name = name |> to_string() |> Macro.camelize()
-    module_name = Module.concat(env.module, camelize_name)
+    module_name = Module.concat(env.module, module_name)
 
     Module.create(module_name, block, env)
     module_name
