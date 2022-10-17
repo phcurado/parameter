@@ -45,6 +45,11 @@ defmodule Parameter.Field do
     Types.load(type, value)
   end
 
+  @spec dump(t(), any()) :: {:ok, any} | {:error, binary()}
+  def dump(%__MODULE__{type: type}, value) do
+    Types.dump(type, value)
+  end
+
   defp do_new(opts) do
     key = Keyword.fetch!(opts, :key)
     type = Keyword.get(opts, :type, :string)

@@ -21,6 +21,28 @@ defmodule Parameter do
     end
   end
 
+  @spec dump(module() | atom(), map()) :: {:ok, any()} | {:error, any()}
+  def dump(schema, input) when is_map(input) do
+    schema_keys = schema.__param__(:field_keys)
+    # TODO: finish dumping method for nested
+    Enum.reduce(schema_keys, {%{}, %{}}, fn schema_key, {result, errors} ->
+      field = schema.__param__(:field, schema_key)
+
+      {:ok, input_value} = Map.fetch(input, field.name)
+
+      case Field.dump(field, input_value) do
+        {:error, error} ->
+          errors = Map.put(errors, field.name, error)
+          {result, errors}
+
+        {:ok, loaded_value} ->
+          result = Map.put(result, field.key, loaded_value)
+          {result, errors}
+      end
+    end)
+    |> parse_loaded_input()
+  end
+
   defp do_load(schema, input, opts) when is_map(input) do
     schema_keys = schema.__param__(:field_keys)
 
