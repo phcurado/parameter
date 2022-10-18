@@ -351,7 +351,7 @@ iex> params = %{"user_token" => "3hgj81312312"}
 ```
 
 ## Validation
-Parameter comes with a set of validators to validate the schema after loading. The `validator` option validates the field:
+Parameter comes with a set of validators to validate the schema after loading. The implemented validators are described in the module `Parameter.Validators`.
 
 ```elixir
 defmodule User do
@@ -370,8 +370,9 @@ defmodule User do
   end
 
 
-  # Custom validators are possible, they need to be a function with arity 1 or 2.
-  # The first parameter is always the field value, the second (and optional) parametero is a `Keyword` list that will be used to pass values on the schema
+  # To add a custom validator create a function with arity 1 or 2.
+  # The first parameter is always the field value and the second (and optional)
+  # parameter is a `Keyword` list that will be used to pass values on the schema
   # The function must always return `:ok` or `{:error, reason}`
   def is_equal(value, to: to_value) do
     if value == to_value do

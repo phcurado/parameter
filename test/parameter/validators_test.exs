@@ -13,10 +13,10 @@ defmodule Parameter.ValidatorsTest do
   end
 
   test "equal/2" do
-    assert Validators.equal("value", equal: "value") == :ok
-    assert Validators.equal(25, equal: 25) == :ok
-    assert Validators.equal(25, equal: "value") == {:error, "is invalid"}
-    assert Validators.equal(25, equal: 15) == {:error, "is invalid"}
+    assert Validators.equal("value", to: "value") == :ok
+    assert Validators.equal(25, to: 25) == :ok
+    assert Validators.equal(25, to: "value") == {:error, "is invalid"}
+    assert Validators.equal(25, to: 15) == {:error, "is invalid"}
   end
 
   test "length/3" do
