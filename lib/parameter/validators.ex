@@ -26,8 +26,8 @@ defmodule Parameter.Validators do
   @doc """
   Validates if value is equal to another
   """
-  def equal(value, to_compare) do
-    if value == to_compare do
+  def equal(value, comparable) do
+    if value == comparable do
       :ok
     else
       error_tuple()
@@ -62,7 +62,7 @@ defmodule Parameter.Validators do
   def none_of(value, list) do
     case one_of(value, list) do
       :ok -> error_tuple()
-      error -> :ok
+      _error -> :ok
     end
   end
 
