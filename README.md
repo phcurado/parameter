@@ -13,10 +13,12 @@ Create a schema
 ```elixir
 defmodule User do
   use Parameter.Schema
+  alias Parameter.Validators
 
   param do
     field :first_name, :string, key: "firstName", required: true
     field :last_name, :string, key: "lastName"
+    field :email, :string, validator: &Validators.email(&1)
     has_one :address, Address  do
       field :city, :string, required: true
       field :street, :string
@@ -32,12 +34,14 @@ Load (deserialize) the schema against external parameters:
 iex> params = %{
       "firstName" => "John",
       "lastName" => "Doe",
+      "email" => "john@email.com",
       "address" => %{"city" => "New York", "street" => "York"}
     }
 ...> Parameter.load(User, params)
 {:ok, %{
   first_name: "John",
   last_name: "Doe",
+  email: "john@email.com",
   main_address: %{city: "New York", street: "York"}
 }}
 ```
@@ -48,6 +52,7 @@ or Dump (serialize) a populated schema to params:
 iex> schema = %{
     first_name: "John",
     last_name: "Doe",
+    email: "john@email.com",
     main_address: %{city: "New York", street: "York"}
   }
 ...> Parameter.dump(User, params)
@@ -55,6 +60,7 @@ iex> schema = %{
  %{
     "firstName" => "John",
     "lastName" => "Doe",
+    "email" => "john@email.com",
     "address" => %{"city" => "New York", "street" => "York"}
 }}
 ```

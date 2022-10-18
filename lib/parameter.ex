@@ -4,8 +4,8 @@ defmodule Parameter do
              |> String.split("<!-- MDOC !-->")
              |> Enum.fetch!(1)
 
-  alias Parameter.Loader
   alias Parameter.Dumper
+  alias Parameter.Loader
   alias Parameter.Types
 
   @unknown_opts [:error, :ignore]

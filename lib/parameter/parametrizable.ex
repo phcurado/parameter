@@ -4,7 +4,7 @@ defmodule Parameter.Parametrizable do
   When the basic types are not enough for loading, validating and dumping data this
   module can be used to provide custom types.
 
-  ## Examples
+  ## Example
   To create a parameterized type, create a module as shown below:
       defmodule CustomType do
         use Parameter.Parametrizable

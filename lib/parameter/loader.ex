@@ -119,8 +119,14 @@ defmodule Parameter.Loader do
     {:error, "invalid list type"}
   end
 
-  defp load_type_value(%Field{type: type}, value, _opts) do
-    Types.load(type, value)
+  defp load_type_value(%Field{type: type, validator: validator}, value, _opts) do
+    case Types.load(type, value) do
+      {:ok, value} ->
+        run_validator(validator, value)
+
+      error ->
+        error
+    end
   end
 
   defp load_type_value(type, value, _opts) do
@@ -149,5 +155,21 @@ defmodule Parameter.Loader do
 
   defp parse_to_struct_or_map({:ok, result}, schema, struct: true) do
     {:ok, struct!(schema, result)}
+  end
+
+  def run_validator(nil, value), do: {:ok, value}
+
+  def run_validator({func, args}, value) do
+    case apply(func, [value | args]) do
+      :ok -> {:ok, value}
+      error -> error
+    end
+  end
+
+  def run_validator(func, value) do
+    case func.(value) do
+      :ok -> {:ok, value}
+      error -> error
+    end
   end
 end
