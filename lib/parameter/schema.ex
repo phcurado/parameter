@@ -2,6 +2,7 @@ defmodule Parameter.Schema do
   @moduledoc false
 
   alias Parameter.Field
+  alias Parameter.Schema.Compiler
 
   @doc false
   defmacro __using__(_) do
@@ -34,71 +35,71 @@ defmodule Parameter.Schema do
     end
   end
 
-  defmacro has_one(name, module_name, opts \\ [])
-
   defmacro has_one(name, module_name, opts, do: block) do
-    quote do
-      module_name =
-        Parameter.Schema.__mount_nested_schema__(
-          unquote(module_name),
-          __ENV__,
-          unquote(Macro.escape(block))
-        )
+    block = Macro.escape(block)
 
-      has_one unquote(name), module_name, unquote(opts)
+    quote bind_quoted: [name: name, module_name: module_name, opts: opts, block: block] do
+      opts = Compiler.fetch_nested_opts!(opts)
+      module_name = Parameter.Schema.__mount_nested_schema__(module_name, __ENV__, block)
+
+      has_one name, module_name, opts
     end
   end
 
   defmacro has_one(name, module_name, do: block) do
-    quote do
-      module_name =
-        Parameter.Schema.__mount_nested_schema__(
-          unquote(module_name),
-          __ENV__,
-          unquote(Macro.escape(block))
-        )
+    block = Macro.escape(block)
 
-      has_one unquote(name), module_name
+    quote bind_quoted: [name: name, module_name: module_name, block: block] do
+      module_name = Parameter.Schema.__mount_nested_schema__(module_name, __ENV__, block)
+
+      has_one name, module_name
     end
   end
 
   defmacro has_one(name, type, opts) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
+      opts = Compiler.fetch_nested_opts!(opts)
       field name, {:has_one, type}, opts
     end
   end
 
-  defmacro has_many(name, module_name, opts \\ [])
+  defmacro has_one(name, type) do
+    quote bind_quoted: [name: name, type: type] do
+      field name, {:has_one, type}
+    end
+  end
 
   defmacro has_many(name, module_name, opts, do: block) do
-    quote do
-      module_name =
-        Parameter.Schema.__mount_nested_schema__(
-          unquote(module_name),
-          __ENV__,
-          unquote(Macro.escape(block))
-        )
+    block = Macro.escape(block)
 
-      has_many unquote(name), module_name, unquote(opts)
+    quote bind_quoted: [name: name, module_name: module_name, opts: opts, block: block] do
+      opts = Compiler.fetch_nested_opts!(opts)
+      module_name = Parameter.Schema.__mount_nested_schema__(module_name, __ENV__, block)
+
+      has_many name, module_name, opts
     end
   end
 
   defmacro has_many(name, module_name, do: block) do
-    quote do
-      module_name =
-        Parameter.Schema.__mount_nested_schema__(
-          unquote(module_name),
-          __ENV__,
-          unquote(Macro.escape(block))
-        )
+    block = Macro.escape(block)
 
-      has_many unquote(name), module_name
+    quote bind_quoted: [name: name, module_name: module_name, block: block] do
+      module_name = Parameter.Schema.__mount_nested_schema__(module_name, __ENV__, block)
+
+      has_many name, module_name
     end
   end
 
   defmacro has_many(name, type, opts) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
+      opts = Compiler.fetch_nested_opts!(opts)
       field name, {:has_many, type}, opts
+    end
+  end
+
+  defmacro has_many(name, type) do
+    quote bind_quoted: [name: name, type: type] do
+      field name, {:has_many, type}
     end
   end
 
