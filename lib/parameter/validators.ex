@@ -130,7 +130,7 @@ defmodule Parameter.Validators do
       iex> Parameter.load(User, %{"code" => "code:12345"})
       {:ok, %{code: "code:12345"}}
   """
-  @spec regex(binary(), regex: binary()) :: resp
+  @spec regex(binary(), regex: any()) :: resp
   def regex(value, regex: regex) when is_binary(value) do
     if String.match?(value, regex) do
       :ok
