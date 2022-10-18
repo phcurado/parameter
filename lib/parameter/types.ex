@@ -42,8 +42,14 @@ defmodule Parameter.Types do
 
   @spec load(atom(), any()) :: {:ok, any()} | {:error, any()}
   def load(type, value) do
-    type_module = Map.get(@types_mod, type) || type
+    type_module = Map.get(@types_mod, type, type)
     type_module.load(value)
+  end
+
+  @spec dump(atom(), any()) :: {:ok, any()} | {:error, any()}
+  def dump(type, value) do
+    type_module = Map.get(@types_mod, type, type)
+    type_module.dump(value)
   end
 
   @spec validate!(atom(), any()) :: :ok | no_return()
@@ -67,7 +73,7 @@ defmodule Parameter.Types do
   end
 
   def validate({:has_one, _inner_type}, _values) do
-    {:error, "not a inner type"}
+    {:error, "invalid inner data type"}
   end
 
   def validate({:has_many, inner_type}, values) when is_list(values) do
@@ -80,7 +86,7 @@ defmodule Parameter.Types do
   end
 
   def validate({:has_many, _inner_type}, _values) do
-    {:error, "not a list type"}
+    {:error, "invalid list type"}
   end
 
   def validate(type, value) do
@@ -88,11 +94,5 @@ defmodule Parameter.Types do
       nil -> {:error, "#{inspect(type)} is not a valid type"}
       module -> module.validate(value)
     end
-  end
-
-  @spec dump(atom(), any()) :: {:ok, any()} | {:error, any()}
-  def dump(type, value) do
-    type_module = Map.get(@types_mod, type) || type
-    type_module.dump(value)
   end
 end

@@ -40,16 +40,6 @@ defmodule Parameter.Field do
     end
   end
 
-  @spec load(t(), any()) :: {:ok, any} | {:error, binary()}
-  def load(%__MODULE__{type: type}, value) do
-    Types.load(type, value)
-  end
-
-  @spec dump(t(), any()) :: {:ok, any} | {:error, binary()}
-  def dump(%__MODULE__{type: type}, value) do
-    Types.dump(type, value)
-  end
-
   defp do_new(opts) do
     key = Keyword.fetch!(opts, :key)
     type = Keyword.get(opts, :type, :string)
@@ -92,7 +82,8 @@ defmodule Parameter.Field do
 
   defp custom_type_valid?(custom_type) do
     if Kernel.function_exported?(custom_type, :load, 1) and
-         Kernel.function_exported?(custom_type, :validate, 1) do
+         Kernel.function_exported?(custom_type, :validate, 1) and
+         Kernel.function_exported?(custom_type, :dump, 1) do
       :ok
     else
       {:error,

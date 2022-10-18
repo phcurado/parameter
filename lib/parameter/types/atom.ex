@@ -13,10 +13,7 @@ defmodule Parameter.Types.Atom do
   end
 
   def load(value) when is_binary(value) do
-    {:ok, String.to_existing_atom(value)}
-  rescue
-    _error ->
-      error_tuple()
+    {:ok, String.to_atom(value)}
   end
 
   def load(_value) do

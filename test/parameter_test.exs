@@ -5,13 +5,13 @@ defmodule ParameterTest do
     use Parameter.Parametrizable
 
     @impl true
-    def load(value, opts \\ [])
+    def load(value)
 
-    def load(value, _opts) when value in ["", nil], do: {:ok, nil}
+    def load(value) when value in ["", nil], do: {:ok, nil}
 
-    def load("0x0", _opts), do: {:ok, 0}
+    def load("0x0"), do: {:ok, 0}
 
-    def load("0x" <> hex, _opts) do
+    def load("0x" <> hex) do
       case Integer.parse(hex, 16) do
         {dec, ""} ->
           {:ok, dec}
@@ -21,18 +21,21 @@ defmodule ParameterTest do
       end
     end
 
-    def load(_value, _opts) do
+    def load(_value) do
       {:error, "invalid hex"}
     end
 
     @impl true
-    def validate(value, opts \\ [])
+    def dump(_value), do: {:ok, 0}
 
-    def validate(value, _opts) when is_binary(value) do
+    @impl true
+    def validate(value)
+
+    def validate(value) when is_binary(value) do
       :ok
     end
 
-    def validate(_value, _opts) do
+    def validate(_value) do
       {:error, "not a string"}
     end
   end
@@ -90,6 +93,12 @@ defmodule ParameterTest do
   end
 
   describe "load/3" do
+    test "passing wrong opts raise RuntimeError" do
+      assert_raise RuntimeError, fn ->
+        Parameter.load(UserTestSchema, %{}, unknown: :unknown_opts)
+      end
+    end
+
     test "load user schema with correct input on all fields" do
       params = %{
         "firstName" => "John",
@@ -235,7 +244,7 @@ defmodule ParameterTest do
                Parameter.load(UserTestSchema, params, struct: true)
     end
 
-    test "if unknown field set as error, it should fail when parsing unkown fields" do
+    test "if unknown field set as error, it should fail when parsing unknown fields" do
       params = %{
         "firstName" => "John",
         "unknownField" => "some value",
@@ -251,7 +260,37 @@ defmodule ParameterTest do
 
       assert {:error,
               %{"otherInvalidField" => "unknown field", "unknownField" => "unknown field"}} ==
-               Parameter.load(UserTestSchema, params, unknown_field: :error)
+               Parameter.load(UserTestSchema, params, unknown: :error)
+    end
+
+    test "if unknown field set as error, it should fail when parsing for nested data" do
+      params = %{
+        "firstName" => "John",
+        "age" => "32",
+        "mainAddress" => %{
+          "city" => "Some City",
+          "street" => "Some street",
+          "number" => "15",
+          "unknownField" => "some value"
+        },
+        "otherAddresses" => [
+          %{"city" => "Some City", "street" => "Some street", "number" => 15},
+          %{
+            "city" => "Other city",
+            "street" => "Other street",
+            "number" => 10,
+            "otherInvalidField" => "invalid value"
+          }
+        ],
+        "numbers" => ["1", 2, 5, "10"]
+      }
+
+      assert {:error,
+              %{
+                main_address: %{"unknownField" => "unknown field"},
+                other_addresses: ["1": %{"otherInvalidField" => "unknown field"}]
+              }} ==
+               Parameter.load(UserTestSchema, params, unknown: :error)
     end
 
     test "if unknown field set as exclude, it should ignore the unknown fields" do
@@ -281,7 +320,7 @@ defmodule ParameterTest do
                    %{city: "Other city", number: 10, street: "Other street"}
                  ]
                }
-             } == Parameter.load(UserTestSchema, params, unknown_field: :ignore)
+             } == Parameter.load(UserTestSchema, params, unknown: :ignore)
     end
 
     test "load custom module schema with param/2 macro" do
@@ -387,6 +426,77 @@ defmodule ParameterTest do
                   {:"1", %{number: "invalid integer type"}}
                 ]
               }} == Parameter.load(Custom.User, params)
+    end
+  end
+
+  describe "dump/2" do
+    test "dump schema input" do
+      loaded_schema = %{
+        first_name: "John",
+        last_name: "Doe",
+        age: 32,
+        main_address: %{city: "Some City", street: "Some street", number: 15},
+        other_addresses: [
+          %{city: "Some City", street: "Some street", number: 15},
+          %{city: "Other city", street: "Other street", number: 10}
+        ],
+        numbers: [1, 2, 5, 10],
+        metadata: %{"key" => "value", "other_key" => "value"},
+        hex_amount: "123123",
+        id_info: %{number: 123, type: "identity"}
+      }
+
+      assert {:ok,
+              %{
+                "firstName" => "John",
+                "lastName" => "Doe",
+                "age" => 32,
+                "mainAddress" => %{
+                  "city" => "Some City",
+                  "street" => "Some street",
+                  "number" => 15
+                },
+                "otherAddresses" => [
+                  %{"city" => "Some City", "street" => "Some street", "number" => 15},
+                  %{"city" => "Other city", "street" => "Other street", "number" => 10}
+                ],
+                "numbers" => [1, 2, 5, 10],
+                "metadata" => %{"key" => "value", "other_key" => "value"},
+                "hexAmount" => 0,
+                "idInfo" => %{
+                  "number" => 123,
+                  "type" => "identity"
+                }
+              }} == Parameter.dump(UserTestSchema, loaded_schema)
+    end
+
+    test "dump schema with invalid input should return error" do
+      loaded_schema = %{
+        last_name: 55,
+        age: "not number",
+        main_address: %{city: "Some City", street: "Some street", number: 15},
+        other_addresses: [
+          %{city: "Some City", street: 55, number: "Street"},
+          %{city: "Other city", street: "Other street", number: 10}
+        ],
+        numbers: %{},
+        metadata: [],
+        hex_amount: :atom,
+        id_info: %{number: 123, type: "identity"}
+      }
+
+      assert {
+               :error,
+               %{
+                 age: "invalid integer type",
+                 last_name: "invalid string type",
+                 metadata: "invalid map type",
+                 numbers: "invalid list type",
+                 other_addresses: [
+                   "0": %{number: "invalid integer type", street: "invalid string type"}
+                 ]
+               }
+             } == Parameter.dump(UserTestSchema, loaded_schema)
     end
   end
 end

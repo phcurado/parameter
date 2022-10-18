@@ -26,6 +26,8 @@ defmodule Parameter.TypesTest do
       assert Types.load(:boolean, "FalsE") == {:ok, false}
       assert Types.load(:boolean, 1) == {:ok, true}
       assert Types.load(:boolean, 0) == {:ok, false}
+      assert Types.load(:boolean, "1") == {:ok, true}
+      assert Types.load(:boolean, "0") == {:ok, false}
       assert Types.load(:boolean, "other value") == {:error, "invalid boolean type"}
     end
 
@@ -227,7 +229,7 @@ defmodule Parameter.TypesTest do
       assert Types.validate({:has_many, :string}, ["hello", :world]) ==
                {:error, "invalid string type"}
 
-      assert Types.validate({:has_many, :string}, 3) == {:error, "not a list type"}
+      assert Types.validate({:has_many, :string}, 3) == {:error, "invalid list type"}
     end
 
     test "validate has_one with inner type" do
@@ -237,7 +239,7 @@ defmodule Parameter.TypesTest do
       assert Types.validate({:has_one, :string}, %{key: "value", other_key: 22}) ==
                {:error, "invalid string type"}
 
-      assert Types.validate({:has_one, :float}, "21") == {:error, "not a inner type"}
+      assert Types.validate({:has_one, :float}, "21") == {:error, "invalid inner data type"}
     end
   end
 end
