@@ -65,6 +65,25 @@ iex> schema = %{
 }}
 ```
 
+## Installation
+
+
+Add `parameter` to your list of dependencies in `mix.exs`:
+
+```elixir
+def deps do
+  [
+    {:parameter, "~> 0.4.0"}
+  ]
+end
+```
+
+add `:parameter` on `.formatter.exs`:
+
+```elixir
+import_deps: [:ecto, :phoenix, ..., :parameter],
+```
+
 
 ## Motivation
 
@@ -116,11 +135,13 @@ defmodule User do
   param do
     field :first_name, :string, key: "firstName", required: true
     field :last_name, :string, key: "lastName", required: true, default: ""
+
     has_one :main_address, Address, key: "mainAddress", required: true  do
       field :city, :string, required: true
       field :street, :string
       field :number, :integer
     end
+    
     has_many :phones, Address  do
       field :country, :string
       field :number, :integer
@@ -423,23 +444,4 @@ iex> params = %{
    permission: :admin,
    user_code: "0000"
  }}
-```
-
-## Installation
-
-
-Add `parameter` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:parameter, "~> 0.4.0"}
-  ]
-end
-```
-
-add `:parameter` on `.formatter.exs`:
-
-```elixir
-import_deps: [:ecto, :phoenix, ..., :parameter],
 ```
