@@ -28,7 +28,7 @@ defmodule Parameter.Dumper do
   end
 
   def dump(type, input) do
-    Types.dump(type, input)
+    dump_type_value(type, input)
   end
 
   defp dump_map_value(field, input) do

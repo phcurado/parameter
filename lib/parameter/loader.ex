@@ -17,8 +17,8 @@ defmodule Parameter.Loader do
     end
   end
 
-  def load(type, input, _opts) do
-    Types.load(type, input)
+  def load(type, input, opts) do
+    load_type_value(type, input, opts)
   end
 
   defp iterate_schema(schema, input, opts) do
