@@ -92,6 +92,34 @@ defmodule ParameterTest do
     end
   end
 
+  defmodule ValidatorSchema do
+    use Parameter.Schema
+    alias Parameter.Validators
+
+    param do
+      field :email, :string, validator: &Validators.email/1
+      field :age, :integer, validator: {&Validators.length/2, min: 18, max: 72}
+      field :code, :string, validator: {&Validators.regex/2, regex: ~r/code/}
+      field :user_code, :string, validator: {&__MODULE__.is_equal/2, to: "0000"}
+
+      field :permission, :atom,
+        required: true,
+        validator: {&Validators.one_of/2, options: [:admin, :normal]}
+
+      has_many :nested, Nested, required: true do
+        field :value, :string, validator: {&Validators.none_of/2, options: ["one", "two"]}
+      end
+    end
+
+    def is_equal(value, to: to_value) do
+      if value == to_value do
+        :ok
+      else
+        {:error, "not equal"}
+      end
+    end
+  end
+
   describe "load/3" do
     test "passing wrong opts raise RuntimeError" do
       assert_raise RuntimeError, fn ->
@@ -426,6 +454,52 @@ defmodule ParameterTest do
                   {:"1", %{number: "invalid integer type"}}
                 ]
               }} == Parameter.load(Custom.User, params)
+    end
+
+    test "load schema with right parameters on validation should load successfully" do
+      params = %{
+        "email" => "john@email.com",
+        "age" => "22",
+        "code" => "code:13234",
+        "permission" => "admin",
+        "user_code" => "0000",
+        "nested" => [%{"value" => "three"}, %{"value" => "fourth"}]
+      }
+
+      assert {:ok,
+              %{
+                age: 22,
+                code: "code:13234",
+                email: "john@email.com",
+                nested: [%{value: "three"}, %{value: "fourth"}],
+                permission: :admin,
+                user_code: "0000"
+              }} == Parameter.load(ValidatorSchema, params)
+    end
+
+    test "load schema with wrong parameters on validation should fail" do
+      params = %{
+        "email" => "not email",
+        "age" => "12",
+        "code" => "asdf",
+        "user_code" => "12345",
+        "permission" => "super_admin",
+        "nested" => [%{"value" => "one"}, %{"value" => "two"}, %{"wrong" => "wrong"}]
+      }
+
+      assert {:error,
+              %{
+                age: "is invalid",
+                code: "is invalid",
+                email: "is invalid",
+                nested: [
+                  {:"0", %{value: "is invalid"}},
+                  {:"1", %{value: "is invalid"}},
+                  {:"2", %{"wrong" => "unknown field"}}
+                ],
+                permission: "is invalid",
+                user_code: "not equal"
+              }} == Parameter.load(ValidatorSchema, params, unknown: :error)
     end
   end
 

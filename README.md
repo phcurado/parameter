@@ -350,6 +350,80 @@ iex> params = %{"user_token" => "3hgj81312312"}
 {:error, %{"user_token" => "unknown field"}}
 ```
 
+## Validation
+Parameter comes with a set of validators to validate the schema after loading. The `validator` option validates the field:
+
+```elixir
+defmodule User do
+  use Parameter.Schema
+  alias Parameter.Validators
+
+  param do
+    field :email, :string, validator: &Validators.email/1
+    field :age, :integer, validator: {&Validators.length/2, min: 18, max: 72}
+    field :code, :string, validator: {&Validators.regex/2, regex: ~r/code/}
+    field :user_code, :string, validator: {&__MODULE__.is_equal/2, to: "0000"}
+
+    field :permission, :atom,
+      required: true,
+      validator: {&Validators.one_of/2, options: [:admin, :normal]}
+  end
+
+
+  # Custom validators are possible, they need to be a function with arity 1 or 2.
+  # The first parameter is always the field value, the second (and optional) parametero is a `Keyword` list that will be used to pass values on the schema
+  # The function must always return `:ok` or `{:error, reason}`
+  def is_equal(value, to: to_value) do
+    if value == to_value do
+      :ok
+    else
+      {:error, "not equal"}
+    end
+  end
+end
+```
+
+Sending wrong parameters:
+
+```elixir
+iex> params = %{
+  "email" => "not email",
+  "age" => "12",
+  "code" => "asdf",
+  "user_code" => "12345",
+  "permission" => "super_admin"
+}
+...> Parameter.load(User, params)
+{:error,
+ %{
+   age: "is invalid",
+   code: "is invalid",
+   email: "is invalid",
+   permission: "is invalid",
+   user_code: "not equal"
+ }}
+```
+
+Correct input should result in the schema loaded correctly:
+
+```elixir
+iex> params = %{
+  "email" => "john@email.com",
+  "age" => "22",
+  "code" => "code:13234",
+  "permission" => "admin",
+  "user_code" => "0000"
+}
+...> Parameter.load(User, params)
+{:ok,
+ %{
+   age: 22,
+   code: "code:13234",
+   email: "john@email.com",
+   permission: :admin,
+   user_code: "0000"
+ }}
+```
 
 ## Installation
 

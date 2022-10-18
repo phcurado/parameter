@@ -8,7 +8,7 @@ defmodule Parameter.Validators do
       end
 
       iex> Parameter.load(User, %{"email" => "not an email"})
-      {:error, email: "is invalid"}
+      {:error, %{email: "is invalid"}}
   """
   @email_regex ~r/^[A-Za-z0-9\._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}$/
 
@@ -26,7 +26,7 @@ defmodule Parameter.Validators do
   @doc """
   Validates if value is equal to another
   """
-  def equal(value, comparable) do
+  def equal(value, equal: comparable) do
     if value == comparable do
       :ok
     else
@@ -37,7 +37,7 @@ defmodule Parameter.Validators do
   @doc """
   Validates if a value is between a min and max
   """
-  def length(value, min, max) do
+  def length(value, min: min, max: max) do
     if value >= min and value <= max do
       :ok
     else
@@ -48,8 +48,8 @@ defmodule Parameter.Validators do
   @doc """
   Validates if a value is a member of the list
   """
-  def one_of(value, list) do
-    if value in list do
+  def one_of(value, options: options) do
+    if value in options do
       :ok
     else
       error_tuple()
@@ -59,8 +59,8 @@ defmodule Parameter.Validators do
   @doc """
   Validates if a value is not a member
   """
-  def none_of(value, list) do
-    case one_of(value, list) do
+  def none_of(value, options: options) do
+    case one_of(value, options: options) do
       :ok -> error_tuple()
       _error -> :ok
     end
@@ -69,7 +69,7 @@ defmodule Parameter.Validators do
   @doc """
   Validates if a value matches a regex expression
   """
-  def regex(value, regex) when is_binary(value) do
+  def regex(value, regex: regex) when is_binary(value) do
     if String.match?(value, regex) do
       :ok
     else

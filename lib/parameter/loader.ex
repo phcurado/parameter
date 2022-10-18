@@ -160,7 +160,7 @@ defmodule Parameter.Loader do
   def run_validator(nil, value), do: {:ok, value}
 
   def run_validator({func, args}, value) do
-    case apply(func, [value | args]) do
+    case apply(func, [value | [args]]) do
       :ok -> {:ok, value}
       error -> error
     end
