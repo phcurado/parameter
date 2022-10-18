@@ -353,7 +353,7 @@ Add `parameter` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:parameter, "~> 0.3.0"}
+    {:parameter, "~> 0.4.0"}
   ]
 end
 ```
@@ -365,6 +365,4 @@ import_deps: [:ecto, :phoenix, :parameter],
 ```
 
 ## Roadmap
-- Make the errors be returned on a list instead of single string.
 - Validator: Schema should have a validator option where it can send a function with validation that returns `:ok | {:error, reason}`. Validation errors will be returned when loading the structure.
-- Dump: Opposite of load.

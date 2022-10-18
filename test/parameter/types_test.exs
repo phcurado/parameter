@@ -57,6 +57,7 @@ defmodule Parameter.TypesTest do
     test "load date types" do
       assert Types.load(:date, %Date{year: 2020, month: 10, day: 5}) == {:ok, ~D[2020-10-05]}
       assert Types.load(:date, {2020, 11, 2}) == {:ok, ~D[2020-11-02]}
+      assert Types.load(:date, {2020, 13, 5}) == {:error, "invalid date type"}
       assert Types.load(:date, ~D[2000-01-01]) == {:ok, ~D[2000-01-01]}
       assert Types.load(:date, "2000-01-01") == {:ok, ~D[2000-01-01]}
       assert Types.load(:date, "some value") == {:error, "invalid date type"}
@@ -65,6 +66,7 @@ defmodule Parameter.TypesTest do
       assert Types.load(:time, time) == {:ok, ~T[00:00:00.000000]}
       assert Types.load(:time, ~T[00:00:00.000000]) == {:ok, ~T[00:00:00.000000]}
       assert Types.load(:time, {22, 30, 10}) == {:ok, ~T[22:30:10]}
+      assert Types.load(:time, {-22, 30, 10}) == {:error, "invalid time type"}
       assert Types.load(:time, "23:50:07") == {:ok, ~T[23:50:07]}
       assert Types.load(:time, ~D[2000-01-01]) == {:error, "invalid time type"}
       assert Types.load(:time, "some value") == {:error, "invalid time type"}
