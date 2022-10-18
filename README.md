@@ -73,8 +73,7 @@ Offer a similar Schema model from [Ecto](https://github.com/elixir-ecto/ecto) li
 ## Schema
 
 The first step for building a schema for your data is to create a schema definition to model the external data.
-This can be achieved by using the `Parameter.Schema` macro. The below example mimic a `User` that have one main address and a list of phones.
-First we create the `User` schema:
+This can be achieved by using the `Parameter.Schema` macro. The example below mimics an `User` model that have one `main_address` and a list of `phones`.
 
 ```elixir
 defmodule User do
@@ -439,8 +438,8 @@ def deps do
 end
 ```
 
-Also for add this depedency inside `.formatter.exs` file:
+add `:parameter` on `.formatter.exs`:
 
 ```elixir
-import_deps: [:ecto, :phoenix, :parameter],
+import_deps: [:ecto, :phoenix, ..., :parameter],
 ```
