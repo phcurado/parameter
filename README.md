@@ -443,6 +443,3 @@ Also for add this depedency inside `.formatter.exs` file:
 ```elixir
 import_deps: [:ecto, :phoenix, :parameter],
 ```
-
-## Roadmap
-- Validator: Schema should have a validator option where it can send a function with validation that returns `:ok | {:error, reason}`. Validation errors will be returned when loading the structure.
