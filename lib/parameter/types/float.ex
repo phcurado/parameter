@@ -3,7 +3,7 @@ defmodule Parameter.Types.Float do
   Float parameter type
   """
 
-  @behaviour Parameter.Parametrizable
+  use Parameter.Parametrizable
 
   @impl true
   def load(value) when is_float(value) do

@@ -5,14 +5,15 @@ defmodule Parameter.Field do
 
   alias Parameter.Types
 
-  defstruct [:name, :key, :default, type: :string, required: false]
+  defstruct [:name, :key, :default, type: :string, required: false, validator: nil]
 
   @type t :: %__MODULE__{
           name: atom(),
           key: binary(),
           default: any(),
           type: Types.t(),
-          required: boolean()
+          required: boolean(),
+          validator: fun()
         }
 
   @spec new!(Keyword.t()) :: t() | no_return()
@@ -40,16 +41,12 @@ defmodule Parameter.Field do
     end
   end
 
-  @spec load(t(), any()) :: {:ok, any} | {:error, binary()}
-  def load(%__MODULE__{type: type}, value) do
-    Types.load(type, value)
-  end
-
   defp do_new(opts) do
     key = Keyword.fetch!(opts, :key)
     type = Keyword.get(opts, :type, :string)
     default = Keyword.get(opts, :default)
     required = Keyword.get(opts, :required, false)
+    validator = Keyword.get(opts, :validator)
 
     default_valid? =
       if default do
@@ -59,12 +56,14 @@ defmodule Parameter.Field do
       end
 
     type_valid? = type_valid?(type)
+    validator_valid? = validator_valid?(validator)
 
     # Using Types module to validate field parameters
     with :ok <- default_valid?,
          :ok <- type_valid?,
          :ok <- Types.validate(:string, key),
-         :ok <- Types.validate(:boolean, required) do
+         :ok <- Types.validate(:boolean, required),
+         :ok <- validator_valid? do
       struct!(__MODULE__, opts)
     end
   end
@@ -87,11 +86,21 @@ defmodule Parameter.Field do
 
   defp custom_type_valid?(custom_type) do
     if Kernel.function_exported?(custom_type, :load, 1) and
-         Kernel.function_exported?(custom_type, :validate, 1) do
+         Kernel.function_exported?(custom_type, :validate, 1) and
+         Kernel.function_exported?(custom_type, :dump, 1) do
       :ok
     else
       {:error,
        "#{inspect(custom_type)} is not a valid custom type, implement the `Parameter.Parametrizable` on custom modules"}
     end
+  end
+
+  defp validator_valid?(validator)
+       when is_function(validator, 1) or is_nil(validator) or is_tuple(validator) do
+    :ok
+  end
+
+  defp validator_valid?(_validator) do
+    {:error, "validator must be a function"}
   end
 end

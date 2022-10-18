@@ -3,7 +3,7 @@ defmodule Parameter.Types.String do
   String parameter type
   """
 
-  @behaviour Parameter.Parametrizable
+  use Parameter.Parametrizable
 
   @impl true
   def load(value) do

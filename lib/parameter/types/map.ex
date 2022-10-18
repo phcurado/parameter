@@ -3,7 +3,7 @@ defmodule Parameter.Types.Map do
   Map parameter type
   """
 
-  @behaviour Parameter.Parametrizable
+  use Parameter.Parametrizable
 
   @impl true
   def load(map, opts \\ [])
