@@ -544,6 +544,48 @@ defmodule ParameterTest do
               }} == Parameter.dump(UserTestSchema, loaded_schema)
     end
 
+    test "dump schema input from struct" do
+      loaded_schema = %UserTestSchema{
+        first_name: "John",
+        last_name: "Doe",
+        age: 32,
+        main_address: %AddressTestSchema{
+          city: "Some City",
+          number: 15
+        },
+        other_addresses: [
+          %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
+          %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
+        ],
+        numbers: [1, 2, 5, 10],
+        metadata: %{"key" => "value", "other_key" => "value"},
+        hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908,
+        id_info: %UserTestSchema.IdInfo{number: 25, type: nil},
+        info: [%UserTestSchema.Info{id: "1"}]
+      }
+
+      assert {:ok,
+              %{
+                "firstName" => "John",
+                "lastName" => "Doe",
+                "age" => 32,
+                "mainAddress" => %{
+                  "city" => "Some City",
+                  "street" => nil,
+                  "number" => 15
+                },
+                "otherAddresses" => [
+                  %{"city" => "Some City", "street" => "Some street", "number" => 15},
+                  %{"city" => "Other city", "street" => "Other street", "number" => 10}
+                ],
+                "numbers" => [1, 2, 5, 10],
+                "metadata" => %{"key" => "value", "other_key" => "value"},
+                "hexAmount" => 0,
+                "idInfo" => %{"number" => 25, "type" => nil},
+                "info" => [%{"id" => "1"}]
+              }} == Parameter.dump(UserTestSchema, loaded_schema)
+    end
+
     test "dump schema with invalid input should return error" do
       loaded_schema = %{
         last_name: 55,
