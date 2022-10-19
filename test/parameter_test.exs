@@ -59,6 +59,7 @@ defmodule ParameterTest do
       field :age, :integer
       field :metadata, :map
       field :hex_amount, CustomTypeHexToDecimal, key: "hexAmount"
+      field :paid_amount, :decimal, key: "paidAmount", default: Decimal.new("1")
       has_one :main_address, AddressTestSchema, key: "mainAddress", required: true
       has_many :other_addresses, AddressTestSchema, key: "otherAddresses"
       has_many :numbers, :integer
@@ -137,6 +138,7 @@ defmodule ParameterTest do
           %{"city" => "Some City", "street" => "Some street", "number" => 15},
           %{"city" => "Other city", "street" => "Other street", "number" => 10}
         ],
+        "paidAmount" => 25.00,
         "numbers" => ["1", 2, 5, "10"],
         "metadata" => %{"key" => "value", "other_key" => "value"},
         "hexAmount" => "0x0",
@@ -156,6 +158,7 @@ defmodule ParameterTest do
                   %{city: "Some City", street: "Some street", number: 15},
                   %{city: "Other city", street: "Other street", number: 10}
                 ],
+                paid_amount: Decimal.new("25.0"),
                 numbers: [1, 2, 5, 10],
                 metadata: %{"key" => "value", "other_key" => "value"},
                 hex_amount: 0,
@@ -233,6 +236,7 @@ defmodule ParameterTest do
                   %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
                   %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
                 ],
+                paid_amount: Decimal.new("1"),
                 numbers: [1, 2, 5, 10],
                 metadata: %{"key" => "value", "other_key" => "value"},
                 hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908,
@@ -343,6 +347,7 @@ defmodule ParameterTest do
                  last_name: "",
                  main_address: %{city: "Some City", number: 15, street: "Some street"},
                  numbers: [1, 2, 5, 10],
+                 paid_amount: Decimal.new("1"),
                  other_addresses: [
                    %{city: "Some City", number: 15, street: "Some street"},
                    %{city: "Other city", number: 10, street: "Other street"}
@@ -557,6 +562,7 @@ defmodule ParameterTest do
           %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
           %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
         ],
+        paid_amount: Decimal.new("10.5"),
         numbers: [1, 2, 5, 10],
         metadata: %{"key" => "value", "other_key" => "value"},
         hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908,
@@ -578,6 +584,7 @@ defmodule ParameterTest do
                   %{"city" => "Some City", "street" => "Some street", "number" => 15},
                   %{"city" => "Other city", "street" => "Other street", "number" => 10}
                 ],
+                "paidAmount" => Decimal.new("10.5"),
                 "numbers" => [1, 2, 5, 10],
                 "metadata" => %{"key" => "value", "other_key" => "value"},
                 "hexAmount" => 0,

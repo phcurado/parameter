@@ -26,6 +26,9 @@ defmodule Parameter.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
+      ],
+      dialyzer: [
+        ignore_warnings: ".dialyzer_ignore"
       ]
     ]
   end
@@ -38,6 +41,7 @@ defmodule Parameter.MixProject do
 
   defp deps do
     [
+      {:decimal, "~> 2.0", optional: true},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},

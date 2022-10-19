@@ -89,6 +89,15 @@ defmodule Parameter.TypesTest do
 
       assert Types.load(:naive_datetime, "some value") == {:error, "invalid naive_datetime type"}
     end
+
+    test "load decimal type" do
+      assert Types.load(:decimal, 1.5) == {:ok, Decimal.new("1.5")}
+      assert Types.load(:decimal, "1.2") == {:ok, Decimal.new("1.2")}
+      assert Types.load(:decimal, "1.2letters") == {:error, "invalid decimal type"}
+      assert Types.load(:decimal, "other value") == {:error, "invalid decimal type"}
+      assert Types.load(:decimal, 1) == {:ok, Decimal.new("1")}
+      assert Types.load(:decimal, "1") == {:ok, Decimal.new("1")}
+    end
   end
 
   describe "dump/2" do
@@ -217,8 +226,17 @@ defmodule Parameter.TypesTest do
                {:error, "invalid naive_datetime type"}
     end
 
+    test "validate decimal type" do
+      assert Types.validate(:decimal, Decimal.new("1.5")) == :ok
+      assert Types.validate(:decimal, "1.2") == {:error, "invalid decimal type"}
+      assert Types.validate(:decimal, "1.2letters") == {:error, "invalid decimal type"}
+      assert Types.validate(:decimal, "other value") == {:error, "invalid decimal type"}
+      assert Types.validate(:decimal, 1) == {:error, "invalid decimal type"}
+      assert Types.validate(:decimal, "1") == {:error, "invalid decimal type"}
+    end
+
     test "return error when invalid type" do
-      assert Types.validate(:decimal, 1.5) == {:error, ":decimal is not a valid type"}
+      assert Types.validate(:invalid_type, 1.5) == {:error, ":invalid_type is not a valid type"}
 
       assert Types.validate("random type", 1.5) ==
                {:error, "\"random type\" is not a valid type"}

@@ -190,9 +190,12 @@ Each field needs to define the type that will be parsed and the options (if any)
 - `:time`
 - `:datetime`
 - `:naive_datetime`
-- `module`*
+- `:decimal`*
+- `module`**
 
-\* Any module that implements the `Parameter.Parametrizable` behaviour is eligible to be a field in the schema definition.
+\* For decimal type add the [decimal](https://hexdocs.pm/decimal) library into your project.
+
+\*\* Any module that implements the `Parameter.Parametrizable` behaviour is eligible to be a field in the schema definition.
 
 The options available for the field definition are:
 - `key`: This is the key on the external source that will be converted to the param definition.
