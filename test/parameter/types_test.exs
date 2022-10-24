@@ -10,6 +10,13 @@ defmodule Parameter.TypesTest do
   end
 
   describe "load/2" do
+    test "load any type" do
+      assert Types.load(:any, "Test") == {:ok, "Test"}
+      assert Types.load(:any, 1) == {:ok, 1}
+      assert Types.load(:any, true) == {:ok, true}
+      assert Types.load(:any, %Decimal{}) == {:ok, %Decimal{}}
+    end
+
     test "load string type" do
       assert Types.load(:string, "Test") == {:ok, "Test"}
       assert Types.load(:string, 1) == {:ok, "1"}
@@ -115,6 +122,13 @@ defmodule Parameter.TypesTest do
   end
 
   describe "dump/2" do
+    test "dump any type" do
+      assert Types.dump(:any, "Test") == {:ok, "Test"}
+      assert Types.dump(:any, 1) == {:ok, 1}
+      assert Types.dump(:any, true) == {:ok, true}
+      assert Types.dump(:any, %Decimal{}) == {:ok, %Decimal{}}
+    end
+
     test "dump string type" do
       assert Types.dump(:string, "Test") == {:ok, "Test"}
       assert Types.dump(:string, 1) == {:error, "invalid string type"}
@@ -189,6 +203,13 @@ defmodule Parameter.TypesTest do
   end
 
   describe "validate/2" do
+    test "validate any type" do
+      assert Types.validate(:any, "Test") == :ok
+      assert Types.validate(:any, 1) == :ok
+      assert Types.validate(:any, %Decimal{}) == :ok
+      assert Types.validate(:any, false) == :ok
+    end
+
     test "validate string type" do
       assert Types.validate(:string, "Test") == :ok
       assert Types.validate(:string, 1) == {:error, "invalid string type"}

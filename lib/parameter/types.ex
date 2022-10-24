@@ -7,6 +7,7 @@ defmodule Parameter.Types do
   @type base_types ::
           :string
           | :atom
+          | :any
           | :boolean
           | :date
           | :datetime
@@ -20,7 +21,7 @@ defmodule Parameter.Types do
 
   @type composite_types :: {:has_many, t()} | {:has_one, t()}
 
-  @base_types ~w(atom boolean date datetime decimal float integer map naive_datetime string time)a
+  @base_types ~w(atom any boolean date datetime decimal float integer map naive_datetime string time)a
   @composite_types ~w(has_one has_many)a
 
   @spec base_types() :: [atom()]
@@ -30,6 +31,7 @@ defmodule Parameter.Types do
   def composite_types, do: @composite_types
 
   @types_mod %{
+    any: Parameter.Types.Any,
     atom: Parameter.Types.Atom,
     boolean: Parameter.Types.Boolean,
     date: Parameter.Types.Date,

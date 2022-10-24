@@ -181,6 +181,7 @@ Each field needs to define the type that will be parsed and the options (if any)
 
 - `:string`
 - `:atom`
+- `:any`
 - `:integer`
 - `:float`
 - `:boolean`

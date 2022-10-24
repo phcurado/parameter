@@ -55,7 +55,7 @@ defmodule Parameter.Parametrizable do
       end
 
       @impl true
-      def validate(value), do: :ok
+      def validate(_value), do: :ok
 
       defoverridable(Parameter.Parametrizable)
     end
