@@ -53,13 +53,19 @@ defmodule ParameterTest do
   defmodule UserTestSchema do
     use Parameter.Schema
 
+    enum Status do
+      value "userValid", as: :user_valid
+      value "userInvalid", as: :user_invalid
+    end
+
     param do
       field :first_name, :string, key: "firstName", required: true
       field :last_name, :string, key: "lastName", required: true, default: ""
       field :age, :integer
       field :metadata, :map
-      field :hex_amount, CustomTypeHexToDecimal, key: "hexAmount"
+      field :hex_amount, CustomTypeHexToDecimal, key: "hexAmount", default: "0"
       field :paid_amount, :decimal, key: "paidAmount", default: Decimal.new("1")
+      field :status, __MODULE__.Status, required: true
       has_one :main_address, AddressTestSchema, key: "mainAddress", required: true
       has_many :other_addresses, AddressTestSchema, key: "otherAddresses"
       has_many :numbers, :integer
@@ -97,11 +103,21 @@ defmodule ParameterTest do
     use Parameter.Schema
     alias Parameter.Validators
 
+    enum Status do
+      value "userValid", as: :user_valid
+      value "userInvalid", as: :user_invalid
+    end
+
     param do
       field :email, :string, validator: &Validators.email/1
       field :age, :integer, validator: {&Validators.length/2, min: 18, max: 72}
       field :code, :string, validator: {&Validators.regex/2, regex: ~r/code/}
       field :user_code, :string, validator: {&__MODULE__.is_equal/2, to: "0000"}
+
+      field :status, __MODULE__.Status,
+        required: true,
+        default: :user_valid,
+        validator: {&Validators.one_of/2, options: [:user_valid]}
 
       field :permission, :atom,
         required: true,
@@ -138,6 +154,7 @@ defmodule ParameterTest do
           %{"city" => "Some City", "street" => "Some street", "number" => 15},
           %{"city" => "Other city", "street" => "Other street", "number" => 10}
         ],
+        "status" => "userValid",
         "paidAmount" => 25.00,
         "numbers" => ["1", 2, 5, "10"],
         "metadata" => %{"key" => "value", "other_key" => "value"},
@@ -158,6 +175,7 @@ defmodule ParameterTest do
                   %{city: "Some City", street: "Some street", number: 15},
                   %{city: "Other city", street: "Other street", number: 10}
                 ],
+                status: :user_valid,
                 paid_amount: Decimal.new("25.0"),
                 numbers: [1, 2, 5, 10],
                 metadata: %{"key" => "value", "other_key" => "value"},
@@ -180,6 +198,7 @@ defmodule ParameterTest do
           %{"city" => "Some City", "street" => "Some street", "number" => 15},
           %{"city" => "Other city", "street" => "Other street", "number" => "not a number"}
         ],
+        "status" => "anotherStatus",
         "numbers" => ["number", 2, 5, "10", "invalid data"],
         "metadata" => "not a map",
         "hexAmount" => 12,
@@ -200,6 +219,7 @@ defmodule ParameterTest do
                 ],
                 metadata: "invalid map type",
                 hex_amount: "invalid hex",
+                status: "invalid enum type",
                 id_info: %{number: "invalid integer type"}
               }} ==
                Parameter.load(UserTestSchema, params)
@@ -215,6 +235,7 @@ defmodule ParameterTest do
           %{"city" => "Some City", "street" => "Some street", "number" => 15},
           %{"city" => "Other city", "street" => "Other street", "number" => 10}
         ],
+        "status" => "userValid",
         "numbers" => ["1", 2, 5, "10"],
         "metadata" => %{"key" => "value", "other_key" => "value"},
         "hexAmount" => "0xbe807dddb074639cd9fa61b47676c064fc50d62c",
@@ -236,6 +257,7 @@ defmodule ParameterTest do
                   %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
                   %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
                 ],
+                status: :user_valid,
                 paid_amount: Decimal.new("1"),
                 numbers: [1, 2, 5, 10],
                 metadata: %{"key" => "value", "other_key" => "value"},
@@ -255,6 +277,7 @@ defmodule ParameterTest do
           %{"city" => "Some City", "street" => "Some street", "number" => 15},
           %{"city" => "Other city", "street" => "Other street", "number" => 10}
         ],
+        "status" => "userValid",
         "numbers" => ["1", 2, 5, "10"]
       }
 
@@ -320,7 +343,8 @@ defmodule ParameterTest do
       assert {:error,
               %{
                 main_address: %{"unknownField" => "unknown field"},
-                other_addresses: ["1": %{"otherInvalidField" => "unknown field"}]
+                other_addresses: ["1": %{"otherInvalidField" => "unknown field"}],
+                status: "is required"
               }} ==
                Parameter.load(UserTestSchema, params, unknown: :error)
     end
@@ -335,6 +359,7 @@ defmodule ParameterTest do
           %{"city" => "Some City", "street" => "Some street", "number" => 15},
           %{"city" => "Other city", "street" => "Other street", "number" => 10}
         ],
+        "status" => "userValid",
         "otherInvalidField" => "invalid value",
         "numbers" => ["1", 2, 5, "10"]
       }
@@ -348,6 +373,8 @@ defmodule ParameterTest do
                  main_address: %{city: "Some City", number: 15, street: "Some street"},
                  numbers: [1, 2, 5, 10],
                  paid_amount: Decimal.new("1"),
+                 status: :user_valid,
+                 hex_amount: "0",
                  other_addresses: [
                    %{city: "Some City", number: 15, street: "Some street"},
                    %{city: "Other city", number: 10, street: "Other street"}
@@ -478,7 +505,8 @@ defmodule ParameterTest do
                 email: "john@email.com",
                 nested: [%{value: "three"}, %{value: "fourth"}],
                 permission: :admin,
-                user_code: "0000"
+                user_code: "0000",
+                status: :user_valid
               }} == Parameter.load(ValidatorSchema, params)
     end
 
@@ -562,6 +590,7 @@ defmodule ParameterTest do
           %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
           %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
         ],
+        status: :user_valid,
         paid_amount: Decimal.new("10.5"),
         numbers: [1, 2, 5, 10],
         metadata: %{"key" => "value", "other_key" => "value"},
@@ -584,6 +613,7 @@ defmodule ParameterTest do
                   %{"city" => "Some City", "street" => "Some street", "number" => 15},
                   %{"city" => "Other city", "street" => "Other street", "number" => 10}
                 ],
+                "status" => "userValid",
                 "paidAmount" => Decimal.new("10.5"),
                 "numbers" => [1, 2, 5, 10],
                 "metadata" => %{"key" => "value", "other_key" => "value"},

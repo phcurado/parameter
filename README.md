@@ -19,7 +19,7 @@ defmodule User do
     field :first_name, :string, key: "firstName", required: true
     field :last_name, :string, key: "lastName"
     field :email, :string, validator: &Validators.email(&1)
-    has_one :address, Address  do
+    has_one :address, Address do
       field :city, :string, required: true
       field :street, :string
       field :number, :integer
@@ -73,7 +73,7 @@ Add `parameter` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:parameter, "~> 0.4.0"}
+    {:parameter, "~> 0.5"}
   ]
 end
 ```
@@ -136,13 +136,13 @@ defmodule User do
     field :first_name, :string, key: "firstName", required: true
     field :last_name, :string, key: "lastName", required: true, default: ""
 
-    has_one :main_address, Address, key: "mainAddress", required: true  do
+    has_one :main_address, Address, key: "mainAddress", required: true do
       field :city, :string, required: true
       field :street, :string
       field :number, :integer
     end
     
-    has_many :phones, Address  do
+    has_many :phones, Address do
       field :country, :string
       field :number, :integer
     end
@@ -191,11 +191,14 @@ Each field needs to define the type that will be parsed and the options (if any)
 - `:datetime`
 - `:naive_datetime`
 - `:decimal`*
-- `module`**
+- `enum`**
+- `module`***
 
 \* For decimal type add the [decimal](https://hexdocs.pm/decimal) library into your project.
 
-\*\* Any module that implements the `Parameter.Parametrizable` behaviour is eligible to be a field in the schema definition.
+\* Check the `Parameter.Enum` for more information on how to use enums.
+
+\*\*\* Any module that implements the `Parameter.Parametrizable` behaviour is eligible to be a field in the schema definition.
 
 The options available for the field definition are:
 - `key`: This is the key on the external source that will be converted to the param definition.

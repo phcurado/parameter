@@ -8,7 +8,10 @@ locals_without_parens = [
   has_one: 4,
   has_many: 2,
   has_many: 3,
-  has_many: 4
+  has_many: 4,
+  enum: 1,
+  enum: 2,
+  value: 2
 ]
 
 [

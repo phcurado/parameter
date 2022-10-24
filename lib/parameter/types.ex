@@ -93,9 +93,7 @@ defmodule Parameter.Types do
   end
 
   def validate(type, value) do
-    case Map.get(@types_mod, type) do
-      nil -> {:error, "#{inspect(type)} is not a valid type"}
-      module -> module.validate(value)
-    end
+    type_module = Map.get(@types_mod, type, type)
+    type_module.validate(value)
   end
 end

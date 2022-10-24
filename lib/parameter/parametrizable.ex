@@ -6,7 +6,7 @@ defmodule Parameter.Parametrizable do
 
   ## Example
   To create a parameterized type, create a module as shown below:
-      defmodule CustomType do
+      defmodule MyApp.CustomType do
         use Parameter.Parametrizable
 
         @impl true
@@ -26,8 +26,8 @@ defmodule Parameter.Parametrizable do
       end
 
   Then use the new custom type on a param schema:
-      param CustomParam do
-        field :custom_field, CustomType, key: "customField"
+      param MyApp.CustomParam do
+        field :custom_field, MyApp.CustomType, key: "customField"
       end
 
   In general is not necessary to implement dump function since using the macro `use Parameter.Parametrizable`
@@ -43,8 +43,10 @@ defmodule Parameter.Parametrizable do
     quote do
       @behaviour Parameter.Parametrizable
 
+      @impl true
       def load(value), do: {:ok, value}
 
+      @impl true
       def dump(value) do
         case validate(value) do
           :ok -> {:ok, value}
@@ -52,6 +54,7 @@ defmodule Parameter.Parametrizable do
         end
       end
 
+      @impl true
       def validate(value), do: :ok
 
       defoverridable(Parameter.Parametrizable)

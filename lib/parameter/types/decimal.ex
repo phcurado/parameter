@@ -5,7 +5,7 @@ if Code.ensure_loaded?(Decimal) do
     Include the Decimal library on your application to use this type:
         def deps do
           [
-            {:parameter, "~> 0.4.0"},
+            {:parameter, "~> ..."},
             {:decimal, "~> 2.0"}
           ]
         end

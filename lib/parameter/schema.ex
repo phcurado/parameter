@@ -8,6 +8,7 @@ defmodule Parameter.Schema do
   defmacro __using__(_) do
     quote do
       import Parameter.Schema
+      import Parameter.Enum
       Module.register_attribute(__MODULE__, :param_fields, accumulate: true)
     end
   end

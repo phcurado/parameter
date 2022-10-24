@@ -3,6 +3,12 @@ defmodule Parameter.TypesTest do
 
   alias Parameter.Types
 
+  defmodule EnumTest do
+    import Parameter.Enum
+
+    enum values: [:user_online, :user_offline]
+  end
+
   describe "load/2" do
     test "load string type" do
       assert Types.load(:string, "Test") == {:ok, "Test"}
@@ -98,6 +104,14 @@ defmodule Parameter.TypesTest do
       assert Types.load(:decimal, 1) == {:ok, Decimal.new("1")}
       assert Types.load(:decimal, "1") == {:ok, Decimal.new("1")}
     end
+
+    test "load enum type" do
+      assert Types.load(EnumTest, true) == {:error, "invalid enum type"}
+      assert Types.load(EnumTest, "user_online") == {:ok, :user_online}
+      assert Types.load(EnumTest, :user_online) == {:error, "invalid enum type"}
+      assert Types.load(EnumTest, "userOnline") == {:error, "invalid enum type"}
+      assert Types.load(EnumTest, "user_offline") == {:ok, :user_offline}
+    end
   end
 
   describe "dump/2" do
@@ -163,6 +177,14 @@ defmodule Parameter.TypesTest do
 
       assert Types.dump(:naive_datetime, ~D[2000-01-01]) ==
                {:error, "invalid naive_datetime type"}
+    end
+
+    test "dump enum type" do
+      assert Types.dump(EnumTest, true) == {:error, "invalid enum type"}
+      assert Types.dump(EnumTest, "user_online") == {:error, "invalid enum type"}
+      assert Types.dump(EnumTest, :user_online) == {:ok, "user_online"}
+      assert Types.dump(EnumTest, "userOnline") == {:error, "invalid enum type"}
+      assert Types.dump(EnumTest, :user_offline) == {:ok, "user_offline"}
     end
   end
 
@@ -235,11 +257,12 @@ defmodule Parameter.TypesTest do
       assert Types.validate(:decimal, "1") == {:error, "invalid decimal type"}
     end
 
-    test "return error when invalid type" do
-      assert Types.validate(:invalid_type, 1.5) == {:error, ":invalid_type is not a valid type"}
-
-      assert Types.validate("random type", 1.5) ==
-               {:error, "\"random type\" is not a valid type"}
+    test "validate enum type" do
+      assert Types.validate(EnumTest, true) == {:error, "invalid enum type"}
+      assert Types.validate(EnumTest, "user_online") == {:error, "invalid enum type"}
+      assert Types.validate(EnumTest, :user_online) == :ok
+      assert Types.validate(EnumTest, "userOnline") == {:error, "invalid enum type"}
+      assert Types.validate(EnumTest, :user_offline) == :ok
     end
 
     test "validate has_many with inner type" do
