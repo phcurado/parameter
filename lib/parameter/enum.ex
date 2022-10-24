@@ -1,6 +1,6 @@
 defmodule Parameter.Enum do
   @moduledoc """
-  Enum type that represents a group of constants that have a value with a associated key.
+  Enum type represents a group of constants that have a value with an associated key.
 
   ## Example
 
@@ -59,7 +59,7 @@ defmodule Parameter.Enum do
         end
       end
 
-    And it's short version:
+    And the short version:
 
       enum values: [:user_online,  :user_offline]
   """
@@ -127,7 +127,7 @@ defmodule Parameter.Enum do
       @impl true
       def load(value) do
         @enum_values
-        |> Enum.find(fn {key, enum_value} ->
+        |> Enum.find(fn {key, _enum_value} ->
           key == value
         end)
         |> case do
