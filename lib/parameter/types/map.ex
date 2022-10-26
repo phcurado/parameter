@@ -6,24 +6,20 @@ defmodule Parameter.Types.Map do
   use Parameter.Parametrizable
 
   @impl true
-  def load(map, opts \\ [])
-
-  def load(map, _opts) when is_map(map) do
+  def load(map) when is_map(map) do
     {:ok, map}
   end
 
-  def load(_value, _opts) do
+  def load(_value) do
     error_tuple()
   end
 
   @impl true
-  def validate(map, opts \\ [])
-
-  def validate(map, _opts) when is_map(map) do
+  def validate(map) when is_map(map) do
     :ok
   end
 
-  def validate(_value, _opts) do
+  def validate(_value) do
     error_tuple()
   end
 

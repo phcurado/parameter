@@ -1,11 +1,17 @@
 defmodule Parameter.Loader do
   @moduledoc false
 
+  alias Parameter.ExcludeFields
   alias Parameter.Field
   alias Parameter.Types
 
-  @spec load(module() | atom(), map(), Keyword.t()) :: {:ok, any()} | {:error, any()}
-  def load(schema, input, [struct: struct, unknown: unknown] = opts) when is_map(input) do
+  @type opts :: [struct: boolean(), unknow_fields: :error | :ignore, exclude: list()]
+
+  @spec load(module() | atom(), map(), opts) :: {:ok, any()} | {:error, any()}
+  def load(schema, input, opts) when is_map(input) do
+    unknown = Keyword.get(opts, :unknown)
+    struct = Keyword.get(opts, :struct)
+
     case unknow_fields(schema, input, unknown) do
       :ok ->
         iterate_schema(schema, input, opts)
@@ -64,6 +70,22 @@ defmodule Parameter.Loader do
   defp unknow_fields(_schema, _input, _ignore), do: :ok
 
   defp load_map_value(field, input, opts) do
+    exclude_fields = Keyword.get(opts, :exclude)
+
+    case ExcludeFields.field_to_exclude(field.name, exclude_fields) do
+      :include ->
+        fetch_and_verify_input(field, input, opts)
+
+      {:exclude, nested_values} ->
+        opts = Keyword.put(opts, :exclude, nested_values)
+        fetch_and_verify_input(field, input, opts)
+
+      :exclude ->
+        {:ok, :ignore}
+    end
+  end
+
+  defp fetch_and_verify_input(field, input, opts) do
     case Map.fetch(input, field.key) do
       :error ->
         check_required(field, :ignore)
@@ -157,16 +179,16 @@ defmodule Parameter.Loader do
     {:ok, struct!(schema, result)}
   end
 
-  def run_validator(nil, value), do: {:ok, value}
+  defp run_validator(nil, value), do: {:ok, value}
 
-  def run_validator({func, args}, value) do
+  defp run_validator({func, args}, value) do
     case apply(func, [value | [args]]) do
       :ok -> {:ok, value}
       error -> error
     end
   end
 
-  def run_validator(func, value) do
+  defp run_validator(func, value) do
     case func.(value) do
       :ok -> {:ok, value}
       error -> error

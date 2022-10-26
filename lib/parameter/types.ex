@@ -14,6 +14,7 @@ defmodule Parameter.Types do
           | :decimal
           | :float
           | :integer
+          | :list
           | :map
           | :naive_datetime
           | :string
@@ -21,7 +22,7 @@ defmodule Parameter.Types do
 
   @type composite_types :: {:has_many, t()} | {:has_one, t()}
 
-  @base_types ~w(atom any boolean date datetime decimal float integer map naive_datetime string time)a
+  @base_types ~w(atom any boolean date datetime decimal float integer list map naive_datetime string time)a
   @composite_types ~w(has_one has_many)a
 
   @spec base_types() :: [atom()]
@@ -39,6 +40,7 @@ defmodule Parameter.Types do
     decimal: Parameter.Types.Decimal,
     float: Parameter.Types.Float,
     integer: Parameter.Types.Integer,
+    list: Parameter.Types.List,
     map: Parameter.Types.Map,
     naive_datetime: Parameter.Types.NaiveDateTime,
     string: Parameter.Types.String,

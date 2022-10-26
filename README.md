@@ -142,7 +142,7 @@ defmodule User do
       field :number, :integer
     end
     
-    has_many :phones, Address do
+    has_many :phones, Phone do
       field :country, :string
       field :number, :integer
     end
@@ -197,7 +197,7 @@ Each field needs to define the type that will be parsed and the options (if any)
 
 \* For decimal type add the [decimal](https://hexdocs.pm/decimal) library into your project.
 
-\* Check the `Parameter.Enum` for more information on how to use enums.
+\*\* Check the `Parameter.Enum` for more information on how to use enums.
 
 \*\*\* Any module that implements the `Parameter.Parametrizable` behaviour is eligible to be a field in the schema definition.
 
@@ -451,4 +451,31 @@ iex> params = %{
    permission: :admin,
    user_code: "0000"
  }}
+```
+
+## Excluding fields on serialization and deserialization
+
+
+Pass the `exclude` key on the third argument of `Parameter.load/3` or `Parameter.dump/3` with a list of the fields to be excluded. Those fields won't be considered when serializing/deserializing the parameters.
+
+```elixir
+iex> params = %{
+      "firstName" => "John",
+      "lastName" => "Doe",
+      "email" => "john@email.com",
+      "address" => %{"city" => "New York", "street" => "York"}
+    }
+...> Parameter.load(User, params, exclude: [:first_name])
+{:ok, %{
+  last_name: "Doe",
+  email: "john@email.com",
+  main_address: %{city: "New York", street: "York"}
+}}
+
+...> Parameter.load(User, params, exclude: [:first_name, {:address, [:street]}])
+{:ok, %{
+  last_name: "Doe",
+  email: "john@email.com",
+  main_address: %{city: "New York"}
+}}
 ```

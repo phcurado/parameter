@@ -534,6 +534,108 @@ defmodule ParameterTest do
                 user_code: "not equal"
               }} == Parameter.load(ValidatorSchema, params, unknown: :error)
     end
+
+    test "load user schema with excluded fields should ignore it" do
+      params = %{
+        "firstName" => "John",
+        "lastName" => "Doe",
+        "age" => "32",
+        "mainAddress" => %{"street" => "Some street"},
+        "otherAddresses" => [
+          %{"city" => "Some City", "street" => "Some street", "number" => 15},
+          %{"city" => "Other city", "street" => "Other street", "number" => 10},
+          %{"number" => 10}
+        ],
+        "status" => "userValid",
+        "paidAmount" => 25.00,
+        "numbers" => ["1", 2, 5, "10"],
+        "metadata" => %{"key" => "value", "other_key" => "value"},
+        "hexAmount" => "0x0",
+        "idInfo" => %{
+          "number" => 123_456,
+          "type" => "identity"
+        }
+      }
+
+      assert {:ok,
+              %{
+                first_name: "John",
+                last_name: "Doe",
+                age: 32,
+                main_address: %{street: "Some street"},
+                other_addresses: [
+                  %{number: 15},
+                  %{number: 10},
+                  %{number: 10}
+                ],
+                paid_amount: Decimal.new("25.0"),
+                numbers: [1, 2, 5, 10],
+                hex_amount: 0,
+                id_info: %{number: 123_456}
+              }} ==
+               Parameter.load(UserTestSchema, params,
+                 exclude: [
+                   :status,
+                   {:main_address, [:city, :number]},
+                   {:other_addresses, [:street, :city]},
+                   :metadata,
+                   {:id_info, [:type]}
+                 ]
+               )
+    end
+
+    test "load user schema with struct true and excluded fields should set it to nil" do
+      params = %{
+        "firstName" => "John",
+        "lastName" => "Doe",
+        "age" => "32",
+        "mainAddress" => %{"street" => "Some street"},
+        "otherAddresses" => [
+          %{"city" => "Some City", "street" => "Some street", "number" => 15},
+          %{"city" => "Other city", "street" => "Other street", "number" => 10},
+          %{"number" => 10}
+        ],
+        "status" => "userValid",
+        "paidAmount" => 25.00,
+        "numbers" => ["1", 2, 5, "10"],
+        "metadata" => %{"key" => "value", "other_key" => "value"},
+        "hexAmount" => "0x0",
+        "idInfo" => %{
+          "number" => 123_456,
+          "type" => "identity"
+        }
+      }
+
+      assert {:ok,
+              %UserTestSchema{
+                first_name: "John",
+                last_name: "Doe",
+                age: 32,
+                main_address: %AddressTestSchema{street: "Some street", city: nil, number: nil},
+                other_addresses: [
+                  %AddressTestSchema{number: 15, city: nil, street: nil},
+                  %AddressTestSchema{number: 10, city: nil, street: nil},
+                  %AddressTestSchema{number: 10, city: nil, street: nil}
+                ],
+                paid_amount: Decimal.new("25.0"),
+                numbers: [1, 2, 5, 10],
+                hex_amount: 0,
+                id_info: %UserTestSchema.IdInfo{number: 123_456, type: nil},
+                info: nil,
+                metadata: nil,
+                status: nil
+              }} ==
+               Parameter.load(UserTestSchema, params,
+                 struct: true,
+                 exclude: [
+                   :status,
+                   {:main_address, [:city, :number]},
+                   {:other_addresses, [:street, :city]},
+                   :metadata,
+                   {:id_info, [:type]}
+                 ]
+               )
+    end
   end
 
   describe "dump/2" do
@@ -547,6 +649,7 @@ defmodule ParameterTest do
           %{city: "Some City", street: "Some street", number: 15},
           %{city: "Other city", street: "Other street", number: 10}
         ],
+        status: :user_valid,
         numbers: [1, 2, 5, 10],
         metadata: %{"key" => "value", "other_key" => "value"},
         hex_amount: "123123",
@@ -567,6 +670,7 @@ defmodule ParameterTest do
                   %{"city" => "Some City", "street" => "Some street", "number" => 15},
                   %{"city" => "Other city", "street" => "Other street", "number" => 10}
                 ],
+                "status" => "userValid",
                 "numbers" => [1, 2, 5, 10],
                 "metadata" => %{"key" => "value", "other_key" => "value"},
                 "hexAmount" => 0,
@@ -650,6 +754,52 @@ defmodule ParameterTest do
                  ]
                }
              } == Parameter.dump(UserTestSchema, loaded_schema)
+    end
+
+    test "dump schema with excluded fields should ignore it" do
+      loaded_schema = %{
+        first_name: "John",
+        last_name: "Doe",
+        age: 32,
+        main_address: %{city: "Some City", street: "Some street", number: 15},
+        other_addresses: [
+          %{city: "Some City", street: "Some street", number: 15},
+          %{city: "Other city", street: "Other street", number: 10}
+        ],
+        status: :user_valid,
+        paid_amount: Decimal.new("25.0"),
+        numbers: [1, 2, 5, 10],
+        metadata: %{"key" => "value", "other_key" => "value"},
+        hex_amount: 0,
+        id_info: %{number: 123_456, type: "identity"}
+      }
+
+      assert {:ok,
+              %{
+                "firstName" => "John",
+                "lastName" => "Doe",
+                "age" => 32,
+                "mainAddress" => %{"street" => "Some street"},
+                "otherAddresses" => [
+                  %{"number" => 15},
+                  %{"number" => 10}
+                ],
+                "paidAmount" => Decimal.new("25.0"),
+                "numbers" => [1, 2, 5, 10],
+                "hexAmount" => 0,
+                "idInfo" => %{
+                  "number" => 123_456
+                }
+              }} ==
+               Parameter.dump(UserTestSchema, loaded_schema,
+                 exclude: [
+                   :status,
+                   {:main_address, [:city, :number]},
+                   {:other_addresses, [:street, :city]},
+                   :metadata,
+                   {:id_info, [:type]}
+                 ]
+               )
     end
   end
 end

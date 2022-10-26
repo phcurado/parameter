@@ -16,9 +16,11 @@ defmodule Parameter do
     Loader.load(schema, input, opts)
   end
 
-  @spec dump(module() | atom(), map()) :: {:ok, any()} | {:error, any()}
-  def dump(schema, input) when is_map(input) do
-    Dumper.dump(schema, input)
+  @spec dump(module() | atom(), map(), Keyword.t()) :: {:ok, any()} | {:error, any()}
+  def dump(schema, input, opts \\ []) when is_map(input) do
+    exclude = Keyword.get(opts, :exclude, [])
+    Types.validate!(:list, exclude)
+    Dumper.dump(schema, input, exclude: exclude)
   end
 
   defp parse_opts(opts) do
@@ -32,6 +34,10 @@ defmodule Parameter do
 
     Types.validate!(:boolean, struct)
 
-    [struct: struct, unknown: unknown]
+    exclude = Keyword.get(opts, :exclude, [])
+
+    Types.validate!(:list, exclude)
+
+    [struct: struct, unknown: unknown, exclude: exclude]
   end
 end
