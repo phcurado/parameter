@@ -42,6 +42,7 @@ defmodule Parameter.MixProject do
   defp deps do
     [
       {:decimal, "~> 2.0", optional: true},
+      {:ecto, "~> 3.8", optional: true},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
