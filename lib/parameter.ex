@@ -1,8 +1,66 @@
 defmodule Parameter do
-  @moduledoc "README.md"
-             |> File.read!()
-             |> String.split("<!-- MDOC !-->")
-             |> Enum.fetch!(1)
+  @moduledoc """
+  `Parameter` is a library for dealing with complex datatypes by solving the following problems:
+  - Schema creation and validation
+  - Input data validation
+  - Deserialization
+  - Serialization
+
+  ## Example
+
+  Create a schema
+
+      defmodule UserParam do
+        use Parameter.Schema
+        alias Parameter.Validators
+
+        param do
+          field :first_name, :string, key: "firstName", required: true
+          field :last_name, :string, key: "lastName"
+          field :email, :string, validator: &Validators.email(&1)
+          has_one :address, Address do
+            field :city, :string, required: true
+            field :street, :string
+            field :number, :integer
+          end
+        end
+      end
+
+  Load (deserialize) the schema against external parameters:
+
+      params = %{
+        "firstName" => "John",
+        "lastName" => "Doe",
+        "email" => "john@email.com",
+        "address" => %{"city" => "New York", "street" => "York"}
+      }
+      Parameter.load(User, params)
+      {:ok, %{
+        first_name: "John",
+        last_name: "Doe",
+        email: "john@email.com",
+        main_address: %{city: "New York", street: "York"}
+      }}
+
+  or Dump (serialize) a populated schema to params:
+
+      schema = %{
+          first_name: "John",
+          last_name: "Doe",
+          email: "john@email.com",
+          main_address: %{city: "New York", street: "York"}
+        }
+      Parameter.dump(User, params)
+      {:ok,
+      %{
+          "firstName" => "John",
+          "lastName" => "Doe",
+          "email" => "john@email.com",
+          "address" => %{"city" => "New York", "street" => "York"}
+      }}
+
+  For more schema options checkout `Parameter.Schema`
+  """
 
   alias Parameter.Dumper
   alias Parameter.Loader

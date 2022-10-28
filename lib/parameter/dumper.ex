@@ -63,6 +63,10 @@ defmodule Parameter.Dumper do
     end
   end
 
+  defp dump_type_value(%Field{virtual: true}, _value, _opts) do
+    {:ok, :ignore}
+  end
+
   defp dump_type_value(%Field{type: {:has_one, inner_module}}, value, opts) when is_map(value) do
     dump(inner_module, value, opts)
   end

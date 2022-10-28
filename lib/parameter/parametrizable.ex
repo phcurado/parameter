@@ -1,8 +1,7 @@
 defmodule Parameter.Parametrizable do
   @moduledoc """
-  Custom types per fields to be implemented using `Parameter.Parametrizable` module.
-  When the basic types are not enough for loading, validating and dumping data this
-  module can be used to provide custom types.
+  Custom types for fields can be done by implementing the `Parameter.Parametrizable` behaviour.
+  This is useful when the basic types provided by `Parameter.Types` are not enough for loading, validating and dumping data.
 
   ## Example
   To create a parameterized type, create a module as shown below:

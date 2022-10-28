@@ -83,9 +83,6 @@ defmodule Parameter.MixProject do
           Parameter.Types.NaiveDateTime,
           Parameter.Types.String,
           Parameter.Types.Time
-        ],
-        Fields: [
-          Parameter.Field
         ]
       ]
     ]

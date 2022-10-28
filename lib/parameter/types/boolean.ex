@@ -5,6 +5,25 @@ defmodule Parameter.Types.Boolean do
 
   use Parameter.Parametrizable
 
+  @doc """
+  loads boolean type
+
+  ## Examples
+      iex> Parameter.Types.Boolean.load("true")
+      {:ok, true}
+
+      iex> Parameter.Types.Boolean.load("false")
+      {:ok, false}
+
+      iex> Parameter.Types.Boolean.load(1)
+      {:ok, true}
+
+      iex> Parameter.Types.Boolean.load(0)
+      {:ok, false}
+
+      iex> Parameter.Types.Boolean.load("not boolean")
+      {:error, "invalid boolean type"}
+  """
   @impl true
   def load(value) when is_boolean(value) do
     {:ok, value}

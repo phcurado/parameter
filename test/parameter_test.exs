@@ -137,6 +137,24 @@ defmodule ParameterTest do
     end
   end
 
+  defmodule VirtualFieldTestSchema do
+    use Parameter.Schema
+
+    param do
+      field :email, :string
+      field :password, :string, virtual: true
+
+      has_many :addresses, Address do
+        field :street, :string, virtual: true
+        field :number, :integer
+      end
+
+      has_many :phones, Phone, virtual: true do
+        field :number, :string
+      end
+    end
+  end
+
   describe "load/3" do
     test "passing wrong opts raise RuntimeError" do
       assert_raise RuntimeError, fn ->
@@ -636,6 +654,34 @@ defmodule ParameterTest do
                  ]
                )
     end
+
+    test "ignore virtual fields when loading" do
+      params = %{
+        "email" => "john@email.com",
+        "password" => "123456",
+        "addresses" => [
+          %{"street" => "street", "number" => 12},
+          %{"street" => "street_2", "number" => 15}
+        ],
+        "phones" => [
+          %{"number" => "123456"},
+          %{"number" => "654321"}
+        ]
+      }
+
+      assert {:ok, %{email: "john@email.com", addresses: [%{number: 12}, %{number: 15}]}} ==
+               Parameter.load(VirtualFieldTestSchema, params)
+
+      assert {:ok, %{addresses: [%{number: 12}, %{number: 15}]}} ==
+               Parameter.load(VirtualFieldTestSchema, params,
+                 exclude: [:email, {:phones, [:number]}]
+               )
+
+      assert {:ok, %{addresses: [%{}, %{}]}} ==
+               Parameter.load(VirtualFieldTestSchema, params,
+                 exclude: [:email, {:addresses, [:number]}, {:phones, [:number]}]
+               )
+    end
   end
 
   describe "dump/2" do
@@ -799,6 +845,37 @@ defmodule ParameterTest do
                    :metadata,
                    {:id_info, [:type]}
                  ]
+               )
+    end
+
+    test "ignore virtual fields when dumping" do
+      params = %{
+        email: "john@email.com",
+        password: "123456",
+        addresses: [
+          %{street: "street", number: 12},
+          %{street: "street_2", number: 15}
+        ],
+        phones: [
+          %{number: "123456"},
+          %{number: "654321"}
+        ]
+      }
+
+      assert {:ok,
+              %{
+                "email" => "john@email.com",
+                "addresses" => [%{"number" => 12}, %{"number" => 15}]
+              }} == Parameter.dump(VirtualFieldTestSchema, params)
+
+      assert {:ok, %{"addresses" => [%{"number" => 12}, %{"number" => 15}]}} ==
+               Parameter.dump(VirtualFieldTestSchema, params,
+                 exclude: [:email, {:phones, [:number]}]
+               )
+
+      assert {:ok, %{"addresses" => [%{}, %{}]}} ==
+               Parameter.dump(VirtualFieldTestSchema, params,
+                 exclude: [:email, {:addresses, [:number]}, {:phones, [:number]}]
                )
     end
   end

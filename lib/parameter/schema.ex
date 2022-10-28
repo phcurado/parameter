@@ -75,6 +75,8 @@ defmodule Parameter.Schema do
           end
         end
       end
+
+  It's recommended to use this approach when the schema will only be used in a single module.
   """
 
   alias Parameter.Field
