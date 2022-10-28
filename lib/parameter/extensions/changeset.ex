@@ -99,20 +99,20 @@ if Code.ensure_loaded?(Ecto) do
       |> Ecto.Changeset.cast(params, Map.keys(types))
     end
 
-    def cast_assoc(changeset, key, changeset_func) do
+    def cast_assoc(changeset, key, with: changeset_func) do
       field = to_string(key)
 
-      changeset_func.(changeset.params[field])
-      |> Ecto.Changeset.apply_action(:update)
-      |> case do
-        {:error, nested_changeset} ->
-          error = {key, nested_changeset.errors}
-          %{changeset | errors: [error | changeset.errors], valid?: false}
+      nested_changeset = changeset_func.(changeset.params[field])
 
-        {:ok, nested_data} ->
-          changes = Map.put(changeset.changes, key, nested_data)
-          %{changeset | changes: changes}
-      end
+      changeset =
+        if nested_changeset.valid? do
+          changeset
+        else
+          %{changeset | valid?: false}
+        end
+
+      changes = Map.put(changeset.changes, key, nested_changeset)
+      %{changeset | changes: changes}
     end
 
     defp cast_types_from_schema(schema, params) do
