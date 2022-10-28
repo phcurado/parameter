@@ -51,8 +51,9 @@ defmodule Parameter.MixProject do
 
   defp package() do
     [
-      files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
+      maintainers: ["Paulo Curado", "Ayrat Badykov"],
       licenses: ["Apache-2.0"],
+      files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
       links: %{"GitHub" => @source_url}
     ]
   end
@@ -61,8 +62,32 @@ defmodule Parameter.MixProject do
     [
       main: "Parameter",
       source_ref: "v#{@version}",
+      skip_undefined_reference_warnings_on: ["CHANGELOG.md"],
       canonical: "https://hexdocs.pm/parameter",
-      source_url: @source_url
+      source_url: @source_url,
+      extras: ["CHANGELOG.md"],
+      groups_for_modules: [
+        Types: [
+          Parameter.Enum,
+          Parameter.Parametrizable,
+          Parameter.Types.Any,
+          Parameter.Types.Atom,
+          Parameter.Types.Boolean,
+          Parameter.Types.Date,
+          Parameter.Types.DateTime,
+          Parameter.Types.Decimal,
+          Parameter.Types.Float,
+          Parameter.Types.Integer,
+          Parameter.Types.List,
+          Parameter.Types.Map,
+          Parameter.Types.NaiveDateTime,
+          Parameter.Types.String,
+          Parameter.Types.Time
+        ],
+        Fields: [
+          Parameter.Field
+        ]
+      ]
     ]
   end
 end

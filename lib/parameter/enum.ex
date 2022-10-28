@@ -20,10 +20,10 @@ defmodule Parameter.Enum do
 
     The `Status` enum should automatically translate the `userOnline` and `userOffline` values when loading
     to the respective atom values.
-      iex> Parameter.load(MyApp.UserParam, %{"firstName" => "John", "status" => "userOnline"})
+      Parameter.load(MyApp.UserParam, %{"firstName" => "John", "status" => "userOnline"})
       {:ok, %{first_name: "John", status: :user_online}}
-      ...> # It also uses the key for dumping:
-      ...> Parameter.dump(MyApp.UserParam, %{first_name: "John", status: :user_online})
+
+      Parameter.dump(MyApp.UserParam, %{first_name: "John", status: :user_online})
       {:ok, %{"firstName" => "John", "status" => "userOnline"}}
 
     Enum also supports a shorter version if the key and value are already the same:
@@ -34,8 +34,18 @@ defmodule Parameter.Enum do
         ...
       end
 
-      iex> Parameter.load(MyApp.UserParam, %{"firstName" => "John", "status" => "user_online"})
+      Parameter.load(MyApp.UserParam, %{"firstName" => "John", "status" => "user_online"})
       {:ok, %{first_name: "John", status: :user_online}}
+
+    Using numbers is also allowed in enums:
+
+      enum Status do
+        value 1, as: :active
+        value 2, as: :pending_request
+      end
+
+      Parameter.load(MyApp.UserParam, %{"status" => 1})
+      {:ok, %{status: :active}}
 
     It's also possible to create enums in different modules by using the
     `enum/1` macro:
@@ -64,6 +74,7 @@ defmodule Parameter.Enum do
       enum values: [:user_online,  :user_offline]
   """
 
+  @doc false
   defmacro enum(do: block) do
     module_block = create_module_block(block)
 
@@ -85,6 +96,7 @@ defmodule Parameter.Enum do
     end
   end
 
+  @doc false
   defmacro enum(module_name, do: block) do
     module_block = create_module_block(block) |> Macro.escape()
 
@@ -107,6 +119,7 @@ defmodule Parameter.Enum do
     end
   end
 
+  @doc false
   defmacro value(key, as: value) do
     quote bind_quoted: [key: key, value: value] do
       Module.put_attribute(__MODULE__, :enum_values, {key, value})

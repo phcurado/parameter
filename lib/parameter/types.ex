@@ -1,6 +1,29 @@
 defmodule Parameter.Types do
   @moduledoc """
-  Type behavour for implementing new types for parameters.
+  Parameter supports different types to be used in the field inside a schema. The available types are:
+
+  - `:string`
+  - `:atom`
+  - `:any`
+  - `:integer`
+  - `:float`
+  - `:boolean`
+  - `:map`
+  - `:array`
+  - `:date`
+  - `:time`
+  - `:datetime`
+  - `:naive_datetime`
+  - `:decimal`*
+  - `enum`**
+  - `module`***
+
+
+  \\* For decimal type add the [decimal](https://hexdocs.pm/decimal) library into your project.
+
+  \\*\\* Check the `Parameter.Enum` for more information on how to use enums.
+
+  \\*\\*\\* Any module that implements the `Parameter.Parametrizable` behaviour is eligible to be a field in the schema definition.
   """
   @type t :: base_types | composite_types
 

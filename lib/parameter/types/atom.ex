@@ -5,6 +5,22 @@ defmodule Parameter.Types.Atom do
 
   use Parameter.Parametrizable
 
+  @doc """
+  loads atom type
+
+  ## Examples
+      iex> Parameter.Types.Atom.load(:atom)
+      {:ok, :atom}
+
+      iex> Parameter.Types.Atom.load("atom")
+      {:ok, :atom}
+
+      iex> Parameter.Types.Atom.load(nil)
+      {:error, "invalid atom type"}
+
+      iex> Parameter.Types.Atom.load(123)
+      {:error, "invalid atom type"}
+  """
   @impl true
   def load(nil), do: error_tuple()
 
@@ -20,6 +36,22 @@ defmodule Parameter.Types.Atom do
     error_tuple()
   end
 
+  @doc """
+  validate atom type
+
+  ## Examples
+      iex> Parameter.Types.Atom.validate(:atom)
+      :ok
+
+      iex> Parameter.Types.Atom.validate("atom")
+      {:error, "invalid atom type"}
+
+      iex> Parameter.Types.Atom.validate(nil)
+      {:error, "invalid atom type"}
+
+      iex> Parameter.Types.Atom.validate(123)
+      {:error, "invalid atom type"}
+  """
   @impl true
   def validate(nil), do: error_tuple()
 

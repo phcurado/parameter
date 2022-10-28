@@ -1,7 +1,5 @@
 defmodule Parameter.ExcludeFields do
-  @moduledoc """
-  Logic for dealing with excluded fields list.
-  """
+  @moduledoc false
 
   @spec field_to_exclude(atom() | binary(), list()) :: :exclude | :include | {:exclude, list()}
   def field_to_exclude(field_name, exclude_fields) when is_list(exclude_fields) do

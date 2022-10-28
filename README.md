@@ -469,13 +469,13 @@ iex> params = %{
 {:ok, %{
   last_name: "Doe",
   email: "john@email.com",
-  main_address: %{city: "New York", street: "York"}
+  address: %{city: "New York", street: "York"}
 }}
 
 ...> Parameter.load(User, params, exclude: [:first_name, {:address, [:street]}])
 {:ok, %{
   last_name: "Doe",
   email: "john@email.com",
-  main_address: %{city: "New York"}
+  address: %{city: "New York"}
 }}
 ```

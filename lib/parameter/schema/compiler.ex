@@ -1,7 +1,5 @@
 defmodule Parameter.Schema.Compiler do
-  @moduledoc """
-  Compile schema options
-  """
+  @moduledoc false
 
   def fetch_nested_opts!(opts) do
     keys = Keyword.keys(opts)
