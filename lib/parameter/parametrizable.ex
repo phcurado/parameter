@@ -3,7 +3,8 @@ defmodule Parameter.Parametrizable do
   Custom types for fields can be done by implementing the `Parameter.Parametrizable` behaviour.
   This is useful when the basic types provided by `Parameter.Types` are not enough for loading, validating and dumping data.
 
-  ## Example
+  ## Examples
+
   To create a parameterized type, create a module as shown below:
       defmodule MyApp.CustomType do
         use Parameter.Parametrizable

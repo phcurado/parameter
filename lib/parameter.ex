@@ -6,7 +6,7 @@ defmodule Parameter do
   - Deserialization
   - Serialization
 
-  ## Example
+  ## Examples
 
   Create a schema
 
@@ -17,8 +17,8 @@ defmodule Parameter do
         param do
           field :first_name, :string, key: "firstName", required: true
           field :last_name, :string, key: "lastName"
-          field :email, :string, validator: &Validators.email(&1)
-          has_one :address, Address do
+          field :email, :string, validator: &Validators.email/1
+          has_one :address, AddressParam do
             field :city, :string, required: true
             field :street, :string
             field :number, :integer
@@ -34,29 +34,28 @@ defmodule Parameter do
         "email" => "john@email.com",
         "address" => %{"city" => "New York", "street" => "York"}
       }
-      Parameter.load(User, params)
+      Parameter.load(UserParam, params)
       {:ok, %{
         first_name: "John",
         last_name: "Doe",
         email: "john@email.com",
-        main_address: %{city: "New York", street: "York"}
+        address: %{city: "New York", street: "York"}
       }}
 
   or Dump (serialize) a populated schema to params:
 
       schema = %{
-          first_name: "John",
-          last_name: "Doe",
-          email: "john@email.com",
-          main_address: %{city: "New York", street: "York"}
-        }
-      Parameter.dump(User, params)
-      {:ok,
-      %{
-          "firstName" => "John",
-          "lastName" => "Doe",
-          "email" => "john@email.com",
-          "address" => %{"city" => "New York", "street" => "York"}
+        first_name: "John",
+        last_name: "Doe",
+        email: "john@email.com",
+        address: %{city: "New York", street: "York"}
+      }
+      Parameter.dump(UserParam, params)
+      {:ok, %{
+        "firstName" => "John",
+        "lastName" => "Doe",
+        "email" => "john@email.com",
+        "address" => %{"city" => "New York", "street" => "York"}
       }}
 
   For more schema options checkout `Parameter.Schema`
@@ -68,12 +67,132 @@ defmodule Parameter do
 
   @unknown_opts [:error, :ignore]
 
+  @doc """
+  Loads parameters into the given schema.
+
+  ## Options
+
+    * `:struct` - If ser to `true` loads the schema into a structure. If `false` (default)
+    loads with plain maps.
+
+    * `:unknown` - Defines the behaviour when unknown fields are presented on the parameters.
+    The options are `:ignore` (default) or `:error`.
+
+    * `:exclude` - Accepts a list of fields to be excluded when loading the parameters. This
+    option is useful if you have fields in your schema are only for dump. The field will not
+    be checked for any validation if it's on the exclude list.
+
+
+  ## Examples
+
+      defmodule UserParam do
+        use Parameter.Schema
+
+        param do
+          field :first_name, :string, key: "firstName", required: true
+          field :last_name, :string, key: "lastName"
+          has_one :address, Address do
+            field :city, :string, required: true
+            field :street, :string
+            field :number, :integer
+          end
+        end
+      end
+
+      params = %{
+        "address" => %{"city" => "New York", "street" => "broadway"},
+        "firstName" => "John",
+        "lastName" => "Doe"
+      }
+      Parameter.load(UserParam, params)
+      {:ok, %{
+        first_name: "John",
+        last_name: "Doe",
+        address: %{city: "New York", street: "broadway"}
+      }}
+
+      # Using struct options
+      Parameter.load(UserParam, params, struct: true)
+      {:ok, %UserParam{
+        first_name: "John",
+        last_name: "Doe",
+        address: %AddressParam{city: "New York", street: "broadway"}
+      }}
+
+      # Excluding fields
+      Parameter.load(UserParam, params, exclude: [:first_name, {:address, [:city]}])
+      {:ok, %{
+        last_name: "Doe",
+        address: %{street: "broadway"}
+      }}
+
+      # Unknown fields should return errors
+      params = %{"user_token" => "3hgj81312312"}
+      Parameter.load(UserParam, params, unknown: :error)
+      {:error, %{"user_token" => "unknown field"}}
+
+      # Invalid data should return validation errors:
+      params = %{
+        "address" => %{"city" => "New York", "number" => "123AB"},
+        "lastName" => "Doe"
+      }
+      Parameter.load(User, params)
+      {:error, %{
+        first_name: "is required",
+        address: %{number: "invalid integer type"},
+      }}
+  """
   @spec load(module() | atom(), map(), Keyword.t()) :: {:ok, any()} | {:error, any()}
   def load(schema, input, opts \\ []) do
     opts = parse_opts(opts)
     Loader.load(schema, input, opts)
   end
 
+  @doc """
+  Dump the loaded parameters.
+
+  ## Options
+
+    * `:exclude` - Accepts a list of fields to be excluded when dumping the loaded parameter. This
+    option is useful if you have fields in your schema are only for loading.
+
+
+  ## Examples
+
+      defmodule UserParam do
+        use Parameter.Schema
+
+        param do
+          field :first_name, :string, key: "firstName", required: true
+          field :last_name, :string, key: "lastName"
+          has_one :address, Address do
+            field :city, :string, required: true
+            field :street, :string
+            field :number, :integer
+          end
+        end
+      end
+
+      loaded_params = %{
+        first_name: "John",
+        last_name: "Doe",
+        address: %{city: "New York", street: "broadway"}
+      }
+
+      Parameter.dump(UserParam, params)
+      {:ok, %{
+        "address" => %{"city" => "New York", "street" => "broadway"},
+        "firstName" => "John",
+        "lastName" => "Doe"
+      }}
+
+      # excluding fields
+      Parameter.dump(UserParam, params, exclude: [:first_name, {:address, [:city]}])
+      {:ok, %{
+        "address" => %{"street" => "broadway"},
+        "lastName" => "Doe"
+      }}
+  """
   @spec dump(module() | atom(), map(), Keyword.t()) :: {:ok, any()} | {:error, any()}
   def dump(schema, input, opts \\ []) when is_map(input) do
     exclude = Keyword.get(opts, :exclude, [])

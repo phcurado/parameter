@@ -2,20 +2,20 @@ defmodule Parameter.Types do
   @moduledoc """
   Parameter supports different types to be used in the field inside a schema. The available types are:
 
-  - `string`
-  - `atom`
-  - `any`
-  - `integer`
-  - `float`
-  - `boolean`
-  - `map`
-  - `array`
-  - `date`
-  - `time`
-  - `datetime`
-  - `naive_datetime`
-  - `decimal`*
-  - `enum`**
+  * `string`
+  * `atom`
+  * `any`
+  * `integer`
+  * `float`
+  * `boolean`
+  * `map`
+  * `array`
+  * `date`
+  * `time`
+  * `datetime`
+  * `naive_datetime`
+  * `decimal`*
+  * `enum`**
 
 
   \\* For decimal type add the [decimal](https://hexdocs.pm/decimal) library into your project.

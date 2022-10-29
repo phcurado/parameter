@@ -147,6 +147,7 @@ defmodule Parameter.Schema do
     end
   end
 
+  @doc false
   defmacro has_one(name, type) do
     quote bind_quoted: [name: name, type: type] do
       field name, {:has_one, type}
@@ -183,6 +184,7 @@ defmodule Parameter.Schema do
     end
   end
 
+  @doc false
   defmacro has_many(name, type) do
     quote bind_quoted: [name: name, type: type] do
       field name, {:has_many, type}

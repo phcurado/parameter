@@ -1,8 +1,9 @@
 defmodule Parameter.Validators do
   @moduledoc """
-  Common validators to use with the schema
+  Common validators to use within fields of the `Parameter.Schema`
 
-  ## Example
+  ## Examples
+
       param User do
         field :email, :string, validator: &Validators.email(&1)
       end

@@ -6,15 +6,16 @@ defmodule Parameter.Field do
 
   The `:field_type` are types implemented on `Parameter.Types` or custom modules that implements the `Parameter.Parametrizable` behaviour.
 
-  The other options available for the field are:
-  - `key`: This is the key on the external source that will be converted to the param definition. As an example,
-  when receiving data from an external source that uses a camelCase for mapping `first_name`, this option should be set as "firstName".
+  ## Options
+  * `:key` - This is the key from the params that will be converted to the field schema. As an example,
+  when of the param comes with a camelCase for mapping `first_name`, this option should be set as "firstName".
   If this parameter is not set it will default to the field name.
-  - `default`: default value of the field when no value is given to the field.
-  - `required`: defines if the field needs to be present when parsing the input.
-  - `validator`: Validation function that will validate the field after loading.
-  - `virtual`: if `true` the field will be ignored on `Parameter.load/2` and `Parameter.dump/2` functions.
+  * `:default` - default value of the field when no value is given to the field.
+  * `:required` - defines if the field needs to be present when parsing the input.
+  * `:validator` - Validation function that will validate the field after loading.
+  * `:virtual` - if `true` the field will be ignored on `Parameter.load/2` and `Parameter.dump/2` functions.
 
+  ## Example
   As an example having an `email` field that is required and needs email validation could be implemented this way:
       field :email, :string, required: true, validator: &Parameter.Validators.email/1
   """
@@ -31,7 +32,7 @@ defmodule Parameter.Field do
     virtual: false
   ]
 
-  @type t :: %__MODULE__{
+  @typep t :: %__MODULE__{
           name: atom(),
           key: binary(),
           default: any(),
@@ -41,6 +42,7 @@ defmodule Parameter.Field do
           virtual: boolean()
         }
 
+  @doc false
   @spec new!(Keyword.t()) :: t() | no_return()
   def new!(opts \\ []) do
     case new(opts) do
@@ -49,6 +51,7 @@ defmodule Parameter.Field do
     end
   end
 
+  @doc false
   @spec new(opts :: Keyword.t()) :: t() | {:error, binary()}
   def new(opts \\ []) do
     name = Keyword.get(opts, :name)

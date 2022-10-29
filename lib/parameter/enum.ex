@@ -2,7 +2,7 @@ defmodule Parameter.Enum do
   @moduledoc """
   Enum type represents a group of constants that have a value with an associated key.
 
-  ## Example
+  ## Examples
 
       defmodule MyApp.UserParam do
         use Parameter.Schema
