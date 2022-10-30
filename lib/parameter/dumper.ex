@@ -12,7 +12,7 @@ defmodule Parameter.Dumper do
     schema_keys = schema.__param__(:field_keys)
 
     Enum.reduce(schema_keys, {%{}, %{}}, fn schema_key, {result, errors} ->
-      field = schema.__param__(:field, schema_key)
+      field = schema.__param__(:field, key: schema_key)
 
       case dump_map_value(field, input, opts) do
         {:error, error} ->

@@ -215,8 +215,12 @@ defmodule Parameter.Schema do
         Enum.map(__param__(:fields), & &1.key)
       end
 
-      def __param__(:field, key) do
+      def __param__(:field, key: key) do
         Enum.find(__param__(:fields), &(&1.key == key))
+      end
+
+      def __param__(:field, name: name) do
+        Enum.find(__param__(:fields), &(&1.name == name))
       end
     end
   end
