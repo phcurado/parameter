@@ -682,6 +682,183 @@ defmodule ParameterTest do
                  exclude: [:email, {:addresses, [:number]}, {:phones, [:number]}]
                )
     end
+
+    test "load input as a list with valid parameters" do
+      params = [
+        %{
+          "firstName" => "John",
+          "lastName" => "Doe",
+          "age" => "32",
+          "mainAddress" => %{"city" => "Some City", "street" => "Some street", "number" => "15"},
+          "otherAddresses" => [
+            %{"city" => "Some City", "street" => "Some street", "number" => 15},
+            %{"city" => "Other city", "street" => "Other street", "number" => 10}
+          ],
+          "status" => "userValid",
+          "paidAmount" => 25.00,
+          "numbers" => ["1", 2, 5, "10"],
+          "metadata" => %{"key" => "value", "other_key" => "value"},
+          "hexAmount" => "0x0",
+          "idInfo" => %{
+            "number" => 123_456,
+            "type" => "identity"
+          }
+        },
+        %{
+          "firstName" => "Jane",
+          "lastName" => "Doe",
+          "age" => "32",
+          "mainAddress" => %{"city" => "Jane City", "street" => "Jane street", "number" => "15"},
+          "otherAddresses" => [
+            %{"city" => "Jane City", "street" => "Jane street", "number" => 15},
+            %{"city" => "Other city", "street" => "Other street", "number" => 10}
+          ],
+          "status" => "userInvalid",
+          "paidAmount" => 25.00,
+          "numbers" => ["1", 2, 5, "10"],
+          "metadata" => %{"key" => "value", "other_key" => "value"},
+          "hexAmount" => "0x0",
+          "idInfo" => %{
+            "number" => 123_456,
+            "type" => "identity"
+          }
+        }
+      ]
+
+      assert {:ok,
+              [
+                %{
+                  first_name: "John",
+                  last_name: "Doe",
+                  age: 32,
+                  main_address: %{city: "Some City", street: "Some street", number: 15},
+                  other_addresses: [
+                    %{city: "Some City", street: "Some street", number: 15},
+                    %{city: "Other city", street: "Other street", number: 10}
+                  ],
+                  status: :user_valid,
+                  paid_amount: Decimal.new("25.0"),
+                  numbers: [1, 2, 5, 10],
+                  metadata: %{"key" => "value", "other_key" => "value"},
+                  hex_amount: 0,
+                  id_info: %{number: 123_456, type: "identity"}
+                },
+                %{
+                  first_name: "Jane",
+                  last_name: "Doe",
+                  age: 32,
+                  main_address: %{city: "Jane City", street: "Jane street", number: 15},
+                  other_addresses: [
+                    %{city: "Jane City", street: "Jane street", number: 15},
+                    %{city: "Other city", street: "Other street", number: 10}
+                  ],
+                  status: :user_invalid,
+                  paid_amount: Decimal.new("25.0"),
+                  numbers: [1, 2, 5, 10],
+                  metadata: %{"key" => "value", "other_key" => "value"},
+                  hex_amount: 0,
+                  id_info: %{number: 123_456, type: "identity"}
+                }
+              ]} == Parameter.load(UserTestSchema, params, many: true)
+
+      assert {:ok,
+              [
+                %UserTestSchema{
+                  first_name: "John",
+                  last_name: "Doe",
+                  age: 32,
+                  main_address: %AddressTestSchema{
+                    city: "Some City",
+                    street: "Some street",
+                    number: 15
+                  },
+                  other_addresses: [
+                    %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
+                    %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
+                  ],
+                  status: :user_valid,
+                  paid_amount: Decimal.new("25.0"),
+                  numbers: [1, 2, 5, 10],
+                  metadata: %{"key" => "value", "other_key" => "value"},
+                  hex_amount: 0,
+                  id_info: %UserTestSchema.IdInfo{number: 123_456, type: "identity"}
+                },
+                %UserTestSchema{
+                  first_name: "Jane",
+                  last_name: "Doe",
+                  age: 32,
+                  main_address: %AddressTestSchema{
+                    city: "Jane City",
+                    street: "Jane street",
+                    number: 15
+                  },
+                  other_addresses: [
+                    %AddressTestSchema{city: "Jane City", street: "Jane street", number: 15},
+                    %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
+                  ],
+                  status: :user_invalid,
+                  paid_amount: Decimal.new("25.0"),
+                  numbers: [1, 2, 5, 10],
+                  metadata: %{"key" => "value", "other_key" => "value"},
+                  hex_amount: 0,
+                  id_info: %UserTestSchema.IdInfo{number: 123_456, type: "identity"}
+                }
+              ]} == Parameter.load(UserTestSchema, params, struct: true, many: true)
+    end
+
+    test "load input as a list with invalid parameters should fail" do
+      params = [
+        %{
+          "firstName" => "John",
+          "lastName" => "Doe",
+          "age" => "32a",
+          "mainAddress" => %{"city" => "Some City", "street" => "Some street", "number" => "15A"},
+          "otherAddresses" => [
+            %{"city" => "Some City", "street" => "Some street", "number" => 15},
+            %{"city" => "Other city", "street" => "Other street", "number" => 10}
+          ],
+          "status" => "userValids",
+          "paidAmount" => 25.00,
+          "numbers" => ["1", 2, 5, "10"],
+          "metadata" => %{"key" => "value", "other_key" => "value"},
+          "hexAmount" => "0x0",
+          "idInfo" => %{
+            "number" => 123_456,
+            "type" => "identity"
+          }
+        },
+        %{
+          "firstName" => "Jane",
+          "lastName" => "Doe",
+          "age" => "32",
+          "mainAddress" => %{"city" => "Jane City", "street" => "Jane street", "number" => "15"},
+          "otherAddresses" => [
+            %{"city" => "Jane City", "street" => "Jane street", "number" => 15},
+            %{"city" => "Other city", "street" => "Other street", "number" => 10}
+          ],
+          "status" => "userInvalid",
+          "paidAmount" => 25.00,
+          "numbers" => ["1a", 2, 5, "10a"],
+          "metadata" => [],
+          "hexAmount" => "0x0",
+          "idInfo" => %{
+            "number" => 123_456,
+            "type" => "identity"
+          }
+        }
+      ]
+
+      assert {:error,
+              [
+                {0,
+                 %{
+                   age: "invalid integer type",
+                   main_address: %{number: "invalid integer type"},
+                   status: "invalid enum type"
+                 }},
+                {1, %{metadata: "invalid map type", numbers: [{0, "invalid integer type"}, {3, "invalid integer type"}]}}
+              ]} == Parameter.load(UserTestSchema, params, many: true)
+    end
   end
 
   describe "dump/2" do
@@ -877,6 +1054,134 @@ defmodule ParameterTest do
                Parameter.dump(VirtualFieldTestSchema, params,
                  exclude: [:email, {:addresses, [:number]}, {:phones, [:number]}]
                )
+    end
+
+    test "dump schema input as list" do
+      loaded_schema = [
+        %{
+          first_name: "John",
+          last_name: "Doe",
+          age: 32,
+          main_address: %{city: "John City", street: "John street", number: 15},
+          other_addresses: [
+            %{city: "John City", street: "John street", number: 15},
+            %{city: "Other city", street: "Other street", number: 10}
+          ],
+          status: :user_valid,
+          numbers: [1, 2, 5, 10],
+          metadata: %{"key" => "value", "other_key" => "value"},
+          hex_amount: "123123",
+          id_info: %{number: 123, type: "identity"}
+        },
+        %{
+          first_name: "Jane",
+          last_name: "Doe",
+          age: 32,
+          main_address: %{city: "Jane City", street: "Jane street", number: 15},
+          other_addresses: [
+            %{city: "Jane City", street: "Jane street", number: 15},
+            %{city: "Other city", street: "Other street", number: 10}
+          ],
+          status: :user_invalid,
+          numbers: [1, 2, 5, 10],
+          metadata: %{"key" => "value", "other_key" => "value"},
+          hex_amount: "123123",
+          id_info: %{number: 123, type: "identity"}
+        }
+      ]
+
+      assert {:ok,
+              [
+                %{
+                  "firstName" => "John",
+                  "lastName" => "Doe",
+                  "age" => 32,
+                  "mainAddress" => %{
+                    "city" => "John City",
+                    "street" => "John street",
+                    "number" => 15
+                  },
+                  "otherAddresses" => [
+                    %{"city" => "John City", "street" => "John street", "number" => 15},
+                    %{"city" => "Other city", "street" => "Other street", "number" => 10}
+                  ],
+                  "status" => "userValid",
+                  "numbers" => [1, 2, 5, 10],
+                  "metadata" => %{"key" => "value", "other_key" => "value"},
+                  "hexAmount" => 0,
+                  "idInfo" => %{
+                    "number" => 123,
+                    "type" => "identity"
+                  }
+                },
+                %{
+                  "firstName" => "Jane",
+                  "lastName" => "Doe",
+                  "age" => 32,
+                  "mainAddress" => %{
+                    "city" => "Jane City",
+                    "street" => "Jane street",
+                    "number" => 15
+                  },
+                  "otherAddresses" => [
+                    %{"city" => "Jane City", "street" => "Jane street", "number" => 15},
+                    %{"city" => "Other city", "street" => "Other street", "number" => 10}
+                  ],
+                  "status" => "userInvalid",
+                  "numbers" => [1, 2, 5, 10],
+                  "metadata" => %{"key" => "value", "other_key" => "value"},
+                  "hexAmount" => 0,
+                  "idInfo" => %{
+                    "number" => 123,
+                    "type" => "identity"
+                  }
+                }
+              ]} == Parameter.dump(UserTestSchema, loaded_schema, many: true)
+    end
+
+    test "dump schema as list with invalid input should return error " do
+      loaded_schema = [
+        %{
+          first_name: "John",
+          last_name: "Doe",
+          age: 32,
+          main_address: %{city: "John City", street: "John street", number: 15},
+          other_addresses: [
+            %{city: "John City", street: "John street", number: 15},
+            %{city: "Other city", street: "Other street", number: 10}
+          ],
+          status: :user_valid,
+          numbers: ["not number", 2, 5, 10],
+          metadata: [],
+          hex_amount: "123123",
+          id_info: %{number: 123, type: "identity"}
+        },
+        %{
+          first_name: "Jane",
+          last_name: "Doe",
+          age: "32not_number",
+          main_address: %{city: "Jane City", street: "Jane street", number: 15},
+          other_addresses: [
+            %{city: "Jane City", street: "Jane street", number: "not number"},
+            %{city: "Other city", street: "Other street", number: 10}
+          ],
+          status: :user_invalid,
+          numbers: [1, 2, 5, 10],
+          metadata: %{"key" => "value", "other_key" => "value"},
+          hex_amount: "123123",
+          id_info: %{number: 123, type: "identity"}
+        }
+      ]
+
+      assert {:error,
+              [
+                {0, %{metadata: "invalid map type", numbers: [{0, "invalid integer type"}]}},
+                {1,
+                 %{
+                   age: "invalid integer type",
+                   other_addresses: [{0, %{number: "invalid integer type"}}]
+                 }}
+              ]} == Parameter.dump(UserTestSchema, loaded_schema, many: true)
     end
   end
 end

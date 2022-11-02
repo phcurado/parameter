@@ -6,6 +6,8 @@ defmodule Parameter.SchemaFields do
   alias Parameter.Loader
   alias Parameter.Types
 
+  @spec field_handler(atom | Field.t(), map(), Keyword.t(), :load | :dump) ::
+          {:ok, :ignore} | {:ok, map()} | {:ok, list()} | {:error, binary()}
   def field_handler(%Field{virtual: true}, _input, _opts, _operation) do
     {:ok, :ignore}
   end

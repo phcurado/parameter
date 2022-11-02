@@ -33,15 +33,15 @@ defmodule Parameter.Field do
     virtual: false
   ]
 
-  @typep t :: %__MODULE__{
-           name: atom(),
-           key: binary(),
-           default: any(),
-           type: Types.t(),
-           required: boolean(),
-           validator: fun(),
-           virtual: boolean()
-         }
+  @type t :: %__MODULE__{
+          name: atom(),
+          key: binary(),
+          default: any(),
+          type: Types.t(),
+          required: boolean(),
+          validator: fun(),
+          virtual: boolean()
+        }
 
   @doc false
   @spec new!(Keyword.t()) :: t() | no_return()
