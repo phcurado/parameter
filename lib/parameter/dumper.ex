@@ -82,7 +82,7 @@ defmodule Parameter.Dumper do
     |> Enum.reduce({[], []}, fn {value, index}, {acc_list, errors} ->
       case dump(inner_module, value, opts) do
         {:error, reason} ->
-          {acc_list, Keyword.put(errors, :"#{index}", reason)}
+          {acc_list, [{index, reason} | errors]}
 
         {:ok, result} ->
           {[result | acc_list], errors}

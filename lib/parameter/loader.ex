@@ -132,7 +132,7 @@ defmodule Parameter.Loader do
       |> load(value, opts)
       |> case do
         {:error, reason} ->
-          {acc_list, Keyword.put(errors, :"#{index}", reason)}
+          {acc_list, [{index, reason} | errors]}
 
         {:ok, result} ->
           {[result | acc_list], errors}

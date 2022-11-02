@@ -8,8 +8,8 @@ defmodule Parameter.Enum do
         use Parameter.Schema
 
         enum Status do
-          value "userOnline", as: :user_online
-          value "userOffline", as: :user_offline
+          value :user_online, key: "userOnline"
+          value :user_offline, key: "userOffline"
         end
 
         param do
@@ -40,8 +40,8 @@ defmodule Parameter.Enum do
     Using numbers is also allowed in enums:
 
       enum Status do
-        value 1, as: :active
-        value 2, as: :pending_request
+        value :active, key: 1
+        value :pending_request, key: 2
       end
 
       Parameter.load(MyApp.UserParam, %{"status" => 1})
@@ -54,8 +54,8 @@ defmodule Parameter.Enum do
         import Parameter.Enum
 
         enum do
-          value "userOnline", as: :user_online
-          value "userOffline", as: :user_offline
+          value :user_online, key: "userOnline"
+          value :user_offline, key: "userOffline"
         end
       end
 
@@ -87,7 +87,7 @@ defmodule Parameter.Enum do
     block =
       quote do
         Enum.map(unquote(values), fn val ->
-          value(to_string(val), as: val)
+          value(val, key: to_string(val))
         end)
       end
 
@@ -110,7 +110,7 @@ defmodule Parameter.Enum do
     block =
       quote do
         Enum.map(unquote(values), fn val ->
-          value(to_string(val), as: val)
+          value(val, key: to_string(val))
         end)
       end
 
@@ -121,6 +121,23 @@ defmodule Parameter.Enum do
 
   @doc false
   defmacro value(key, as: value) do
+    quote bind_quoted: [key: key, value: value] do
+      IO.warn(
+        """
+
+        This Enum format is now deprecated:
+            value \"#{key}\", as: #{value}
+        instead use the new form:
+            value #{value}, key: \"#{key}\"
+        """,
+        Macro.Env.stacktrace(__ENV__)
+      )
+
+      Module.put_attribute(__MODULE__, :enum_values, {key, value})
+    end
+  end
+
+  defmacro value(value, key: key) do
     quote bind_quoted: [key: key, value: value] do
       Module.put_attribute(__MODULE__, :enum_values, {key, value})
     end

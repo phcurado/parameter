@@ -1,5 +1,4 @@
 # Parameter
-<!-- MDOC !-->
 `Parameter` is a library for dealing with complex datatypes by solving the following problems:
   - Schema creation and validation
   - Input data validation
@@ -75,7 +74,7 @@ Add `parameter` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:parameter, "~> 0.5"}
+    {:parameter, "~> 0.6"}
   ]
 end
 ```
@@ -86,3 +85,4 @@ add `:parameter` on `.formatter.exs`:
 import_deps: [:ecto, :phoenix, ..., :parameter],
 ```
 
+For `Parameter` with `Ecto` integration check out the [parameter_ecto](https://github.com/phcurado/parameter_ecto) project.

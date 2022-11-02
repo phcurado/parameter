@@ -69,6 +69,25 @@ defmodule Parameter.Types.Boolean do
     error_tuple()
   end
 
+  @doc """
+  validate boolean type
+
+  ## Examples
+      iex> Parameter.Types.Boolean.validate(true)
+      :ok
+
+      iex> Parameter.Types.Boolean.validate(false)
+      :ok
+
+      iex> Parameter.Types.Boolean.validate("true")
+      {:error, "invalid boolean type"}
+
+      iex> Parameter.Types.Boolean.validate(nil)
+      {:error, "invalid boolean type"}
+
+      iex> Parameter.Types.Boolean.validate(123)
+      {:error, "invalid boolean type"}
+  """
   @impl true
   def validate(value) when is_boolean(value) do
     :ok

@@ -54,8 +54,8 @@ defmodule ParameterTest do
     use Parameter.Schema
 
     enum Status do
-      value "userValid", as: :user_valid
-      value "userInvalid", as: :user_invalid
+      value :user_valid, key: "userValid"
+      value :user_invalid, key: "userInvalid"
     end
 
     param do
@@ -104,8 +104,8 @@ defmodule ParameterTest do
     alias Parameter.Validators
 
     enum Status do
-      value "userValid", as: :user_valid
-      value "userInvalid", as: :user_invalid
+      value :user_valid, key: "userValid"
+      value :user_invalid, key: "userInvalid"
     end
 
     param do
@@ -230,10 +230,10 @@ defmodule ParameterTest do
               %{
                 age: "invalid integer type",
                 main_address: %{number: "invalid integer type"},
-                other_addresses: ["1": %{number: "invalid integer type"}],
+                other_addresses: [{1, %{number: "invalid integer type"}}],
                 numbers: [
-                  "0": "invalid integer type",
-                  "4": "invalid integer type"
+                  {0, "invalid integer type"},
+                  {4, "invalid integer type"}
                 ],
                 metadata: "invalid map type",
                 hex_amount: "invalid hex",
@@ -361,7 +361,7 @@ defmodule ParameterTest do
       assert {:error,
               %{
                 main_address: %{"unknownField" => "unknown field"},
-                other_addresses: ["1": %{"otherInvalidField" => "unknown field"}],
+                other_addresses: [{1, %{"otherInvalidField" => "unknown field"}}],
                 status: "is required"
               }} ==
                Parameter.load(UserTestSchema, params, unknown: :error)
@@ -500,8 +500,8 @@ defmodule ParameterTest do
               %{
                 last_name: "is required",
                 phones: [
-                  {:"0", %{number: "invalid integer type"}},
-                  {:"1", %{number: "invalid integer type"}}
+                  {0, %{number: "invalid integer type"}},
+                  {1, %{number: "invalid integer type"}}
                 ]
               }} == Parameter.load(Custom.User, params)
     end
@@ -544,9 +544,9 @@ defmodule ParameterTest do
                 code: "is invalid",
                 email: "is invalid",
                 nested: [
-                  {:"0", %{value: "is invalid"}},
-                  {:"1", %{value: "is invalid"}},
-                  {:"2", %{"wrong" => "unknown field"}}
+                  {0, %{value: "is invalid"}},
+                  {1, %{value: "is invalid"}},
+                  {2, %{"wrong" => "unknown field"}}
                 ],
                 permission: "is invalid",
                 user_code: "not equal"
@@ -796,7 +796,7 @@ defmodule ParameterTest do
                  metadata: "invalid map type",
                  numbers: "invalid list type",
                  other_addresses: [
-                   "0": %{number: "invalid integer type", street: "invalid string type"}
+                   {0, %{number: "invalid integer type", street: "invalid string type"}}
                  ]
                }
              } == Parameter.dump(UserTestSchema, loaded_schema)

@@ -72,7 +72,7 @@ defmodule Parameter do
 
   ## Options
 
-    * `:struct` - If ser to `true` loads the schema into a structure. If `false` (default)
+    * `:struct` - If set to `true` loads the schema into a structure. If `false` (default)
     loads with plain maps.
 
     * `:unknown` - Defines the behaviour when unknown fields are presented on the parameters.

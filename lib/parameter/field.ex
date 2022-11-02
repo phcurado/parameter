@@ -1,10 +1,11 @@
 defmodule Parameter.Field do
   @moduledoc """
-  This module define the structure of a Field inside a Parameter Schema.
-  The field follow the structure:
-      field :field_name, :field_type, opts
+  The field inside a Parameter Schema have the following structure:
+      field :name, :type, opts
 
-  The `:field_type` are types implemented on `Parameter.Types` or custom modules that implements the `Parameter.Parametrizable` behaviour.
+  * `:name` - Atom key that defines the field name
+  * `:type` - Type from `Parameter.Types`. For custom types check the `Parameter.Parametrizable` behaviour.
+  * `:opts` - Keyword with field options.
 
   ## Options
   * `:key` - This is the key from the params that will be converted to the field schema. As an example,

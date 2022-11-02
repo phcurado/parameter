@@ -7,17 +7,17 @@ defmodule Parameter.EnumTest do
     enum values: [:user_online, :user_offline]
 
     enum JobType do
-      value "freelancer", as: :freelancer
-      value "businessOwner", as: :business_owner
-      value "unemployed", as: :unemployed
-      value "employed", as: :employed
+      value :freelancer, key: "freelancer"
+      value :business_owner, key: "businessOwner"
+      value :unemployed, key: "unemployed"
+      value :employed, key: "employed"
     end
 
     enum JobTypeInteger do
-      value 1, as: :freelancer
-      value 2, as: :business_owner
-      value 3, as: :unemployed
-      value 4, as: :employed
+      value :freelancer, key: 1
+      value :business_owner, key: 2
+      value :unemployed, key: 3
+      value :employed, key: 4
     end
   end
 
