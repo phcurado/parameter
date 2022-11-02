@@ -82,6 +82,8 @@ defmodule Parameter do
     option is useful if you have fields in your schema are only for dump. The field will not
     be checked for any validation if it's on the exclude list.
 
+    * `:many` - When `true` will parse the input data as list, when `false` (default) it parses as map
+
 
   ## Examples
 
@@ -142,7 +144,8 @@ defmodule Parameter do
         address: %{number: "invalid integer type"},
       }}
   """
-  @spec load(module() | atom(), map(), Keyword.t()) :: {:ok, any()} | {:error, any()}
+  @spec load(module() | atom(), map() | list(map()), Keyword.t()) ::
+          {:ok, any()} | {:error, any()}
   def load(schema, input, opts \\ []) do
     opts = parse_opts(opts)
     Loader.load(schema, input, opts)
@@ -155,6 +158,8 @@ defmodule Parameter do
 
     * `:exclude` - Accepts a list of fields to be excluded when dumping the loaded parameter. This
     option is useful if you have fields in your schema are only for loading.
+
+    * `:many` - When `true` will parse the input data as list, when `false` (default) it parses as map
 
 
   ## Examples
@@ -193,11 +198,14 @@ defmodule Parameter do
         "lastName" => "Doe"
       }}
   """
-  @spec dump(module() | atom(), map(), Keyword.t()) :: {:ok, any()} | {:error, any()}
-  def dump(schema, input, opts \\ []) when is_map(input) do
+  @spec dump(module() | atom(), map() | list(map), Keyword.t()) :: {:ok, any()} | {:error, any()}
+  def dump(schema, input, opts \\ []) do
     exclude = Keyword.get(opts, :exclude, [])
+    many = Keyword.get(opts, :many, false)
+
     Types.validate!(:list, exclude)
-    Dumper.dump(schema, input, exclude: exclude)
+    Types.validate!(:boolean, many)
+    Dumper.dump(schema, input, exclude: exclude, many: many)
   end
 
   defp parse_opts(opts) do
@@ -208,13 +216,13 @@ defmodule Parameter do
     end
 
     struct = Keyword.get(opts, :struct, false)
+    exclude = Keyword.get(opts, :exclude, [])
+    many = Keyword.get(opts, :many, false)
 
     Types.validate!(:boolean, struct)
-
-    exclude = Keyword.get(opts, :exclude, [])
-
     Types.validate!(:list, exclude)
+    Types.validate!(:boolean, many)
 
-    [struct: struct, unknown: unknown, exclude: exclude]
+    [struct: struct, unknown: unknown, exclude: exclude, many: many]
   end
 end

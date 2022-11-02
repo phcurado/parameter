@@ -1,13 +1,11 @@
 defmodule Parameter.Loader do
   @moduledoc false
 
-  alias Parameter.ExcludeFields
-  alias Parameter.Field
-  alias Parameter.Types
+  alias Parameter.SchemaFields
 
   @type opts :: [struct: boolean(), unknow_fields: :error | :ignore, exclude: list()]
 
-  @spec load(module() | atom(), map(), opts) :: {:ok, any()} | {:error, any()}
+  @spec load(module() | atom(), map() | list(map()), opts) :: {:ok, any()} | {:error, any()}
   def load(schema, input, opts) when is_map(input) do
     unknown = Keyword.get(opts, :unknown)
     struct = Keyword.get(opts, :struct)
@@ -23,8 +21,17 @@ defmodule Parameter.Loader do
     end
   end
 
+  def load(schema, input, opts) when is_list(input) do
+    if Keyword.get(opts, :many) do
+      SchemaFields.list_field_handler(schema, input, opts, :load)
+    else
+      {:error,
+       "received a list with `many: false`, if a list is expected pass `many: true` on options"}
+    end
+  end
+
   def load(type, input, opts) do
-    load_type_value(type, input, opts)
+    SchemaFields.field_handler(type, input, opts, :load)
   end
 
   defp iterate_schema(schema, input, opts) do
@@ -72,7 +79,7 @@ defmodule Parameter.Loader do
   defp load_map_value(field, input, opts) do
     exclude_fields = Keyword.get(opts, :exclude)
 
-    case ExcludeFields.field_to_exclude(field.name, exclude_fields) do
+    case SchemaFields.field_to_exclude(field.name, exclude_fields) do
       :include ->
         fetch_and_verify_input(field, input, opts)
 
@@ -94,7 +101,7 @@ defmodule Parameter.Loader do
         check_required(field, nil)
 
       {:ok, value} ->
-        load_type_value(field, value, opts)
+        SchemaFields.field_handler(field, value, opts, :load)
     end
   end
 
@@ -108,62 +115,6 @@ defmodule Parameter.Loader do
 
       true ->
         {:ok, action}
-    end
-  end
-
-  defp load_type_value(%Field{virtual: true}, _value, _opts) do
-    {:ok, :ignore}
-  end
-
-  defp load_type_value(%Field{type: {:has_one, inner_module}}, value, opts) when is_map(value) do
-    load(inner_module, value, opts)
-  end
-
-  defp load_type_value(%Field{type: {:has_one, _inner_module}}, _value, _opts) do
-    {:error, "invalid inner data type"}
-  end
-
-  defp load_type_value(%Field{type: {:has_many, inner_module}}, values, opts)
-       when is_list(values) do
-    values
-    |> Enum.with_index()
-    |> Enum.reduce({[], []}, fn {value, index}, {acc_list, errors} ->
-      inner_module
-      |> load(value, opts)
-      |> case do
-        {:error, reason} ->
-          {acc_list, [{index, reason} | errors]}
-
-        {:ok, result} ->
-          {[result | acc_list], errors}
-      end
-    end)
-    |> parse_list_values()
-  end
-
-  defp load_type_value(%Field{type: {:has_many, _inner_module}}, _value, _opts) do
-    {:error, "invalid list type"}
-  end
-
-  defp load_type_value(%Field{type: type, validator: validator}, value, _opts) do
-    case Types.load(type, value) do
-      {:ok, value} ->
-        run_validator(validator, value)
-
-      error ->
-        error
-    end
-  end
-
-  defp load_type_value(type, value, _opts) do
-    Types.load(type, value)
-  end
-
-  defp parse_list_values({result, errors}) do
-    if errors == [] do
-      {:ok, Enum.reverse(result)}
-    else
-      {:error, Enum.reverse(errors)}
     end
   end
 
@@ -181,21 +132,5 @@ defmodule Parameter.Loader do
 
   defp parse_to_struct_or_map({:ok, result}, schema, struct: true) do
     {:ok, struct!(schema, result)}
-  end
-
-  defp run_validator(nil, value), do: {:ok, value}
-
-  defp run_validator({func, args}, value) do
-    case apply(func, [value | [args]]) do
-      :ok -> {:ok, value}
-      error -> error
-    end
-  end
-
-  defp run_validator(func, value) do
-    case func.(value) do
-      :ok -> {:ok, value}
-      error -> error
-    end
   end
 end
