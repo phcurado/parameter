@@ -856,7 +856,11 @@ defmodule ParameterTest do
                    main_address: %{number: "invalid integer type"},
                    status: "invalid enum type"
                  }},
-                {1, %{metadata: "invalid map type", numbers: [{0, "invalid integer type"}, {3, "invalid integer type"}]}}
+                {1,
+                 %{
+                   metadata: "invalid map type",
+                   numbers: [{0, "invalid integer type"}, {3, "invalid integer type"}]
+                 }}
               ]} == Parameter.load(UserTestSchema, params, many: true)
     end
   end
