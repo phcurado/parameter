@@ -146,17 +146,21 @@ defmodule Parameter.SchemaFields do
 
     case Map.fetch(input, key) do
       :error ->
-        check_required(field, :ignore)
+        check_required(field, :ignore, action)
 
       {:ok, nil} ->
-        check_required(field, nil)
+        check_required(field, nil, action)
 
       {:ok, value} ->
         field_handler(field, value, opts, action)
     end
   end
 
-  defp check_required(field, action) do
+  defp check_required(_field, value, :dump) do
+    {:ok, value}
+  end
+
+  defp check_required(field, value, _action) do
     cond do
       !is_nil(field.default) ->
         {:ok, field.default}
@@ -165,7 +169,7 @@ defmodule Parameter.SchemaFields do
         {:error, "is required"}
 
       true ->
-        {:ok, action}
+        {:ok, value}
     end
   end
 end

@@ -898,7 +898,6 @@ defmodule ParameterTest do
                   %{"city" => "Other city", "street" => "Other street", "number" => 10}
                 ],
                 "status" => "userValid",
-                "paidAmount" => Decimal.new(1),
                 "numbers" => [1, 2, 5, 10],
                 "metadata" => %{"key" => "value", "other_key" => "value"},
                 "hexAmount" => 0,
@@ -980,8 +979,7 @@ defmodule ParameterTest do
                  numbers: "invalid list type",
                  other_addresses: [
                    {0, %{number: "invalid integer type", street: "invalid string type"}}
-                 ],
-                 status: "is required"
+                 ]
                }
              } == Parameter.dump(UserTestSchema, loaded_schema)
     end
@@ -1113,7 +1111,6 @@ defmodule ParameterTest do
                     %{"city" => "Other city", "street" => "Other street", "number" => 10}
                   ],
                   "status" => "userValid",
-                  "paidAmount" => Decimal.new(1),
                   "numbers" => [1, 2, 5, 10],
                   "metadata" => %{"key" => "value", "other_key" => "value"},
                   "hexAmount" => 0,
@@ -1136,7 +1133,6 @@ defmodule ParameterTest do
                     %{"city" => "Other city", "street" => "Other street", "number" => 10}
                   ],
                   "status" => "userInvalid",
-                  "paidAmount" => Decimal.new(1),
                   "numbers" => [1, 2, 5, 10],
                   "metadata" => %{"key" => "value", "other_key" => "value"},
                   "hexAmount" => 0,
