@@ -12,7 +12,7 @@ defmodule Parameter.Dumper do
     Enum.reduce(schema_keys, {%{}, %{}}, fn schema_key, {result, errors} ->
       field = schema.__param__(:field, key: schema_key)
 
-      case dump_map_value(field, input, opts) do
+      case SchemaFields.process_map_value(field, input, opts, :dump) do
         {:error, error} ->
           errors = Map.put(errors, field.name, error)
           {result, errors}
@@ -39,35 +39,6 @@ defmodule Parameter.Dumper do
 
   def dump(type, input, opts) do
     SchemaFields.field_handler(type, input, opts, :dump)
-  end
-
-  defp dump_map_value(field, input, opts) do
-    exclude_fields = Keyword.get(opts, :exclude)
-
-    case SchemaFields.field_to_exclude(field.name, exclude_fields) do
-      :include ->
-        fetch_and_verify_input(field, input, opts)
-
-      {:exclude, nested_values} ->
-        opts = Keyword.put(opts, :exclude, nested_values)
-        fetch_and_verify_input(field, input, opts)
-
-      :exclude ->
-        {:ok, :ignore}
-    end
-  end
-
-  defp fetch_and_verify_input(field, input, opts) do
-    case Map.fetch(input, field.name) do
-      :error ->
-        {:ok, :ignore}
-
-      {:ok, nil} ->
-        {:ok, nil}
-
-      {:ok, value} ->
-        SchemaFields.field_handler(field, value, opts, :dump)
-    end
   end
 
   defp parse_loaded_input({result, errors}) do

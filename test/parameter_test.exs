@@ -898,6 +898,7 @@ defmodule ParameterTest do
                   %{"city" => "Other city", "street" => "Other street", "number" => 10}
                 ],
                 "status" => "userValid",
+                "paidAmount" => Decimal.new(1),
                 "numbers" => [1, 2, 5, 10],
                 "metadata" => %{"key" => "value", "other_key" => "value"},
                 "hexAmount" => 0,
@@ -956,6 +957,7 @@ defmodule ParameterTest do
 
     test "dump schema with invalid input should return error" do
       loaded_schema = %{
+        first_name: "John",
         last_name: 55,
         age: "not number",
         main_address: %{city: "Some City", street: "Some street", number: 15},
@@ -978,7 +980,8 @@ defmodule ParameterTest do
                  numbers: "invalid list type",
                  other_addresses: [
                    {0, %{number: "invalid integer type", street: "invalid string type"}}
-                 ]
+                 ],
+                 status: "is required"
                }
              } == Parameter.dump(UserTestSchema, loaded_schema)
     end
@@ -1110,6 +1113,7 @@ defmodule ParameterTest do
                     %{"city" => "Other city", "street" => "Other street", "number" => 10}
                   ],
                   "status" => "userValid",
+                  "paidAmount" => Decimal.new(1),
                   "numbers" => [1, 2, 5, 10],
                   "metadata" => %{"key" => "value", "other_key" => "value"},
                   "hexAmount" => 0,
@@ -1132,6 +1136,7 @@ defmodule ParameterTest do
                     %{"city" => "Other city", "street" => "Other street", "number" => 10}
                   ],
                   "status" => "userInvalid",
+                  "paidAmount" => Decimal.new(1),
                   "numbers" => [1, 2, 5, 10],
                   "metadata" => %{"key" => "value", "other_key" => "value"},
                   "hexAmount" => 0,

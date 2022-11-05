@@ -7,7 +7,25 @@ defmodule Parameter.SchemaFields do
   alias Parameter.Types
 
   @spec field_handler(atom | Field.t(), map(), Keyword.t(), :load | :dump) ::
-          {:ok, :ignore} | {:ok, map()} | {:ok, list()} | {:error, binary()}
+          {:ok, :ignore} | {:ok, map()} | {:ok, list()} | {:error, String.t()}
+  def process_map_value(field, input, opts, action) do
+    exclude_fields = Keyword.get(opts, :exclude)
+
+    case field_to_exclude(field.name, exclude_fields) do
+      :include ->
+        fetch_and_verify_input(field, input, opts, action)
+
+      {:exclude, nested_values} ->
+        opts = Keyword.put(opts, :exclude, nested_values)
+        fetch_and_verify_input(field, input, opts, action)
+
+      :exclude ->
+        {:ok, :ignore}
+    end
+  end
+
+  @spec field_handler(atom | Field.t(), map(), Keyword.t(), :load | :dump) ::
+          {:ok, :ignore} | {:ok, map()} | {:ok, list()} | {:error, String.t()}
   def field_handler(%Field{virtual: true}, _input, _opts, _operation) do
     {:ok, :ignore}
   end
@@ -116,6 +134,38 @@ defmodule Parameter.SchemaFields do
     case operation do
       :dump -> Types.dump(type, input)
       :load -> Types.load(type, input)
+    end
+  end
+
+  defp fetch_and_verify_input(field, input, opts, action) do
+    key =
+      case action do
+        :load -> field.key
+        :dump -> field.name
+      end
+
+    case Map.fetch(input, key) do
+      :error ->
+        check_required(field, :ignore)
+
+      {:ok, nil} ->
+        check_required(field, nil)
+
+      {:ok, value} ->
+        field_handler(field, value, opts, action)
+    end
+  end
+
+  defp check_required(field, action) do
+    cond do
+      !is_nil(field.default) ->
+        {:ok, field.default}
+
+      field.required ->
+        {:error, "is required"}
+
+      true ->
+        {:ok, action}
     end
   end
 end
