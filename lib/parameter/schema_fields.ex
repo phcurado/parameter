@@ -6,7 +6,7 @@ defmodule Parameter.SchemaFields do
   alias Parameter.Loader
   alias Parameter.Types
 
-  @spec field_handler(atom | Field.t(), map(), Keyword.t(), :load | :dump) ::
+  @spec process_map_value(atom | Field.t(), map(), Keyword.t(), :load | :dump) ::
           {:ok, :ignore} | {:ok, map()} | {:ok, list()} | {:error, String.t()}
   def process_map_value(field, input, opts, action) do
     exclude_fields = Keyword.get(opts, :exclude)
