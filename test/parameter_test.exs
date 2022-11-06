@@ -62,7 +62,7 @@ defmodule ParameterTest do
       field :first_name, :string, key: "firstName", required: true
       field :last_name, :string, key: "lastName", required: true, default: ""
       field :age, :integer
-      field :metadata, :map
+      field :metadata, :map, dump_default: %{"key" => "value"}
       field :hex_amount, CustomTypeHexToDecimal, key: "hexAmount", default: "0"
       field :paid_amount, :decimal, key: "paidAmount", default: Decimal.new("1")
       field :status, __MODULE__.Status, required: true
@@ -71,7 +71,7 @@ defmodule ParameterTest do
       has_many :numbers, :integer
 
       has_one :id_info, IdInfo, key: "idInfo" do
-        field :number, :integer, default: 0
+        field :number, :integer, load_default: 0, dump_default: 25
         field :type, :string
       end
 
@@ -925,7 +925,6 @@ defmodule ParameterTest do
         status: :user_valid,
         paid_amount: Decimal.new("10.5"),
         numbers: [1, 2, 5, 10],
-        metadata: %{"key" => "value", "other_key" => "value"},
         hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908,
         id_info: %UserTestSchema.IdInfo{type: nil},
         info: [%UserTestSchema.Info{id: "1"}]
@@ -948,9 +947,9 @@ defmodule ParameterTest do
                 "status" => "userValid",
                 "paidAmount" => Decimal.new("10.5"),
                 "numbers" => [1, 2, 5, 10],
-                "metadata" => %{"key" => "value", "other_key" => "value"},
+                "metadata" => %{"key" => "value"},
                 "hexAmount" => 0,
-                "idInfo" => %{"number" => 0, "type" => nil},
+                "idInfo" => %{"number" => 25, "type" => nil},
                 "info" => [%{"id" => "1"}]
               }} == Parameter.dump(UserTestSchema, loaded_schema)
     end

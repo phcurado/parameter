@@ -18,8 +18,10 @@ defmodule Parameter.FieldTest do
                key: "mainAddress",
                name: :main_address,
                required: true,
-               type: :string
-             } = Field.new(opts)
+               type: :string,
+               load_default: "Default",
+               dump_default: "Default"
+             } == Field.new(opts)
     end
 
     test "fails if a default value of wrong type" do
@@ -31,7 +33,21 @@ defmodule Parameter.FieldTest do
         default: "Hello"
       ]
 
-      assert {:error, "invalid float type"} = Field.new(opts)
+      assert {:error, "invalid float type"} == Field.new(opts)
+    end
+
+    test "fails if a default value used at the sametime with load_default and dump_default" do
+      opts = [
+        name: :main_address,
+        type: :string,
+        key: "mainAddress",
+        required: true,
+        default: "Hello",
+        load_default: "Hello"
+      ]
+
+      assert {:error, "`default` opts should not be used with `load_default` or `dump_default`"} ==
+               Field.new(opts)
     end
   end
 
@@ -50,8 +66,10 @@ defmodule Parameter.FieldTest do
                key: "mainAddress",
                name: :main_address,
                required: true,
-               type: :string
-             } = Field.new!(opts)
+               type: :string,
+               dump_default: "Default",
+               load_default: "Default"
+             } == Field.new!(opts)
     end
 
     test "fails if a default value of wrong type" do

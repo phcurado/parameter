@@ -8,14 +8,24 @@ defmodule Parameter.Field do
   * `:opts` - Keyword with field options.
 
   ## Options
-  * `:key` - This is the key from the params that will be converted to the field schema. As an example,
-  when of the param comes with a camelCase for mapping `first_name`, this option should be set as "firstName".
-  If this parameter is not set it will default to the field name.
-  * `:default` - default value of the field when no value is given to the field.
-  * `:required` - defines if the field needs to be present when parsing the input.
+  * `:key` - This is the key from the params that will be converted to the field schema. Examples:
+    * If an input field use `camelCase` for mapping `first_name`, this option should be set as "firstName".
+    * If an input field use the same case for the field definition, this key can be ignored.
+
+  * `:default` - Default value of the field when no value is given.
+
+  * `:load_default` - Default value of the field when no value is given when loading with `Parameter.load/3` function.
+  This option should not be used at the same time as `default` option.
+
+  * `:dump_default` - Default value of the field when no value is given when loading with `Parameter.dump/3` function.
+  This option should not be used at the same time as `default` option.
+
+  * `:required` - Defines if the field needs to be present when parsing the input.
   `Parameter.load/3` will return an error if the value is missing from the input data.
+
   * `:validator` - Validation function that will validate the field after loading.
-  * `:virtual` - if `true` the field will be ignored on `Parameter.load/2` and `Parameter.dump/2` functions.
+
+  * `:virtual` - If `true` the field will be ignored on `Parameter.load/3` and `Parameter.dump/3` functions.
 
   > NOTE: Validation only occurs on `Parameter.load/3`.
   > By desgin, data passed into `Parameter.dump/3` are considered valid.
@@ -31,6 +41,8 @@ defmodule Parameter.Field do
     :name,
     :key,
     :default,
+    :load_default,
+    :dump_default,
     type: :string,
     required: false,
     validator: nil,
@@ -41,6 +53,8 @@ defmodule Parameter.Field do
           name: atom(),
           key: binary(),
           default: any(),
+          load_default: any(),
+          dump_default: any(),
           type: Types.t(),
           required: boolean(),
           validator: fun(),
@@ -78,28 +92,56 @@ defmodule Parameter.Field do
     key = Keyword.fetch!(opts, :key)
     type = Keyword.get(opts, :type, :string)
     default = Keyword.get(opts, :default)
+    load_default = Keyword.get(opts, :load_default)
+    dump_default = Keyword.get(opts, :dump_default)
     required = Keyword.get(opts, :required, false)
     validator = Keyword.get(opts, :validator)
     virtual = Keyword.get(opts, :virtual, false)
-
-    default_valid? =
-      if default do
-        Types.validate(type, default)
-      else
-        :ok
-      end
 
     type_valid? = type_valid?(type)
     validator_valid? = validator_valid?(validator)
 
     # Using Types module to validate field parameters
-    with :ok <- default_valid?,
+    with {:ok, opts} <- default_valid?(type, opts, default, load_default, dump_default),
          :ok <- type_valid?,
          :ok <- Types.validate(:string, key),
          :ok <- Types.validate(:boolean, required),
          :ok <- Types.validate(:boolean, virtual),
          :ok <- validator_valid? do
       struct!(__MODULE__, opts)
+    end
+  end
+
+  defp default_valid?(type, opts, default, nil, nil) when not is_nil(default) do
+    case validate_default(type, default) do
+      :ok ->
+        opts =
+          opts
+          |> Keyword.put(:load_default, default)
+          |> Keyword.put(:dump_default, default)
+
+        {:ok, opts}
+
+      error ->
+        error
+    end
+  end
+
+  defp default_valid?(type, opts, nil, load_default, dump_default) do
+    with :ok <- validate_default(type, load_default),
+         :ok <- validate_default(type, dump_default),
+         do: {:ok, opts}
+  end
+
+  defp default_valid?(_type, _opts, _default, _load_default, _dump_default) do
+    {:error, "`default` opts should not be used with `load_default` or `dump_default`"}
+  end
+
+  defp validate_default(type, default_value) do
+    if default_value do
+      Types.validate(type, default_value)
+    else
+      :ok
     end
   end
 
