@@ -230,11 +230,8 @@ defmodule ParameterTest do
               %{
                 age: "invalid integer type",
                 main_address: %{number: "invalid integer type"},
-                other_addresses: [{1, %{number: "invalid integer type"}}],
-                numbers: [
-                  {0, "invalid integer type"},
-                  {4, "invalid integer type"}
-                ],
+                other_addresses: %{1 => %{number: "invalid integer type"}},
+                numbers: %{0 => "invalid integer type", 4 => "invalid integer type"},
                 metadata: "invalid map type",
                 hex_amount: "invalid hex",
                 status: "invalid enum type",
@@ -361,7 +358,7 @@ defmodule ParameterTest do
       assert {:error,
               %{
                 main_address: %{"unknownField" => "unknown field"},
-                other_addresses: [{1, %{"otherInvalidField" => "unknown field"}}],
+                other_addresses: %{1 => %{"otherInvalidField" => "unknown field"}},
                 status: "is required"
               }} ==
                Parameter.load(UserTestSchema, params, unknown: :error)
@@ -499,10 +496,10 @@ defmodule ParameterTest do
       assert {:error,
               %{
                 last_name: "is required",
-                phones: [
-                  {0, %{number: "invalid integer type"}},
-                  {1, %{number: "invalid integer type"}}
-                ]
+                phones: %{
+                  0 => %{number: "invalid integer type"},
+                  1 => %{number: "invalid integer type"}
+                }
               }} == Parameter.load(Custom.User, params)
     end
 
@@ -543,11 +540,11 @@ defmodule ParameterTest do
                 age: "is invalid",
                 code: "is invalid",
                 email: "is invalid",
-                nested: [
-                  {0, %{value: "is invalid"}},
-                  {1, %{value: "is invalid"}},
-                  {2, %{"wrong" => "unknown field"}}
-                ],
+                nested: %{
+                  0 => %{value: "is invalid"},
+                  1 => %{value: "is invalid"},
+                  2 => %{"wrong" => "unknown field"}
+                },
                 permission: "is invalid",
                 user_code: "not equal"
               }} == Parameter.load(ValidatorSchema, params, unknown: :error)
@@ -849,19 +846,17 @@ defmodule ParameterTest do
       ]
 
       assert {:error,
-              [
-                {0,
-                 %{
-                   age: "invalid integer type",
-                   main_address: %{number: "invalid integer type"},
-                   status: "invalid enum type"
-                 }},
-                {1,
-                 %{
-                   metadata: "invalid map type",
-                   numbers: [{0, "invalid integer type"}, {3, "invalid integer type"}]
-                 }}
-              ]} == Parameter.load(UserTestSchema, params, many: true)
+              %{
+                0 => %{
+                  age: "invalid integer type",
+                  main_address: %{number: "invalid integer type"},
+                  status: "invalid enum type"
+                },
+                1 => %{
+                  metadata: "invalid map type",
+                  numbers: %{0 => "invalid integer type", 3 => "invalid integer type"}
+                }
+              }} == Parameter.load(UserTestSchema, params, many: true)
     end
   end
 
@@ -977,9 +972,9 @@ defmodule ParameterTest do
                  last_name: "invalid string type",
                  metadata: "invalid map type",
                  numbers: "invalid list type",
-                 other_addresses: [
-                   {0, %{number: "invalid integer type", street: "invalid string type"}}
-                 ]
+                 other_addresses: %{
+                   0 => %{number: "invalid integer type", street: "invalid string type"}
+                 }
                }
              } == Parameter.dump(UserTestSchema, loaded_schema)
     end
@@ -1158,7 +1153,7 @@ defmodule ParameterTest do
             %{city: "Other city", street: "Other street", number: 10}
           ],
           status: :user_valid,
-          numbers: ["not number", 2, 5, 10],
+          numbers: ["not number", 2, 5, "not number"],
           metadata: [],
           hex_amount: "123123",
           id_info: %{number: 123, type: "identity"}
@@ -1181,14 +1176,16 @@ defmodule ParameterTest do
       ]
 
       assert {:error,
-              [
-                {0, %{metadata: "invalid map type", numbers: [{0, "invalid integer type"}]}},
-                {1,
-                 %{
-                   age: "invalid integer type",
-                   other_addresses: [{0, %{number: "invalid integer type"}}]
-                 }}
-              ]} == Parameter.dump(UserTestSchema, loaded_schema, many: true)
+              %{
+                0 => %{
+                  metadata: "invalid map type",
+                  numbers: %{0 => "invalid integer type", 3 => "invalid integer type"}
+                },
+                1 => %{
+                  age: "invalid integer type",
+                  other_addresses: %{0 => %{number: "invalid integer type"}}
+                }
+              }} == Parameter.dump(UserTestSchema, loaded_schema, many: true)
     end
   end
 end

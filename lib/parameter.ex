@@ -121,6 +121,22 @@ defmodule Parameter do
         address: %AddressParam{city: "New York", street: "broadway"}
       }}
 
+      # Using many: true for lists
+      Parameter.load(UserParam, [params, params], many: true)
+      {:ok,
+      [
+        %{
+          address: %{city: "New York", street: "broadway"},
+          first_name: "John",
+          last_name: "Doe"
+        },
+        %{
+          address: %{city: "New York", street: "broadway"},
+          first_name: "John",
+          last_name: "Doe"
+        }
+      ]}
+
       # Excluding fields
       Parameter.load(UserParam, params, exclude: [:first_name, {:address, [:city]}])
       {:ok, %{
@@ -138,10 +154,17 @@ defmodule Parameter do
         "address" => %{"city" => "New York", "number" => "123AB"},
         "lastName" => "Doe"
       }
-      Parameter.load(User, params)
+      Parameter.load(UserParam, params)
       {:error, %{
         first_name: "is required",
         address: %{number: "invalid integer type"},
+      }}
+
+      Parameter.load(UserParam, [params, params], many: true)
+      {:error,
+      %{
+        0 => %{address: %{number: "invalid integer type"}, first_name: "is required"},
+        1 => %{address: %{number: "invalid integer type"}, first_name: "is required"}
       }}
   """
   @spec load(module() | atom(), map() | list(map()), Keyword.t()) ::

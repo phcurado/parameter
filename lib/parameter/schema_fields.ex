@@ -67,10 +67,10 @@ defmodule Parameter.SchemaFields do
       when is_list(inputs) do
     inputs
     |> Enum.with_index()
-    |> Enum.reduce({[], []}, fn {value, index}, {acc_list, errors} ->
+    |> Enum.reduce({[], %{}}, fn {value, index}, {acc_list, errors} ->
       case operation_handler(schema, value, opts, operation) do
         {:error, reason} ->
-          {acc_list, [{index, reason} | errors]}
+          {acc_list, Map.put(errors, index, reason)}
 
         {:ok, result} ->
           {[result | acc_list], errors}
@@ -100,10 +100,10 @@ defmodule Parameter.SchemaFields do
   def field_to_exclude(_field_name, _exclude_fields), do: :include
 
   defp parse_list_values({result, errors}) do
-    if errors == [] do
+    if errors == %{} do
       {:ok, Enum.reverse(result)}
     else
-      {:error, Enum.reverse(errors)}
+      {:error, errors}
     end
   end
 
