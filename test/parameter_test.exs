@@ -68,7 +68,7 @@ defmodule ParameterTest do
       field :status, __MODULE__.Status, required: true
       has_one :main_address, AddressTestSchema, key: "mainAddress", required: true
       has_many :other_addresses, AddressTestSchema, key: "otherAddresses"
-      has_many :numbers, :integer
+      has_many :numbers, :integer, default: [1, 2]
 
       has_one :id_info, IdInfo, key: "idInfo" do
         field :number, :integer, load_default: 0, dump_default: 25
@@ -251,7 +251,6 @@ defmodule ParameterTest do
           %{"city" => "Other city", "street" => "Other street", "number" => 10}
         ],
         "status" => "userValid",
-        "numbers" => ["1", 2, 5, "10"],
         "metadata" => %{"key" => "value", "other_key" => "value"},
         "hexAmount" => "0xbe807dddb074639cd9fa61b47676c064fc50d62c",
         "idInfo" => %{"number" => "25"},
@@ -274,7 +273,7 @@ defmodule ParameterTest do
                 ],
                 status: :user_valid,
                 paid_amount: Decimal.new("1"),
-                numbers: [1, 2, 5, 10],
+                numbers: [1, 2],
                 metadata: %{"key" => "value", "other_key" => "value"},
                 hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908,
                 id_info: %UserTestSchema.IdInfo{number: 25, type: nil},

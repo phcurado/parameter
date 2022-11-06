@@ -81,6 +81,7 @@ defmodule Parameter.Schema do
 
   alias Parameter.Field
   alias Parameter.Schema.Compiler
+  alias Parameter.Types
 
   @doc false
   defmacro __using__(_) do
@@ -179,7 +180,10 @@ defmodule Parameter.Schema do
 
   defmacro has_many(name, type, opts) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
-      opts = Compiler.fetch_nested_opts!(opts)
+      if type not in Types.base_types() do
+        Compiler.fetch_nested_opts!(opts)
+      end
+
       field name, {:has_many, type}, opts
     end
   end
