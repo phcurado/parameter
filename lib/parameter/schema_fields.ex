@@ -156,20 +156,11 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  defp check_required(_field, value, :dump) do
-    {:ok, value}
+  defp check_required(%Field{required: true, default: nil}, _value, :load) do
+    {:error, "is required"}
   end
 
-  defp check_required(field, value, _action) do
-    cond do
-      !is_nil(field.default) ->
-        {:ok, field.default}
-
-      field.required ->
-        {:error, "is required"}
-
-      true ->
-        {:ok, value}
-    end
+  defp check_required(%Field{default: default}, value, _operation) do
+    {:ok, default || value}
   end
 end

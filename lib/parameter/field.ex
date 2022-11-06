@@ -13,8 +13,12 @@ defmodule Parameter.Field do
   If this parameter is not set it will default to the field name.
   * `:default` - default value of the field when no value is given to the field.
   * `:required` - defines if the field needs to be present when parsing the input.
+  `Parameter.load/3` will return an error if the value is missing from the input data.
   * `:validator` - Validation function that will validate the field after loading.
   * `:virtual` - if `true` the field will be ignored on `Parameter.load/2` and `Parameter.dump/2` functions.
+
+  > NOTE: Validation only occurs on `Parameter.load/3`.
+  > By desgin, data passed into `Parameter.dump/3` are considered valid.
 
   ## Example
   As an example having an `email` field that is required and needs email validation could be implemented this way:

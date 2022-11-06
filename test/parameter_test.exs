@@ -71,7 +71,7 @@ defmodule ParameterTest do
       has_many :numbers, :integer
 
       has_one :id_info, IdInfo, key: "idInfo" do
-        field :number, :integer
+        field :number, :integer, default: 0
         field :type, :string
       end
 
@@ -901,6 +901,7 @@ defmodule ParameterTest do
                 "numbers" => [1, 2, 5, 10],
                 "metadata" => %{"key" => "value", "other_key" => "value"},
                 "hexAmount" => 0,
+                "paidAmount" => Decimal.new(1),
                 "idInfo" => %{
                   "number" => 123,
                   "type" => "identity"
@@ -926,7 +927,7 @@ defmodule ParameterTest do
         numbers: [1, 2, 5, 10],
         metadata: %{"key" => "value", "other_key" => "value"},
         hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908,
-        id_info: %UserTestSchema.IdInfo{number: 25, type: nil},
+        id_info: %UserTestSchema.IdInfo{type: nil},
         info: [%UserTestSchema.Info{id: "1"}]
       }
 
@@ -949,7 +950,7 @@ defmodule ParameterTest do
                 "numbers" => [1, 2, 5, 10],
                 "metadata" => %{"key" => "value", "other_key" => "value"},
                 "hexAmount" => 0,
-                "idInfo" => %{"number" => 25, "type" => nil},
+                "idInfo" => %{"number" => 0, "type" => nil},
                 "info" => [%{"id" => "1"}]
               }} == Parameter.dump(UserTestSchema, loaded_schema)
     end
@@ -987,7 +988,6 @@ defmodule ParameterTest do
     test "dump schema with excluded fields should ignore it" do
       loaded_schema = %{
         first_name: "John",
-        last_name: "Doe",
         age: 32,
         main_address: %{city: "Some City", street: "Some street", number: 15},
         other_addresses: [
@@ -1005,7 +1005,7 @@ defmodule ParameterTest do
       assert {:ok,
               %{
                 "firstName" => "John",
-                "lastName" => "Doe",
+                "lastName" => "",
                 "age" => 32,
                 "mainAddress" => %{"street" => "Some street"},
                 "otherAddresses" => [
@@ -1091,6 +1091,7 @@ defmodule ParameterTest do
           numbers: [1, 2, 5, 10],
           metadata: %{"key" => "value", "other_key" => "value"},
           hex_amount: "123123",
+          paid_amount: Decimal.new(5),
           id_info: %{number: 123, type: "identity"}
         }
       ]
@@ -1114,6 +1115,7 @@ defmodule ParameterTest do
                   "numbers" => [1, 2, 5, 10],
                   "metadata" => %{"key" => "value", "other_key" => "value"},
                   "hexAmount" => 0,
+                  "paidAmount" => Decimal.new(1),
                   "idInfo" => %{
                     "number" => 123,
                     "type" => "identity"
@@ -1136,6 +1138,7 @@ defmodule ParameterTest do
                   "numbers" => [1, 2, 5, 10],
                   "metadata" => %{"key" => "value", "other_key" => "value"},
                   "hexAmount" => 0,
+                  "paidAmount" => Decimal.new(5),
                   "idInfo" => %{
                     "number" => 123,
                     "type" => "identity"
