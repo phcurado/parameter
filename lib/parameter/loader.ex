@@ -40,7 +40,7 @@ defmodule Parameter.Loader do
     Enum.reduce(schema_keys, {%{}, %{}}, fn schema_key, {result, errors} ->
       field = schema.__param__(:field, key: schema_key)
 
-      case load_map_value(field, input, opts) do
+      case SchemaFields.process_map_value(field, input, opts, :load) do
         {:error, error} ->
           errors = Map.put(errors, field.name, error)
           {result, errors}
@@ -75,48 +75,6 @@ defmodule Parameter.Loader do
   end
 
   defp unknow_fields(_schema, _input, _ignore), do: :ok
-
-  defp load_map_value(field, input, opts) do
-    exclude_fields = Keyword.get(opts, :exclude)
-
-    case SchemaFields.field_to_exclude(field.name, exclude_fields) do
-      :include ->
-        fetch_and_verify_input(field, input, opts)
-
-      {:exclude, nested_values} ->
-        opts = Keyword.put(opts, :exclude, nested_values)
-        fetch_and_verify_input(field, input, opts)
-
-      :exclude ->
-        {:ok, :ignore}
-    end
-  end
-
-  defp fetch_and_verify_input(field, input, opts) do
-    case Map.fetch(input, field.key) do
-      :error ->
-        check_required(field, :ignore)
-
-      {:ok, nil} ->
-        check_required(field, nil)
-
-      {:ok, value} ->
-        SchemaFields.field_handler(field, value, opts, :load)
-    end
-  end
-
-  defp check_required(field, action) do
-    cond do
-      !is_nil(field.default) ->
-        {:ok, field.default}
-
-      field.required ->
-        {:error, "is required"}
-
-      true ->
-        {:ok, action}
-    end
-  end
 
   defp parse_loaded_input({result, errors}) do
     if errors == %{} do

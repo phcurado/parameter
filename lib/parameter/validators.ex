@@ -12,7 +12,7 @@ defmodule Parameter.Validators do
       {:error, %{email: "is invalid"}}
   """
 
-  @type resp :: :ok | {:error, binary()}
+  @type resp :: :ok | {:error, String.t()}
   @email_regex ~r/^[A-Za-z0-9\._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}$/
 
   @doc """

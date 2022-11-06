@@ -956,6 +956,7 @@ defmodule ParameterTest do
 
     test "dump schema with invalid input should return error" do
       loaded_schema = %{
+        first_name: "John",
         last_name: 55,
         age: "not number",
         main_address: %{city: "Some City", street: "Some street", number: 15},

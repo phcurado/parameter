@@ -53,7 +53,7 @@ defmodule Parameter.Field do
   end
 
   @doc false
-  @spec new(opts :: Keyword.t()) :: t() | {:error, binary()}
+  @spec new(opts :: Keyword.t()) :: t() | {:error, String.t()}
   def new(opts \\ []) do
     name = Keyword.get(opts, :name)
 
