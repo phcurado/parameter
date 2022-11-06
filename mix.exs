@@ -61,6 +61,7 @@ defmodule Parameter.MixProject do
   defp docs do
     [
       main: "Parameter",
+      logo: "logo.png",
       source_ref: "v#{@version}",
       skip_undefined_reference_warnings_on: ["CHANGELOG.md"],
       canonical: "https://hexdocs.pm/parameter",

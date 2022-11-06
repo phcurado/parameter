@@ -1,6 +1,11 @@
 # Parameter
 
-<p align="center"><img src="logo.png" alt="parameter" height="300px"></p>
+<img src="logo.png" alt="parameter" width="150">
+
+[![ci](https://github.com/phcurado/parameter/workflows/ci/badge.svg?branch=main)](https://github.com/phcurado/parameter/actions?query=branch%3Amain+workflow%3Aci)
+[![Hex](https://img.shields.io/hexpm/v/parameter)](https://hexdocs.pm/parameter)
+[![HexDocs](https://img.shields.io/badge/documentation-gray)](https://hexdocs.pm/parameter)
+
 
 `Parameter` is a library for dealing with complex datatypes by solving the following problems:
   - Schema creation and validation
@@ -89,3 +94,9 @@ import_deps: [:ecto, :phoenix, ..., :parameter],
 ```
 
 For `Parameter` with `Ecto` integration check out the [parameter_ecto](https://github.com/phcurado/parameter_ecto) project.
+
+## License
+
+Copyright (c) 2022, Paulo Curado.
+
+Parameter source code is licensed under the Apache 2.0 License.
