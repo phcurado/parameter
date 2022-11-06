@@ -1,4 +1,7 @@
 # Parameter
+
+<p align="center"><img src="logo.png" alt="parameter" height="300px"></p>
+
 `Parameter` is a library for dealing with complex datatypes by solving the following problems:
   - Schema creation and validation
   - Input data validation
