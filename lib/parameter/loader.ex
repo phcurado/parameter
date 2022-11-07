@@ -3,7 +3,12 @@ defmodule Parameter.Loader do
 
   alias Parameter.SchemaFields
 
-  @type opts :: [struct: boolean(), unknow_fields: :error | :ignore, exclude: list()]
+  @type opts :: [
+          struct: boolean(),
+          unknow_fields: :error | :ignore,
+          exclude: list(),
+          many: boolean()
+        ]
 
   @spec load(module() | atom(), map() | list(map()), opts) :: {:ok, any()} | {:error, any()}
   def load(schema, input, opts) when is_map(input) do

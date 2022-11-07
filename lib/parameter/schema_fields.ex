@@ -5,8 +5,9 @@ defmodule Parameter.SchemaFields do
   alias Parameter.Field
   alias Parameter.Loader
   alias Parameter.Types
+  alias Parameter.Validator
 
-  @spec process_map_value(atom | Field.t(), map(), Keyword.t(), :load | :dump) ::
+  @spec process_map_value(atom | Field.t(), map(), Keyword.t(), :load | :dump | :validate) ::
           {:ok, :ignore} | {:ok, map()} | {:ok, list()} | {:error, String.t()}
   def process_map_value(field, input, opts, action) do
     exclude_fields = Keyword.get(opts, :exclude)
@@ -24,7 +25,7 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  @spec field_handler(atom | Field.t(), map(), Keyword.t(), :load | :dump) ::
+  @spec field_handler(atom | Field.t(), map(), Keyword.t(), :load | :dump | :validate) ::
           {:ok, :ignore} | {:ok, map()} | {:ok, list()} | {:error, String.t()}
   def field_handler(%Field{virtual: true}, _input, _opts, _operation) do
     {:ok, :ignore}
@@ -51,6 +52,10 @@ defmodule Parameter.SchemaFields do
       error ->
         error
     end
+  end
+
+  def field_handler(%Field{validator: validator}, input, _opts, :validate) do
+    run_validator(validator, input)
   end
 
   def field_handler(%Field{type: type}, input, _opts, operation) do
@@ -127,6 +132,7 @@ defmodule Parameter.SchemaFields do
     case operation do
       :dump -> Dumper.dump(schema, input, opts)
       :load -> Loader.load(schema, input, opts)
+      :validate -> Validator.validate(schema, input, opts)
     end
   end
 
@@ -134,6 +140,7 @@ defmodule Parameter.SchemaFields do
     case operation do
       :dump -> Types.dump(type, input)
       :load -> Types.load(type, input)
+      :validate -> Types.validate(type, input)
     end
   end
 
@@ -142,6 +149,7 @@ defmodule Parameter.SchemaFields do
       case action do
         :load -> field.key
         :dump -> field.name
+        :validate -> field.name
       end
 
     case Map.fetch(input, key) do
@@ -156,11 +164,13 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  defp check_required(%Field{required: true, load_default: nil}, _value, :load) do
+  defp check_required(%Field{required: true, load_default: nil}, _value, operation)
+       when operation in [:load, :validate] do
     {:error, "is required"}
   end
 
-  defp check_required(%Field{load_default: default}, value, :load) do
+  defp check_required(%Field{load_default: default}, value, operation)
+       when operation in [:load, :validate] do
     {:ok, default || value}
   end
 

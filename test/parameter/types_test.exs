@@ -141,8 +141,8 @@ defmodule Parameter.TypesTest do
 
     test "dump string type" do
       assert Types.dump(:string, "Test") == {:ok, "Test"}
-      assert Types.dump(:string, 1) == {:error, "invalid string type"}
-      assert Types.dump(:string, true) == {:error, "invalid string type"}
+      assert Types.dump(:string, 1) == {:ok, "1"}
+      assert Types.dump(:string, true) == {:ok, "true"}
       assert Types.dump(:string, "true") == {:ok, "true"}
     end
 
@@ -162,7 +162,7 @@ defmodule Parameter.TypesTest do
 
     test "dump integer type" do
       assert Types.dump(:integer, 1) == {:ok, 1}
-      assert Types.dump(:integer, "1") == {:error, "invalid integer type"}
+      assert Types.dump(:integer, "1") == {:ok, 1}
       assert Types.dump(:integer, 1.5) == {:error, "invalid integer type"}
     end
 
@@ -183,7 +183,8 @@ defmodule Parameter.TypesTest do
 
     test "dump float type" do
       assert Types.dump(:float, 1.5) == {:ok, 1.5}
-      assert Types.dump(:float, 1) == {:error, "invalid float type"}
+      assert Types.dump(:float, 1) == {:ok, 1.0}
+      assert Types.dump(:float, "string") == {:error, "invalid float type"}
     end
 
     test "dump date types" do
@@ -191,7 +192,7 @@ defmodule Parameter.TypesTest do
                {:ok, %Date{year: 2020, month: 10, day: 5}}
 
       assert Types.dump(:date, ~D[2000-01-01]) == {:ok, ~D[2000-01-01]}
-      assert Types.dump(:date, "2000-01-01") == {:error, "invalid date type"}
+      assert Types.dump(:date, "2000-01-01") == {:ok, ~D[2000-01-01]}
 
       {:ok, time} = Time.new(0, 0, 0, 0)
       assert Types.dump(:time, time) == {:ok, time}

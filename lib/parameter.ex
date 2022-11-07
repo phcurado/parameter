@@ -64,6 +64,7 @@ defmodule Parameter do
   alias Parameter.Dumper
   alias Parameter.Loader
   alias Parameter.Types
+  alias Parameter.Validator
 
   @unknown_opts [:error, :ignore]
 
@@ -229,6 +230,14 @@ defmodule Parameter do
     Types.validate!(:list, exclude)
     Types.validate!(:boolean, many)
     Dumper.dump(schema, input, exclude: exclude, many: many)
+  end
+
+  @spec validate(module() | atom(), map() | list(map), Keyword.t()) ::
+          {:ok, any()} | {:error, any()}
+  def validate(schema, input, opts \\ []) do
+    many = Keyword.get(opts, :many, false)
+    Types.validate!(:boolean, many)
+    Validator.validate(schema, input, many: many)
   end
 
   defp parse_opts(opts) do

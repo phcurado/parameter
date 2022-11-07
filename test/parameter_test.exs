@@ -968,11 +968,10 @@ defmodule ParameterTest do
                :error,
                %{
                  age: "invalid integer type",
-                 last_name: "invalid string type",
                  metadata: "invalid map type",
                  numbers: "invalid list type",
                  other_addresses: %{
-                   0 => %{number: "invalid integer type", street: "invalid string type"}
+                   0 => %{number: "invalid integer type"}
                  }
                }
              } == Parameter.dump(UserTestSchema, loaded_schema)
