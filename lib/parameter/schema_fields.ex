@@ -44,18 +44,16 @@ defmodule Parameter.SchemaFields do
     list_field_handler(schema, inputs, opts, operation)
   end
 
-  def field_handler(%Field{type: type, validator: validator}, input, _opts, :load) do
-    case Types.load(type, input) do
-      {:ok, value} ->
-        run_validator(validator, value)
-
-      error ->
-        error
+  def field_handler(%Field{type: type, validator: validator}, input, _opts, operation)
+      when not is_nil(validator) and operation in [:load, :validate] do
+    case operation do
+      :load -> Types.load(type, input)
+      :validate -> {:ok, input}
     end
-  end
-
-  def field_handler(%Field{validator: validator}, input, _opts, :validate) do
-    run_validator(validator, input)
+    |> case do
+      {:ok, value} -> run_validator(validator, value)
+      error -> error
+    end
   end
 
   def field_handler(%Field{type: type}, input, _opts, operation) do
@@ -84,7 +82,7 @@ defmodule Parameter.SchemaFields do
           {acc_list, errors}
       end
     end)
-    |> parse_list_values()
+    |> parse_list_values(operation)
   end
 
   def list_field_handler(_schema, _inputs, _opts, _operation) do
@@ -107,15 +105,21 @@ defmodule Parameter.SchemaFields do
 
   def field_to_exclude(_field_name, _exclude_fields), do: :include
 
-  defp parse_list_values({result, errors}) do
+  defp parse_list_values({_result, errors}, :validate) do
+    if errors == %{} do
+      :ok
+    else
+      {:error, errors}
+    end
+  end
+
+  defp parse_list_values({result, errors}, _operation) do
     if errors == %{} do
       {:ok, Enum.reverse(result)}
     else
       {:error, errors}
     end
   end
-
-  defp run_validator(nil, value), do: {:ok, value}
 
   defp run_validator({func, args}, value) do
     case apply(func, [value | [args]]) do

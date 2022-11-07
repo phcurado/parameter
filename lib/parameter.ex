@@ -232,11 +232,64 @@ defmodule Parameter do
     Dumper.dump(schema, input, exclude: exclude, many: many)
   end
 
+  @doc """
+  Validate parameters.
+
+  ## Options
+
+    * `:exclude` - Accepts a list of fields to be excluded when validating the parameters.
+
+    * `:many` - When `true` will parse the input data as list, when `false` (default) it parses as map
+
+
+  ## Examples
+
+      defmodule UserParam do
+        use Parameter.Schema
+
+        param do
+          field :first_name, :string, key: "firstName", required: true
+          field :last_name, :string, key: "lastName"
+          has_one :address, Address do
+            field :city, :string, required: true
+            field :street, :string
+            field :number, :integer
+          end
+        end
+      end
+
+      params = %{
+        first_name: "John",
+        last_name: "Doe",
+        address: %{city: "New York", street: "broadway"}
+      }
+
+      Parameter.validate(UserParam, params)
+      :ok
+
+      # Invalid data
+      params = %{
+        last_name: 12,
+        address: %{city: "New York", street: "broadway", number: "A"}
+      }
+
+      Parameter.validate(UserParam, params)
+      {:error,
+        %{
+          address: %{number: "invalid integer type"},
+          first_name: "is required",
+          last_name: "invalid string type"
+        }
+      }
+  """
   @spec validate(module() | atom(), map() | list(map), Keyword.t()) :: :ok | {:error, any()}
   def validate(schema, input, opts \\ []) do
+    exclude = Keyword.get(opts, :exclude, [])
     many = Keyword.get(opts, :many, false)
+
+    Types.validate!(:list, exclude)
     Types.validate!(:boolean, many)
-    Validator.validate(schema, input, many: many)
+    Validator.validate(schema, input, exclude: exclude, many: many)
   end
 
   defp parse_opts(opts) do
