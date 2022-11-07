@@ -8,7 +8,7 @@ defmodule Parameter.SchemaFields do
   alias Parameter.Validator
 
   @spec process_map_value(atom | Field.t(), map(), Keyword.t(), :load | :dump | :validate) ::
-          {:ok, :ignore} | {:ok, map()} | {:ok, list()} | {:error, String.t()}
+          {:ok, :ignore} | {:ok, map()} | {:ok, list()} | :ok | {:error, String.t()}
   def process_map_value(field, input, opts, action) do
     exclude_fields = Keyword.get(opts, :exclude)
 
@@ -26,7 +26,7 @@ defmodule Parameter.SchemaFields do
   end
 
   @spec field_handler(atom | Field.t(), map(), Keyword.t(), :load | :dump | :validate) ::
-          {:ok, :ignore} | {:ok, map()} | {:ok, list()} | {:error, String.t()}
+          {:ok, :ignore} | {:ok, map()} | {:ok, list()} | :ok | {:error, String.t()}
   def field_handler(%Field{virtual: true}, _input, _opts, _operation) do
     {:ok, :ignore}
   end
@@ -79,6 +79,9 @@ defmodule Parameter.SchemaFields do
 
         {:ok, result} ->
           {[result | acc_list], errors}
+
+        :ok ->
+          {acc_list, errors}
       end
     end)
     |> parse_list_values()

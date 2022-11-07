@@ -5,24 +5,25 @@ defmodule Parameter.Validator do
 
   @type opts :: [exclude: list(), many: boolean()]
 
-  @spec validate(module() | atom(), map() | list(map()), opts) :: {:ok, any()} | {:error, any()}
+  @spec validate(module() | atom(), map() | list(map()), opts) :: :ok | {:error, any()}
   def validate(schema, input, opts) when is_map(input) do
     schema_keys = schema.__param__(:field_keys)
 
-    Enum.reduce(schema_keys, {%{}, %{}}, fn schema_key, {result, errors} ->
+    Enum.reduce(schema_keys, %{}, fn schema_key, errors ->
       field = schema.__param__(:field, key: schema_key)
 
       case SchemaFields.process_map_value(field, input, opts, :validate) do
         {:error, error} ->
-          errors = Map.put(errors, field.name, error)
-          {result, errors}
+          Map.put(errors, field.name, error)
 
         {:ok, :ignore} ->
-          {result, errors}
+          errors
 
-        {:ok, loaded_value} ->
-          result = Map.put(result, field.name, loaded_value)
-          {result, errors}
+        {:ok, _result} ->
+          errors
+
+        :ok ->
+          errors
       end
     end)
     |> parse_result()
@@ -41,9 +42,9 @@ defmodule Parameter.Validator do
     SchemaFields.field_handler(type, input, opts, :validate)
   end
 
-  defp parse_result({result, errors}) do
+  defp parse_result(errors) do
     if errors == %{} do
-      {:ok, result}
+      :ok
     else
       {:error, errors}
     end

@@ -232,8 +232,7 @@ defmodule Parameter do
     Dumper.dump(schema, input, exclude: exclude, many: many)
   end
 
-  @spec validate(module() | atom(), map() | list(map), Keyword.t()) ::
-          {:ok, any()} | {:error, any()}
+  @spec validate(module() | atom(), map() | list(map), Keyword.t()) :: :ok | {:error, any()}
   def validate(schema, input, opts \\ []) do
     many = Keyword.get(opts, :many, false)
     Types.validate!(:boolean, many)
