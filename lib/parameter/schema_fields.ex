@@ -9,16 +9,16 @@ defmodule Parameter.SchemaFields do
 
   @spec process_map_value(atom | Field.t(), map(), Keyword.t(), :load | :dump | :validate) ::
           {:ok, :ignore} | {:ok, map()} | {:ok, list()} | :ok | {:error, String.t()}
-  def process_map_value(field, input, opts, action) do
+  def process_map_value(field, input, opts, operation) do
     exclude_fields = Keyword.get(opts, :exclude)
 
     case field_to_exclude(field.name, exclude_fields) do
       :include ->
-        fetch_and_verify_input(field, input, opts, action)
+        fetch_and_verify_input(field, input, opts, operation)
 
       {:exclude, nested_values} ->
         opts = Keyword.put(opts, :exclude, nested_values)
-        fetch_and_verify_input(field, input, opts, action)
+        fetch_and_verify_input(field, input, opts, operation)
 
       :exclude ->
         {:ok, :ignore}
@@ -168,9 +168,9 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  defp fetch_and_verify_input(field, input, opts, action) do
+  defp fetch_and_verify_input(field, input, opts, operation) do
     key =
-      case action do
+      case operation do
         :load -> field.key
         :dump -> field.name
         :validate -> field.name
@@ -178,13 +178,13 @@ defmodule Parameter.SchemaFields do
 
     case Map.fetch(input, key) do
       :error ->
-        check_required(field, :ignore, action)
+        check_required(field, :ignore, operation)
 
       {:ok, nil} ->
-        check_required(field, nil, action)
+        check_required(field, nil, operation)
 
       {:ok, value} ->
-        field_handler(field, value, opts, action)
+        field_handler(field, value, opts, operation)
     end
   end
 

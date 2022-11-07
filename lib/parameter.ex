@@ -233,7 +233,9 @@ defmodule Parameter do
   end
 
   @doc """
-  Validate parameters.
+  Validate parameters. This function is meant to be used when the data is loaded or
+  created internally. `validate/3` will validate field types, required fields and
+  `Parameter.Validators` functions.
 
   ## Options
 

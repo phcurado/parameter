@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.x (2022-11-07)
+
+### Enhancements
+
+* [Parameter] New `validate/3` function.
+
+### Bug fixes
+
+* [Parameter] `dump/3` function to load the value to be dumped.
+
 ## v0.6.x (2022-11-06)
 
 ### Enhancements
@@ -10,7 +20,7 @@
   * [Parameter.Field] Support for `load_default` and `dump_default` options
   * [Parameter.Enum] Deprecated `as` in favour of `key`
 
-### Bug fix
+### Bug fixes
 
   * [Parameter.Field] Return `default` value when calling `Parameter.dump/3` with empty value.
 
