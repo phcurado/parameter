@@ -51,8 +51,13 @@ defmodule Parameter.SchemaFields do
       :validate -> {:ok, input}
     end
     |> case do
-      {:ok, value} -> run_validator(validator, value)
-      error -> error
+      {:ok, value} ->
+        validator
+        |> run_validator(value)
+        |> parse_validator_result(value, operation)
+
+      error ->
+        error
     end
   end
 
@@ -135,6 +140,18 @@ defmodule Parameter.SchemaFields do
     end
   end
 
+  defp parse_validator_result(:ok, value, :load) do
+    {:ok, value}
+  end
+
+  defp parse_validator_result(:ok, _value, :validate) do
+    :ok
+  end
+
+  defp parse_validator_result(error, _value, _operation) do
+    error
+  end
+
   defp operation_handler(schema, input, opts, operation) do
     case operation do
       :dump -> Dumper.dump(schema, input, opts)
@@ -176,9 +193,12 @@ defmodule Parameter.SchemaFields do
     {:error, "is required"}
   end
 
-  defp check_required(%Field{load_default: default}, value, operation)
-       when operation in [:load, :validate] do
+  defp check_required(%Field{load_default: default}, value, :load) do
     {:ok, default || value}
+  end
+
+  defp check_required(_field, _value, :validate) do
+    :ok
   end
 
   defp check_required(%Field{dump_default: default}, value, :dump) do

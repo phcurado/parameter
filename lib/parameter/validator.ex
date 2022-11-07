@@ -19,9 +19,6 @@ defmodule Parameter.Validator do
         {:ok, :ignore} ->
           errors
 
-        {:ok, _result} ->
-          errors
-
         :ok ->
           errors
       end
