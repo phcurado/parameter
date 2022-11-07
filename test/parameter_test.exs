@@ -31,7 +31,7 @@ defmodule ParameterTest do
     @impl true
     def validate(value)
 
-    def validate(value) when is_binary(value) do
+    def validate(value) when is_binary(value) or is_integer(value) do
       :ok
     end
 
@@ -139,9 +139,10 @@ defmodule ParameterTest do
 
   defmodule VirtualFieldTestSchema do
     use Parameter.Schema
+    alias Parameter.Validators
 
     param do
-      field :email, :string
+      field :email, :string, validator: &Validators.email/1
       field :password, :string, virtual: true
 
       has_many :addresses, Address do
@@ -859,7 +860,7 @@ defmodule ParameterTest do
     end
   end
 
-  describe "dump/2" do
+  describe "dump/3" do
     test "dump schema input" do
       loaded_schema = %{
         first_name: "John",
@@ -968,11 +969,10 @@ defmodule ParameterTest do
                :error,
                %{
                  age: "invalid integer type",
-                 last_name: "invalid string type",
                  metadata: "invalid map type",
                  numbers: "invalid list type",
                  other_addresses: %{
-                   0 => %{number: "invalid integer type", street: "invalid string type"}
+                   0 => %{number: "invalid integer type"}
                  }
                }
              } == Parameter.dump(UserTestSchema, loaded_schema)
@@ -1185,6 +1185,197 @@ defmodule ParameterTest do
                   other_addresses: %{0 => %{number: "invalid integer type"}}
                 }
               }} == Parameter.dump(UserTestSchema, loaded_schema, many: true)
+    end
+  end
+
+  describe "validate/3" do
+    test "validate schema input" do
+      params = %{
+        first_name: "John",
+        last_name: "Doe",
+        age: 32,
+        main_address: %{city: "Some City", street: "Some street", number: 15},
+        other_addresses: [
+          %{city: "Some City", street: "Some street", number: 15},
+          %{city: "Other city", street: "Other street", number: 10}
+        ],
+        status: :user_valid,
+        numbers: [1, 2, 5, 10],
+        metadata: %{"key" => "value", "other_key" => "value"},
+        hex_amount: "123123",
+        id_info: %{number: 123, type: "identity"}
+      }
+
+      assert :ok == Parameter.validate(UserTestSchema, params)
+    end
+
+    test "validate schema input from struct" do
+      params = %UserTestSchema{
+        first_name: "John",
+        last_name: "Doe",
+        age: 32,
+        main_address: %AddressTestSchema{
+          city: "Some City",
+          number: 15
+        },
+        other_addresses: [
+          %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
+          %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
+        ],
+        status: :user_valid,
+        paid_amount: Decimal.new("10.5"),
+        hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908,
+        id_info: %UserTestSchema.IdInfo{type: "type"},
+        info: [%UserTestSchema.Info{id: "1"}]
+      }
+
+      assert :ok == Parameter.validate(UserTestSchema, params)
+    end
+
+    test "validate schema with invalid input should return error" do
+      params = %{
+        first_name: "John",
+        last_name: 55,
+        age: "not number",
+        main_address: %{city: "Some City", street: "Some street", number: 15},
+        other_addresses: [
+          %{city: "Some City", street: 55, number: "Street"},
+          %{city: "Other city", street: "Other street", number: 10}
+        ],
+        numbers: %{},
+        metadata: [],
+        hex_amount: :atom,
+        id_info: %{number: 123, type: "identity"}
+      }
+
+      assert {
+               :error,
+               %{
+                 age: "invalid integer type",
+                 metadata: "invalid map type",
+                 numbers: "invalid list type",
+                 other_addresses: %{
+                   0 => %{number: "invalid integer type", street: "invalid string type"}
+                 },
+                 hex_amount: "not a string",
+                 last_name: "invalid string type",
+                 status: "is required"
+               }
+             } == Parameter.validate(UserTestSchema, params)
+    end
+
+    test "ignore virtual fields when validating" do
+      params = %{
+        email: "johnemail.com",
+        password: "123456",
+        addresses: [
+          %{street: "street", number: 12},
+          %{street: "street_2", number: 15}
+        ],
+        phones: [
+          %{number: "123456A"},
+          %{number: "654321A"}
+        ]
+      }
+
+      assert {:error, %{email: "is invalid"}} ==
+               Parameter.validate(VirtualFieldTestSchema, params)
+
+      assert :ok ==
+               Parameter.validate(VirtualFieldTestSchema, params,
+                 exclude: [:email, {:phones, [:number]}]
+               )
+
+      assert :ok ==
+               Parameter.validate(VirtualFieldTestSchema, params,
+                 exclude: [:email, {:addresses, [:number]}, {:phones, [:number]}]
+               )
+    end
+
+    test "validate schema input as list" do
+      params = [
+        %{
+          first_name: "John",
+          last_name: "Doe",
+          age: 32,
+          main_address: %{city: "John City", street: "John street", number: 15},
+          other_addresses: [
+            %{city: "John City", street: "John street", number: 15},
+            %{city: "Other city", street: "Other street", number: 10}
+          ],
+          status: :user_valid,
+          numbers: [1, 2, 5, 10],
+          metadata: %{"key" => "value", "other_key" => "value"},
+          hex_amount: "123123",
+          id_info: %{number: 123, type: "identity"}
+        },
+        %{
+          first_name: "Jane",
+          last_name: "Doe",
+          age: 32,
+          main_address: %{city: "Jane City", street: "Jane street", number: 15},
+          other_addresses: [
+            %{city: "Jane City", street: "Jane street", number: 15},
+            %{city: "Other city", street: "Other street", number: 10}
+          ],
+          status: :user_invalid,
+          numbers: [1, 2, 5, 10],
+          metadata: %{"key" => "value", "other_key" => "value"},
+          hex_amount: "123123",
+          paid_amount: Decimal.new(5),
+          id_info: %{number: 123, type: "identity"}
+        }
+      ]
+
+      assert :ok == Parameter.validate(UserTestSchema, params, many: true)
+    end
+
+    test "validate schema as list with invalid input should return error " do
+      loaded_schema = [
+        %{
+          last_name: 55,
+          age: 32,
+          main_address: %{city: "John City", street: "John street", number: 15},
+          other_addresses: [
+            %{city: "John City", street: "John street", number: 15},
+            %{city: "Other city", street: "Other street", number: 10}
+          ],
+          status: :user_valid,
+          numbers: ["not number", 2, 5, "not number"],
+          metadata: [],
+          hex_amount: "123123",
+          id_info: %{number: 123, type: "identity"}
+        },
+        %{
+          first_name: "Jane",
+          last_name: "Doe",
+          age: "32not_number",
+          main_address: %{city: "Jane City", street: "Jane street", number: 15},
+          other_addresses: [
+            %{city: "Jane City", street: "Jane street", number: "not number"},
+            %{city: "Other city", street: "Other street", number: 10}
+          ],
+          status: :user_invalid,
+          numbers: [1, 2, 5, 10],
+          metadata: %{"key" => "value", "other_key" => "value"},
+          hex_amount: "123123",
+          id_info: %{number: 123, type: "identity"}
+        }
+      ]
+
+      assert {:error,
+              %{
+                0 => %{
+                  first_name: "is required",
+                  last_name: "invalid string type",
+                  metadata: "invalid map type",
+                  numbers: %{0 => "invalid integer type", 3 => "invalid integer type"}
+                },
+                1 => %{
+                  age: "invalid integer type",
+                  other_addresses: %{0 => %{number: "invalid integer type"}}
+                }
+              }} == Parameter.validate(UserTestSchema, loaded_schema, many: true)
     end
   end
 end

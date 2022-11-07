@@ -48,10 +48,7 @@ defmodule Parameter.Parametrizable do
 
       @impl true
       def dump(value) do
-        case validate(value) do
-          :ok -> {:ok, value}
-          error -> error
-        end
+        load(value)
       end
 
       @impl true
