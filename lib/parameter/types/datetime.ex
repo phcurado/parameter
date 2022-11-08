@@ -5,6 +5,19 @@ defmodule Parameter.Types.DateTime do
 
   use Parameter.Parametrizable
 
+  @doc """
+  loads DateTime type
+
+  ## Examples
+      iex> Parameter.Types.DateTime.load(~U[2018-11-15 10:00:00Z])
+      {:ok, ~U[2018-11-15 10:00:00Z]}
+
+      iex> Parameter.Types.DateTime.load("2015-01-23T23:50:07Z")
+      {:ok, ~U[2015-01-23 23:50:07Z]}
+
+      iex> Parameter.Types.DateTime.load("2015-25-23")
+      {:error, "invalid datetime type"}
+  """
   @impl true
   def load(%DateTime{} = value) do
     {:ok, value}
@@ -21,8 +34,21 @@ defmodule Parameter.Types.DateTime do
     error_tuple()
   end
 
+  @doc """
+  validate date type
+
+  ## Examples
+      iex> Parameter.Types.DateTime.validate(~U[2018-11-15 10:00:00Z])
+      :ok
+
+      iex> Parameter.Types.DateTime.validate(~D[1990-05-01])
+      {:error, "invalid datetime type"}
+
+      iex> Parameter.Types.DateTime.validate("2015-01-23T23:50:07Z")
+      {:error, "invalid datetime type"}
+  """
   @impl true
-  def validate(%DateTime{}) do
+  def validate(%DateTime{} = _datetime) do
     :ok
   end
 

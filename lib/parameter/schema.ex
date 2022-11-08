@@ -77,6 +77,26 @@ defmodule Parameter.Schema do
       end
 
   It's recommended to use this approach when the schema will only be used in a single module.
+
+  ## Required fields
+  By default, `Parameter.Schema` considers all fields to be optional when validating the schema.
+  This behaviour can be changed by passing the module attribute `@fields_required true` on
+  the module where the schema is declared.
+
+  ### Example
+      defmodule MyApp.UserSchema do
+        use Parameter.Schema
+
+        @fields_required true
+
+        param do
+          field :name, :string
+          field :age, :integer
+        end
+      end
+
+      Parameter.load(MyApp.UserSchema, %{})
+      {:error, %{age: "is required", name: "is required"}}
   """
 
   alias Parameter.Field
@@ -88,6 +108,8 @@ defmodule Parameter.Schema do
     quote do
       import Parameter.Schema
       import Parameter.Enum
+
+      Module.put_attribute(__MODULE__, :fields_required, false)
       Module.register_attribute(__MODULE__, :param_fields, accumulate: true)
     end
   end
@@ -112,7 +134,9 @@ defmodule Parameter.Schema do
   defmacro field(name, type, opts \\ []) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
       main_attrs = [name: name, type: type]
-      field = Field.new!(main_attrs ++ opts)
+      required_attrs = [required: @fields_required]
+
+      field = Field.new!(main_attrs ++ required_attrs ++ opts)
       Module.put_attribute(__MODULE__, :param_fields, field)
       Module.put_attribute(__MODULE__, :param_struct_fields, field.name)
     end
@@ -233,6 +257,13 @@ defmodule Parameter.Schema do
     block =
       quote do
         use Parameter.Schema
+        import Parameter.Schema
+
+        Module.register_attribute(__MODULE__, :param_fields, accumulate: true)
+
+        fields_required = Parameter.Schema.__fetch_fields_required_attr__(unquote(env.module))
+
+        Module.put_attribute(__MODULE__, :fields_required, fields_required)
 
         param do
           unquote(block)
@@ -243,5 +274,12 @@ defmodule Parameter.Schema do
 
     Module.create(module_name, block, env)
     module_name
+  end
+
+  def __fetch_fields_required_attr__(module) do
+    case Module.get_attribute(module, :fields_required) do
+      nil -> false
+      value -> value
+    end
   end
 end

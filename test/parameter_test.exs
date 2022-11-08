@@ -156,6 +156,22 @@ defmodule ParameterTest do
     end
   end
 
+  defmodule UserRequiredSchemaTest do
+    use Parameter.Schema
+
+    @fields_required true
+
+    param do
+      field :first_name, :string
+      has_many :addresses, AddressTestSchema
+
+      has_one :region, Region, required: false do
+        field :place, :string
+        field :street, :string, required: false
+      end
+    end
+  end
+
   describe "load/3" do
     test "passing wrong opts raise RuntimeError" do
       assert_raise RuntimeError, fn ->
@@ -857,6 +873,14 @@ defmodule ParameterTest do
                   numbers: %{0 => "invalid integer type", 3 => "invalid integer type"}
                 }
               }} == Parameter.load(UserTestSchema, params, many: true)
+    end
+
+    test "load schema with @fields_required: true should force required on all fields" do
+      assert {:error, %{addresses: "is required", first_name: "is required"}} ==
+               Parameter.load(UserRequiredSchemaTest, %{})
+
+      assert {:error, %{first_name: "is required", addresses: %{0 => %{city: "is required"}}}} ==
+               Parameter.load(UserRequiredSchemaTest, %{"addresses" => [%{}]})
     end
   end
 
