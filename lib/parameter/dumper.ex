@@ -2,11 +2,20 @@ defmodule Parameter.Dumper do
   @moduledoc false
 
   alias Parameter.SchemaFields
+  alias Parameter.Types
 
   @type opts :: [exclude: list(), many: boolean()]
 
   @spec dump(module() | atom(), map() | list(map()), opts) :: {:ok, any()} | {:error, any()}
-  def dump(schema, input, opts) when is_map(input) do
+  def dump(schema, input, opts) do
+    if schema in Types.base_types() do
+      dump_type(schema, input, opts)
+    else
+      dump_schema(schema, input, opts)
+    end
+  end
+
+  defp dump_schema(schema, input, opts) when is_map(input) do
     schema_keys = schema.__param__(:field_keys)
 
     Enum.reduce(schema_keys, {%{}, %{}}, fn schema_key, {result, errors} ->
@@ -28,7 +37,7 @@ defmodule Parameter.Dumper do
     |> parse_loaded_input()
   end
 
-  def dump(schema, input, opts) when is_list(input) do
+  defp dump_schema(schema, input, opts) when is_list(input) do
     if Keyword.get(opts, :many) do
       SchemaFields.list_field_handler(schema, input, opts, :dump)
     else
@@ -37,7 +46,7 @@ defmodule Parameter.Dumper do
     end
   end
 
-  def dump(type, input, opts) do
+  defp dump_type(type, input, opts) do
     SchemaFields.field_handler(type, input, opts, :dump)
   end
 

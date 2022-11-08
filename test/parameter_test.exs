@@ -69,6 +69,7 @@ defmodule ParameterTest do
       has_one :main_address, AddressTestSchema, key: "mainAddress", required: true
       has_many :other_addresses, AddressTestSchema, key: "otherAddresses"
       has_many :numbers, :integer, default: [1, 2]
+      has_many :map_values, :map
 
       has_one :id_info, IdInfo, key: "idInfo" do
         field :number, :integer, load_default: 0, dump_default: 25
@@ -193,6 +194,7 @@ defmodule ParameterTest do
         "paidAmount" => 25.00,
         "numbers" => ["1", 2, 5, "10"],
         "metadata" => %{"key" => "value", "other_key" => "value"},
+        "map_values" => [%{"test" => "test"}],
         "hexAmount" => "0x0",
         "idInfo" => %{
           "number" => 123_456,
@@ -213,6 +215,7 @@ defmodule ParameterTest do
                 status: :user_valid,
                 paid_amount: Decimal.new("25.0"),
                 numbers: [1, 2, 5, 10],
+                map_values: [%{"test" => "test"}],
                 metadata: %{"key" => "value", "other_key" => "value"},
                 hex_amount: 0,
                 id_info: %{number: 123_456, type: "identity"}
@@ -941,6 +944,7 @@ defmodule ParameterTest do
           %AddressTestSchema{city: "Some City", street: "Some street", number: 15},
           %AddressTestSchema{city: "Other city", street: "Other street", number: 10}
         ],
+        map_values: [%{"test" => true}],
         status: :user_valid,
         paid_amount: Decimal.new("10.5"),
         numbers: [1, 2, 5, 10],
@@ -963,6 +967,7 @@ defmodule ParameterTest do
                   %{"city" => "Some City", "street" => "Some street", "number" => 15},
                   %{"city" => "Other city", "street" => "Other street", "number" => 10}
                 ],
+                "map_values" => [%{"test" => true}],
                 "status" => "userValid",
                 "paidAmount" => Decimal.new("10.5"),
                 "numbers" => [1, 2, 5, 10],
@@ -1225,6 +1230,7 @@ defmodule ParameterTest do
         ],
         status: :user_valid,
         numbers: [1, 2, 5, 10],
+        map_values: [%{"test" => "test"}],
         metadata: %{"key" => "value", "other_key" => "value"},
         hex_amount: "123123",
         id_info: %{number: 123, type: "identity"}

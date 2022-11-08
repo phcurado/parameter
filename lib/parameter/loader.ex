@@ -2,6 +2,7 @@ defmodule Parameter.Loader do
   @moduledoc false
 
   alias Parameter.SchemaFields
+  alias Parameter.Types
 
   @type opts :: [
           struct: boolean(),
@@ -11,7 +12,15 @@ defmodule Parameter.Loader do
         ]
 
   @spec load(module() | atom(), map() | list(map()), opts) :: {:ok, any()} | {:error, any()}
-  def load(schema, input, opts) when is_map(input) do
+  def load(schema, input, opts) do
+    if schema in Types.base_types() do
+      load_type(schema, input, opts)
+    else
+      load_schema(schema, input, opts)
+    end
+  end
+
+  defp load_schema(schema, input, opts) when is_map(input) do
     unknown = Keyword.get(opts, :unknown)
     struct = Keyword.get(opts, :struct)
 
@@ -26,7 +35,7 @@ defmodule Parameter.Loader do
     end
   end
 
-  def load(schema, input, opts) when is_list(input) do
+  defp load_schema(schema, input, opts) when is_list(input) do
     if Keyword.get(opts, :many) do
       SchemaFields.list_field_handler(schema, input, opts, :load)
     else
@@ -35,7 +44,7 @@ defmodule Parameter.Loader do
     end
   end
 
-  def load(type, input, opts) do
+  defp load_type(type, input, opts) do
     SchemaFields.field_handler(type, input, opts, :load)
   end
 
