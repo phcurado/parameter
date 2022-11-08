@@ -2,9 +2,10 @@
 
 <img src="logo.png" alt="parameter" width="150">
 
-[![ci](https://github.com/phcurado/parameter/workflows/ci/badge.svg?branch=main)](https://github.com/phcurado/parameter/actions?query=branch%3Amain+workflow%3Aci)
-[![hex.pm](https://img.shields.io/hexpm/v/parameter)](https://hex.pm/packages/parameter)
-[![hexdocs.pm](https://img.shields.io/badge/documentation-gray)](https://hexdocs.pm/parameter)
+[![CI](https://github.com/phcurado/parameter/workflows/ci/badge.svg?branch=main)](https://github.com/phcurado/parameter/actions?query=branch%3Amain+workflow%3Aci)
+[![Hex.pm](https://img.shields.io/hexpm/v/parameter)](https://hex.pm/packages/parameter)
+[![HexDocs.pm](https://img.shields.io/badge/Docs-HexDocs-blue)](https://hexdocs.pm/parameter)
+[![License](https://img.shields.io/hexpm/l/parameter.svg)](https://hex.pm/packages/parameter)
 
 
 `Parameter` is a library for dealing with complex datatypes by solving the following problems:

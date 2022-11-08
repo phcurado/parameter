@@ -4,11 +4,12 @@
 
 ### Enhancements
 
-* [Parameter] New `validate/3` function.
+* [Parameter] New `validate/3` function
+* [Parameter.Schema] Supports for `fields_required` module attribute on schema
 
 ### Bug fixes
 
-* [Parameter] `dump/3` function to load the value to be dumped.
+* [Parameter] `dump/3` function to load the value to be dumped
 
 ## v0.6.x (2022-11-06)
 
