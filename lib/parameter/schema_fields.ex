@@ -178,23 +178,38 @@ defmodule Parameter.SchemaFields do
 
       {:ok, value} ->
         field_handler(field, value, opts, operation)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp fetch_input(field, input, :load) do
     fetched_input = Map.fetch(input, field.key)
 
-    cond do
-      fetched_input == :error and to_string(field.name) == field.key ->
-        Map.fetch(input, field.name)
-
-      true ->
-        fetched_input
+    if to_string(field.name) == field.key do
+      verify_double_key(fetched_input, field, input)
+    else
+      fetched_input
     end
   end
 
   defp fetch_input(field, input, _operation) do
     Map.fetch(input, field.name)
+  end
+
+  defp verify_double_key(:error, field, input) do
+    Map.fetch(input, field.name)
+  end
+
+  defp verify_double_key(fetched_input, field, input) do
+    case Map.fetch(input, field.name) do
+      {:ok, _value} ->
+        {:error, "field is present as atom and string keys"}
+
+      _ ->
+        fetched_input
+    end
   end
 
   defp check_required(%Field{required: true, load_default: nil}, _value, operation)

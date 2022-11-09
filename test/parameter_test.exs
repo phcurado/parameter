@@ -270,7 +270,7 @@ defmodule ParameterTest do
           "number" => "not a number"
         },
         "otherAddresses" => [
-          %{"city" => "Some City", "street" => "Some street", "number" => 15},
+          %{"city" => "Some City", "street" => "Some street", "number" => 15, city: "city"},
           %{"city" => "Other city", "street" => "Other street", "number" => "not a number"}
         ],
         "status" => "anotherStatus",
@@ -279,7 +279,8 @@ defmodule ParameterTest do
         "hexAmount" => 12,
         "idInfo" => %{
           "number" => "random",
-          "type" => "identity"
+          "type" => "identity",
+          type: 12
         }
       }
 
@@ -287,12 +288,18 @@ defmodule ParameterTest do
               %{
                 age: "invalid integer type",
                 main_address: %{number: "invalid integer type"},
-                other_addresses: %{1 => %{number: "invalid integer type"}},
+                other_addresses: %{
+                  1 => %{number: "invalid integer type"},
+                  0 => %{city: "field is present as atom and string keys"}
+                },
                 numbers: %{0 => "invalid integer type", 4 => "invalid integer type"},
                 metadata: "invalid map type",
                 hex_amount: "invalid hex",
                 status: "invalid enum type",
-                id_info: %{number: "invalid integer type"}
+                id_info: %{
+                  number: "invalid integer type",
+                  type: "field is present as atom and string keys"
+                }
               }} ==
                Parameter.load(UserTestSchema, params)
     end

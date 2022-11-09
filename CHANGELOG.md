@@ -5,6 +5,7 @@
 ### Enhancements
 
 * [Parameter] New `validate/3` function
+* [Parameter] Supports for `load/3` parsing maps with atom keys
 * [Parameter.Schema] Supports for `fields_required` module attribute on schema
 
 ### Bug fixes

@@ -167,6 +167,51 @@ defmodule Parameter do
         0 => %{address: %{number: "invalid integer type"}, first_name: "is required"},
         1 => %{address: %{number: "invalid integer type"}, first_name: "is required"}
       }}
+
+  ### Loading map with atom keys
+  It's also possible to load map with atom keys. Parameter schemas should not implement the `key`
+  option for this to work.
+
+      defmodule UserParam do
+        use Parameter.Schema
+
+        param do
+          field :first_name, :string, required: true
+          field :last_name, :string
+        end
+      end
+
+      params = %{
+        first_name: "John",
+        last_name: "Doe"
+      }
+      Parameter.load(UserParam, params)
+      {:ok, %{
+        first_name: "John",
+        last_name: "Doe"
+      }}
+
+      # String maps will also be correctly loaded if they have the same key
+      params = %{
+        "first_name" => "John",
+        "last_name" => "Doe"
+      }
+      Parameter.load(UserParam, params)
+      {:ok, %{
+        first_name: "John",
+        last_name: "Doe"
+      }}
+
+      # But the same key should not be present in both String and Atom keys:
+      params = %{
+        "first_name" => "John",
+        first_name: "John"
+      }
+      Parameter.load(UserParam, params)
+      {:error, %{
+        first_name: "field is present as atom and string keys"
+      }}
+
   """
   @spec load(module() | atom(), map() | list(map()), Keyword.t()) ::
           {:ok, any()} | {:error, any()}
