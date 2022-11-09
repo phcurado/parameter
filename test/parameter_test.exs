@@ -222,6 +222,43 @@ defmodule ParameterTest do
               }} == Parameter.load(UserTestSchema, params)
     end
 
+    test "load user schema with correct input on all fields and atom keys should work only if key equals the field name" do
+      params = %{
+        "firstName" => "John",
+        "mainAddress" => %{city: "Some City", street: "Some street", number: "15"},
+        lastName: "Doe",
+        age: "32",
+        otherAddresses: [
+          %{city: "Some City", street: "Some street", number: 15},
+          %{city: "Other city", street: "Other street", number: 10}
+        ],
+        status: "userValid",
+        paidAmount: 25.00,
+        numbers: ["1", 2, 5, "10"],
+        metadata: %{"key" => "value", "other_key" => "value"},
+        map_values: [%{"test" => "test"}],
+        hexAmount: "0x0",
+        id_info: %{
+          number: 123_456,
+          type: "identity"
+        }
+      }
+
+      assert {:ok,
+              %{
+                first_name: "John",
+                last_name: "",
+                age: 32,
+                main_address: %{city: "Some City", street: "Some street", number: 15},
+                status: :user_valid,
+                paid_amount: Decimal.new("1"),
+                numbers: [1, 2, 5, 10],
+                map_values: [%{"test" => "test"}],
+                metadata: %{"key" => "value", "other_key" => "value"},
+                hex_amount: "0"
+              }} == Parameter.load(UserTestSchema, params)
+    end
+
     test "load user schema with invalid input shoud return an error" do
       params = %{
         "firstName" => "John",

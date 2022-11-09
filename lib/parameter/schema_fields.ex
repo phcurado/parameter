@@ -169,14 +169,7 @@ defmodule Parameter.SchemaFields do
   end
 
   defp fetch_and_verify_input(field, input, opts, operation) do
-    key =
-      case operation do
-        :load -> field.key
-        :dump -> field.name
-        :validate -> field.name
-      end
-
-    case Map.fetch(input, key) do
+    case fetch_input(field, input, operation) do
       :error ->
         check_required(field, :ignore, operation)
 
@@ -186,6 +179,22 @@ defmodule Parameter.SchemaFields do
       {:ok, value} ->
         field_handler(field, value, opts, operation)
     end
+  end
+
+  defp fetch_input(field, input, :load) do
+    fetched_input = Map.fetch(input, field.key)
+
+    cond do
+      fetched_input == :error and to_string(field.name) == field.key ->
+        Map.fetch(input, field.name)
+
+      true ->
+        fetched_input
+    end
+  end
+
+  defp fetch_input(field, input, _operation) do
+    Map.fetch(input, field.name)
   end
 
   defp check_required(%Field{required: true, load_default: nil}, _value, operation)
