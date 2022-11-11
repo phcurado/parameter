@@ -11,7 +11,8 @@
 ### Bug fixes
 
 * [Parameter] `dump/3` function to load the value to be dumped
-* [Parameter] consider basic types when loading, dumping or validating a schema.
+* [Parameter] consider basic types when loading, dumping or validating a schema
+* [Parameter.Field] remove compile time verification for custom types
 
 ## v0.6.x (2022-11-06)
 
