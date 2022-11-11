@@ -98,12 +98,10 @@ defmodule Parameter.Field do
     validator = Keyword.get(opts, :validator)
     virtual = Keyword.get(opts, :virtual, false)
 
-    type_valid? = type_valid?(type)
     validator_valid? = validator_valid?(validator)
 
     # Using Types module to validate field parameters
     with {:ok, opts} <- default_valid?(type, opts, default, load_default, dump_default),
-         :ok <- type_valid?,
          :ok <- Types.validate(:string, key),
          :ok <- Types.validate(:boolean, required),
          :ok <- Types.validate(:boolean, virtual),
@@ -142,33 +140,6 @@ defmodule Parameter.Field do
       Types.validate(type, default_value)
     else
       :ok
-    end
-  end
-
-  defp type_valid?({type, _inner_type}) do
-    if type in Types.composite_types() do
-      :ok
-    else
-      custom_type_valid?(type)
-    end
-  end
-
-  defp type_valid?(type) do
-    if type in Types.base_types() do
-      :ok
-    else
-      custom_type_valid?(type)
-    end
-  end
-
-  defp custom_type_valid?(custom_type) do
-    if Kernel.function_exported?(custom_type, :load, 1) and
-         Kernel.function_exported?(custom_type, :validate, 1) and
-         Kernel.function_exported?(custom_type, :dump, 1) do
-      :ok
-    else
-      {:error,
-       "#{inspect(custom_type)} is not a valid custom type, implement the `Parameter.Parametrizable` on custom modules"}
     end
   end
 
