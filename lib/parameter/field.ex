@@ -57,7 +57,7 @@ defmodule Parameter.Field do
           dump_default: any(),
           type: Types.t(),
           required: boolean(),
-          validator: fun(),
+          validator: fun() | nil,
           virtual: boolean()
         }
 

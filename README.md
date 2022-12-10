@@ -85,7 +85,7 @@ Add `parameter` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:parameter, "~> 0.7"}
+    {:parameter, "~> 0.8"}
   ]
 end
 ```
