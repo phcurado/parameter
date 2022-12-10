@@ -54,7 +54,7 @@ defmodule Parameter.SchemaFields do
       {:ok, value} ->
         validator
         |> run_validator(value)
-        |> parse_validator_result(value, operation)
+        |> parse_validator_result(operation)
 
       error ->
         error
@@ -140,15 +140,15 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  defp parse_validator_result(:ok, value, :load) do
+  defp parse_validator_result({:ok, value}, :load) do
     {:ok, value}
   end
 
-  defp parse_validator_result(:ok, _value, :validate) do
+  defp parse_validator_result({:ok, _value}, :validate) do
     :ok
   end
 
-  defp parse_validator_result(error, _value, _operation) do
+  defp parse_validator_result(error, _operation) do
     error
   end
 

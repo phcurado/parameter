@@ -1,6 +1,9 @@
 defmodule ParameterTest do
   use ExUnit.Case
 
+  alias Parameter.Schema
+  alias Parameter.Validators
+
   defmodule CustomTypeHexToDecimal do
     use Parameter.Parametrizable
 
@@ -172,6 +175,33 @@ defmodule ParameterTest do
       end
     end
   end
+
+  @attr_schema %{
+                 user: [type: :string, required: true],
+                 roles: [
+                   type:
+                     {:has_many,
+                      %{
+                        name: [
+                          type: :integer,
+                          required: true,
+                          validator: {&Validators.one_of/2, options: [1, 2, 3]}
+                        ],
+                        permissions: [
+                          type:
+                            {:has_many,
+                             %{
+                               name: [
+                                 type: :string,
+                                 validator:
+                                   {&Validators.one_of/2, options: ~w(create read update delete)}
+                               ]
+                             }}
+                        ]
+                      }}
+                 ]
+               }
+               |> Schema.compile!()
 
   describe "load/3" do
     test "passing wrong opts raise RuntimeError" do
@@ -929,6 +959,96 @@ defmodule ParameterTest do
       assert {:error, %{first_name: "is required", addresses: %{0 => %{city: "is required"}}}} ==
                Parameter.load(UserRequiredSchemaTest, %{"addresses" => [%{}]})
     end
+
+    test "load runtime schema with correct parameters" do
+      params = %{
+        "user" => "personal",
+        "roles" => [
+          %{
+            "name" => 1,
+            "permissions" => [
+              %{"name" => "create"},
+              %{"name" => "read"},
+              %{"name" => "update"}
+            ]
+          },
+          %{
+            "name" => 2,
+            "permissions" => [
+              %{"name" => "create"},
+              %{"name" => "read"},
+              %{"name" => "update"},
+              %{"name" => "delete"}
+            ]
+          }
+        ]
+      }
+
+      assert {:ok,
+              %{
+                user: "personal",
+                roles: [
+                  %{
+                    name: 1,
+                    permissions: [%{name: "create"}, %{name: "read"}, %{name: "update"}]
+                  },
+                  %{
+                    name: 2,
+                    permissions: [
+                      %{name: "create"},
+                      %{name: "read"},
+                      %{name: "update"},
+                      %{name: "delete"}
+                    ]
+                  }
+                ]
+              }} == Parameter.load(@attr_schema, params)
+    end
+
+    test "load runtime schema with wrong parameters should fail" do
+      params = %{
+        "user" => "personal",
+        "roles" => [
+          %{
+            "name" => "admin",
+            "permissions" => [
+              %{"name" => "not_create"},
+              %{"name" => "unread"},
+              %{"name" => "update"}
+            ]
+          },
+          %{
+            "name" => "super_admin",
+            "permissions" => [
+              %{"name" => "create"},
+              %{"name" => "read"},
+              %{"name" => "not_update"},
+              %{"name" => "delete"}
+            ]
+          },
+          %{
+            "permissions" => [
+              %{"name" => "create"}
+            ]
+          }
+        ]
+      }
+
+      assert {:error,
+              %{
+                roles: %{
+                  0 => %{
+                    name: "invalid integer type",
+                    permissions: %{0 => %{name: "is invalid"}, 1 => %{name: "is invalid"}}
+                  },
+                  1 => %{
+                    name: "invalid integer type",
+                    permissions: %{2 => %{name: "is invalid"}}
+                  },
+                  2 => %{name: "is required"}
+                }
+              }} == Parameter.load(@attr_schema, params)
+    end
   end
 
   describe "dump/3" do
@@ -1259,6 +1379,77 @@ defmodule ParameterTest do
                 }
               }} == Parameter.dump(UserTestSchema, loaded_schema, many: true)
     end
+
+    test "dump runtime schema with correct parameters" do
+      params = %{
+        user: "personal",
+        roles: [
+          %{
+            name: 1,
+            permissions: [%{name: "create"}, %{name: "read"}, %{name: "update"}]
+          },
+          %{
+            name: 2,
+            permissions: [
+              %{name: "create"},
+              %{name: "read"},
+              %{name: "update"},
+              %{name: "delete"}
+            ]
+          }
+        ]
+      }
+
+      assert {:ok,
+              %{
+                "user" => "personal",
+                "roles" => [
+                  %{
+                    "name" => 1,
+                    "permissions" => [
+                      %{"name" => "create"},
+                      %{"name" => "read"},
+                      %{"name" => "update"}
+                    ]
+                  },
+                  %{
+                    "name" => 2,
+                    "permissions" => [
+                      %{"name" => "create"},
+                      %{"name" => "read"},
+                      %{"name" => "update"},
+                      %{"name" => "delete"}
+                    ]
+                  }
+                ]
+              }} == Parameter.dump(@attr_schema, params)
+    end
+
+    test "dump runtime schema with wrong parameters should fail" do
+      params = %{
+        user: "personal",
+        roles: [
+          %{
+            name: "permission",
+            permissions: [
+              %{name: "create"},
+              %{name: 2},
+              %{name: "delete"}
+            ]
+          },
+          %{
+            permissions: [
+              %{name: "create"},
+              %{name: "read"},
+              %{name: "delete"}
+            ]
+          }
+        ]
+      }
+
+      assert {:error, %{roles: %{0 => %{name: "invalid integer type"}}}} ==
+               Parameter.dump(@attr_schema, params)
+    end
   end
 
   describe "validate/3" do
@@ -1451,5 +1642,77 @@ defmodule ParameterTest do
                 }
               }} == Parameter.validate(UserTestSchema, loaded_schema, many: true)
     end
+  end
+
+  test "validate runtime schema with correct parameters" do
+    params = %{
+      user: "personal",
+      roles: [
+        %{
+          name: 1,
+          permissions: [
+            %{name: "create"},
+            %{name: "read"},
+            %{name: "update"}
+          ]
+        },
+        %{
+          name: 2,
+          permissions: [
+            %{name: "create"},
+            %{name: "read"},
+            %{name: "update"},
+            %{name: "delete"}
+          ]
+        }
+      ]
+    }
+
+    assert :ok == Parameter.validate(@attr_schema, params)
+  end
+
+  test "validate runtime schema with wrong parameters should fail" do
+    params = %{
+      user: "personal",
+      roles: [
+        %{
+          name: "admin",
+          permissions: [
+            %{name: "not_create"},
+            %{name: "unread"},
+            %{name: "update"}
+          ]
+        },
+        %{
+          name: "super_admin",
+          permissions: [
+            %{name: "create"},
+            %{name: "read"},
+            %{name: "not_update"},
+            %{name: "delete"}
+          ]
+        },
+        %{
+          permissions: [
+            %{name: "create"}
+          ]
+        }
+      ]
+    }
+
+    assert {:error,
+            %{
+              roles: %{
+                0 => %{
+                  name: "is invalid",
+                  permissions: %{0 => %{name: "is invalid"}, 1 => %{name: "is invalid"}}
+                },
+                1 => %{
+                  name: "is invalid",
+                  permissions: %{2 => %{name: "is invalid"}}
+                },
+                2 => %{name: "is required"}
+              }
+            }} == Parameter.validate(@attr_schema, params)
   end
 end

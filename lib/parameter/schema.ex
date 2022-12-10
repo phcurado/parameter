@@ -136,8 +136,6 @@ defmodule Parameter.Schema do
       end
 
     This makes it easy to dynamically create schemas or just avoid using any macros.
-
-
   """
 
   alias Parameter.Field
@@ -260,6 +258,34 @@ defmodule Parameter.Schema do
     end
   end
 
+  def compile!(opts) when is_list(opts) do
+    Field.new!(opts)
+  end
+
+  def compile!(schema) when is_map(schema) do
+    for {name, opts} <- schema do
+      {type, opts} = Keyword.pop(opts, :type, :string)
+      type = compile_type(type)
+      compile!([name: name, type: type] ++ opts)
+    end
+  end
+
+  def compile_type({:has_one, schema}) do
+    {:has_one, compile!(schema)}
+  end
+
+  def compile_type({:has_many, schema}) do
+    {:has_many, compile!(schema)}
+  end
+
+  def compile_type({_not_assoc, _schema}) do
+    {:error, "not a valid inner type, please use `has_one` or `has_many` for nested associations"}
+  end
+
+  def compile_type(type) when is_atom(type) do
+    type
+  end
+
   defp mount_schema(caller, block) do
     quote do
       if line = Module.get_attribute(__MODULE__, :param_schema_defined) do
@@ -281,17 +307,33 @@ defmodule Parameter.Schema do
       end
 
       def __param__(:field_keys) do
-        Enum.map(__param__(:fields), & &1.key)
+        field_keys(__param__(:fields))
       end
 
       def __param__(:field, key: key) do
-        Enum.find(__param__(:fields), &(&1.key == key))
+        field_key(__param__(:fields), key)
       end
 
       def __param__(:field, name: name) do
         Enum.find(__param__(:fields), &(&1.name == name))
       end
     end
+  end
+
+  def field_keys(module) when is_atom(module) do
+    module.__param__(:field_keys)
+  end
+
+  def field_keys(fields) when is_list(fields) do
+    Enum.map(fields, & &1.key)
+  end
+
+  def field_key(module, key) when is_atom(module) do
+    module.__param__(:field, key: key)
+  end
+
+  def field_key(fields, key) when is_list(fields) do
+    Enum.find(fields, &(&1.key == key))
   end
 
   def __mount_nested_schema__(module_name, env, block) do

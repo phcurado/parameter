@@ -66,6 +66,7 @@ defmodule Parameter do
   """
 
   alias Parameter.Dumper
+  alias Parameter.Field
   alias Parameter.Loader
   alias Parameter.Types
   alias Parameter.Validator
@@ -217,7 +218,7 @@ defmodule Parameter do
       }}
 
   """
-  @spec load(module() | atom(), map() | list(map()), Keyword.t()) ::
+  @spec load(module() | atom() | list(Field.t()), map() | list(map()), Keyword.t()) ::
           {:ok, any()} | {:error, any()}
   def load(schema, input, opts \\ []) do
     opts = parse_opts(opts)
@@ -271,7 +272,8 @@ defmodule Parameter do
         "lastName" => "Doe"
       }}
   """
-  @spec dump(module() | atom(), map() | list(map), Keyword.t()) :: {:ok, any()} | {:error, any()}
+  @spec dump(module() | atom() | list(Field.t()), map() | list(map), Keyword.t()) ::
+          {:ok, any()} | {:error, any()}
   def dump(schema, input, opts \\ []) do
     exclude = Keyword.get(opts, :exclude, [])
     many = Keyword.get(opts, :many, false)
@@ -333,7 +335,8 @@ defmodule Parameter do
         }
       }
   """
-  @spec validate(module() | atom(), map() | list(map), Keyword.t()) :: :ok | {:error, any()}
+  @spec validate(module() | atom() | list(Field.t()), map() | list(map), Keyword.t()) ::
+          :ok | {:error, any()}
   def validate(schema, input, opts \\ []) do
     exclude = Keyword.get(opts, :exclude, [])
     many = Keyword.get(opts, :many, false)
