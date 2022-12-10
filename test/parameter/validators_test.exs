@@ -19,7 +19,7 @@ defmodule Parameter.ValidatorsTest do
     assert Validators.equal(25, to: 15) == {:error, "is invalid"}
   end
 
-  test "length/3" do
+  test "length/2" do
     assert Validators.length(15, min: 12, max: 16) == :ok
     assert Validators.length("value", min: "sm", max: "value_bigger") == :ok
     assert Validators.length(25, min: 12, max: 16) == {:error, "is invalid"}
@@ -27,6 +27,12 @@ defmodule Parameter.ValidatorsTest do
 
     assert Validators.length("value", min: "value_big", max: "value_bigger") ==
              {:error, "is invalid"}
+
+    assert Validators.length(3, min: 5) == {:error, "is invalid"}
+    assert Validators.length(10, min: 6) == :ok
+
+    assert Validators.length(21, max: 15) == {:error, "is invalid"}
+    assert Validators.length(55, max: 60) == :ok
   end
 
   test "one_of/2" do

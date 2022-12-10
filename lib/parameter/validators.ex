@@ -69,9 +69,24 @@ defmodule Parameter.Validators do
       iex> Parameter.load(User, %{"age" => 30})
       {:ok, %{age: 30}}
   """
-  @spec length(binary(), min: any(), max: any()) :: resp
+  @spec length(binary(), Keyword.t()) :: resp
   def length(value, min: min, max: max) do
-    if value >= min and value <= max do
+    case length(value, min: min) do
+      {:error, _reason} = error -> error
+      :ok -> length(value, max: max)
+    end
+  end
+
+  def length(value, min: min) do
+    if value >= min do
+      :ok
+    else
+      error_tuple()
+    end
+  end
+
+  def length(value, max: max) do
+    if value <= max do
       :ok
     else
       error_tuple()
