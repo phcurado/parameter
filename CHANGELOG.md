@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.8.x (2022-12-10)
+
+### Enhancements
+
+* [Parameter.Schema] Supports `compile/1` function for compiling runtime schemas.
+* [Parameter] `load/3`, `validate/3` and `dump/3` now support evaluating parameters using runtime schemas.
+* [Parameter.Validators] Improved `length/2` validator to support `min` and/or `max` attributes. Before it was only accepting both.
+
+### Bug fixes
+* [Parameter] Fix a bug where `load/3` and `validate/3` was evaluating the `validator` option wrongly.
+
 ## v0.7.x (2022-11-07)
 
 ### Enhancements

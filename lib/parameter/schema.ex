@@ -84,7 +84,7 @@ defmodule Parameter.Schema do
 
   ## Runtime Schemas
 
-  It's also possible schemas via runtime without relying on any macros.
+  It's also possible to create schemas via runtime without relying on any macros.
   The API is almost the same comparing to the macro's examples:
 
       schema = %{
