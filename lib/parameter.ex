@@ -1,14 +1,18 @@
 defmodule Parameter do
   @moduledoc """
-  `Parameter` is a library for dealing with complex datatypes by solving the following problems:
+  `Parameter` helps you shape data that comes from external sources into Elixir internal types.
+  The main use case is to use `Parameter` when dealing with any external data in general such as
+  integrating with APIs, parsing user input or validating data that comes into your system.
+
+  `Parameter` offers the following helpers:
   - Schema creation and validation
   - Input data validation
   - Deserialization
   - Serialization
 
-  ## Examples
+  ## Schema
 
-  Create a schema
+  First step for dealing with external data is to create a schema that shape the data:
 
       defmodule UserParam do
         use Parameter.Schema
@@ -26,7 +30,7 @@ defmodule Parameter do
         end
       end
 
-  Load (deserialize) the schema against external parameters:
+  Now it's possible to Load (deserialize) the schema against external data:
 
       params = %{
         "firstName" => "John",
@@ -42,7 +46,7 @@ defmodule Parameter do
         address: %{city: "New York", street: "York"}
       }}
 
-  or Dump (serialize) a populated schema to params:
+  or Dump (serialize) a populated schema to the source:
 
       schema = %{
         first_name: "John",

@@ -1,7 +1,11 @@
 defmodule Parameter.Schema do
   @moduledoc """
   The first step for building a schema for your data is to create a schema definition to model the external data.
-  This can be achieved by using the `Parameter.Schema` macro. The example below mimics an `User` model that have one `main_address` and a list of `phones`.
+  This can be achieved by using the `Parameter.Schema` macro.
+
+
+  ## Schema
+  The example below mimics an `User` model that have one `main_address` and a list of `phones`.
 
       defmodule User do
         use Parameter.Schema
@@ -97,6 +101,43 @@ defmodule Parameter.Schema do
 
       Parameter.load(MyApp.UserSchema, %{})
       {:error, %{age: "is required", name: "is required"}}
+
+  ## Compiletime and Runtime schemas
+
+  It's also possible schemas via runtime without relying on any macros. The API is very similar to the
+  macros API:
+
+      schema = %{
+        first_name: [key: "firstName", type: :string, required: true],
+        address: [required: true, type: {:has_one, %{street: [type: :string, required: true]}}],
+        phones: [type: {:has_many, %{country: [type: :string, required: true]}}]
+      }
+
+      {:ok, schema} = Parameter.Schema.compile(schema)
+
+      Parameter.load(schema, %{"firstName" => "John"})
+      ...
+
+
+    The same API can also be evaluated on compile time by using module attributes:
+
+      defmodule UserParams do
+        alias Parameter.Schema
+
+        @schema %{
+          first_name: [key: "firstName", type: :string, required: true],
+          address: [required: true, type: {:has_one, %{street: [type: :string, required: true]}}],
+          phones: [type: {:has_many, %{country: [type: :string, required: true]}}]
+        } |> Schema.compile!()
+
+        def load(params) do
+          Parameter.load(@schema, params)
+        end
+      end
+
+    This makes it easy to dynamically create schemas or just avoid using any macros.
+
+
   """
 
   alias Parameter.Field
