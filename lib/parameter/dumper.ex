@@ -1,12 +1,15 @@
 defmodule Parameter.Dumper do
   @moduledoc false
 
+  alias Parameter.Field
+  alias Parameter.Schema
   alias Parameter.SchemaFields
   alias Parameter.Types
 
   @type opts :: [exclude: list(), many: boolean()]
 
-  @spec dump(module() | atom(), map() | list(map()), opts) :: {:ok, any()} | {:error, any()}
+  @spec dump(module() | atom() | list(Field.t()), map() | list(map()), opts) ::
+          {:ok, any()} | {:error, any()}
   def dump(schema, input, opts) do
     if schema in Types.base_types() do
       dump_type(schema, input, opts)
@@ -16,10 +19,10 @@ defmodule Parameter.Dumper do
   end
 
   defp dump_schema(schema, input, opts) when is_map(input) do
-    schema_keys = schema.__param__(:field_keys)
+    schema_keys = Schema.field_keys(schema)
 
     Enum.reduce(schema_keys, {%{}, %{}}, fn schema_key, {result, errors} ->
-      field = schema.__param__(:field, key: schema_key)
+      field = Schema.field_key(schema, schema_key)
 
       case SchemaFields.process_map_value(field, input, opts, :dump) do
         {:error, error} ->

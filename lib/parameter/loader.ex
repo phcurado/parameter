@@ -1,6 +1,8 @@
 defmodule Parameter.Loader do
   @moduledoc false
 
+  alias Parameter.Field
+  alias Parameter.Schema
   alias Parameter.SchemaFields
   alias Parameter.Types
 
@@ -11,7 +13,8 @@ defmodule Parameter.Loader do
           many: boolean()
         ]
 
-  @spec load(module() | atom(), map() | list(map()), opts) :: {:ok, any()} | {:error, any()}
+  @spec load(module() | atom() | list(Field.t()), map() | list(map()), opts) ::
+          {:ok, any()} | {:error, any()}
   def load(schema, input, opts) do
     if schema in Types.base_types() do
       load_type(schema, input, opts)
@@ -49,10 +52,10 @@ defmodule Parameter.Loader do
   end
 
   defp iterate_schema(schema, input, opts) do
-    schema_keys = schema.__param__(:field_keys)
+    schema_keys = Schema.field_keys(schema)
 
     Enum.reduce(schema_keys, {%{}, %{}}, fn schema_key, {result, errors} ->
-      field = schema.__param__(:field, key: schema_key)
+      field = Schema.field_key(schema, schema_key)
 
       case SchemaFields.process_map_value(field, input, opts, :load) do
         {:error, error} ->
@@ -70,7 +73,7 @@ defmodule Parameter.Loader do
   end
 
   defp unknow_fields(schema, input, :error) do
-    schema_keys = schema.__param__(:field_keys)
+    schema_keys = Schema.field_keys(schema)
 
     unknow_fields =
       Enum.reduce(input, %{}, fn {key, _value}, acc ->

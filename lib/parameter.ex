@@ -1,14 +1,16 @@
 defmodule Parameter do
   @moduledoc """
-  `Parameter` is a library for dealing with complex datatypes by solving the following problems:
+  `Parameter` helps you shape data from external sources into Elixir internal types. Use it to deal with any external data in general, such as API integrations, parsing user input, or validating data that comes into your system.
+
+  `Parameter` offers the following helpers:
   - Schema creation and validation
   - Input data validation
   - Deserialization
   - Serialization
 
-  ## Examples
+  ## Schema
 
-  Create a schema
+  First step for dealing with external data is to create a schema that shape the data:
 
       defmodule UserParam do
         use Parameter.Schema
@@ -26,7 +28,7 @@ defmodule Parameter do
         end
       end
 
-  Load (deserialize) the schema against external parameters:
+  Now it's possible to Load (deserialize) the schema against external data:
 
       params = %{
         "firstName" => "John",
@@ -42,7 +44,7 @@ defmodule Parameter do
         address: %{city: "New York", street: "York"}
       }}
 
-  or Dump (serialize) a populated schema to params:
+  or Dump (serialize) a populated schema to the source:
 
       schema = %{
         first_name: "John",
@@ -62,6 +64,7 @@ defmodule Parameter do
   """
 
   alias Parameter.Dumper
+  alias Parameter.Field
   alias Parameter.Loader
   alias Parameter.Types
   alias Parameter.Validator
@@ -213,7 +216,7 @@ defmodule Parameter do
       }}
 
   """
-  @spec load(module() | atom(), map() | list(map()), Keyword.t()) ::
+  @spec load(module() | atom() | list(Field.t()), map() | list(map()), Keyword.t()) ::
           {:ok, any()} | {:error, any()}
   def load(schema, input, opts \\ []) do
     opts = parse_opts(opts)
@@ -267,7 +270,8 @@ defmodule Parameter do
         "lastName" => "Doe"
       }}
   """
-  @spec dump(module() | atom(), map() | list(map), Keyword.t()) :: {:ok, any()} | {:error, any()}
+  @spec dump(module() | atom() | list(Field.t()), map() | list(map), Keyword.t()) ::
+          {:ok, any()} | {:error, any()}
   def dump(schema, input, opts \\ []) do
     exclude = Keyword.get(opts, :exclude, [])
     many = Keyword.get(opts, :many, false)
@@ -329,7 +333,8 @@ defmodule Parameter do
         }
       }
   """
-  @spec validate(module() | atom(), map() | list(map), Keyword.t()) :: :ok | {:error, any()}
+  @spec validate(module() | atom() | list(Field.t()), map() | list(map), Keyword.t()) ::
+          :ok | {:error, any()}
   def validate(schema, input, opts \\ []) do
     exclude = Keyword.get(opts, :exclude, [])
     many = Keyword.get(opts, :many, false)

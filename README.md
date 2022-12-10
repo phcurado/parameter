@@ -8,7 +8,9 @@
 [![License](https://img.shields.io/hexpm/l/parameter.svg)](https://hex.pm/packages/parameter)
 
 
-`Parameter` is a library for dealing with complex datatypes by solving the following problems:
+`Parameter` helps you shape data from external sources into Elixir internal types. Use it to deal with any external data in general, such as API integrations, parsing user input, or validating data that comes into your system.
+
+  `Parameter` offers the following helpers:
   - Schema creation and validation
   - Input data validation
   - Deserialization
