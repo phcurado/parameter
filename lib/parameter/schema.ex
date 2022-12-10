@@ -82,30 +82,10 @@ defmodule Parameter.Schema do
 
   It's recommended to use this approach when the schema will only be used in a single module.
 
-  ## Required fields
-  By default, `Parameter.Schema` considers all fields to be optional when validating the schema.
-  This behaviour can be changed by passing the module attribute `@fields_required true` on
-  the module where the schema is declared.
+  ## Runtime Schemas
 
-  ### Example
-      defmodule MyApp.UserSchema do
-        use Parameter.Schema
-
-        @fields_required true
-
-        param do
-          field :name, :string
-          field :age, :integer
-        end
-      end
-
-      Parameter.load(MyApp.UserSchema, %{})
-      {:error, %{age: "is required", name: "is required"}}
-
-  ## Compiletime and Runtime schemas
-
-  It's also possible schemas via runtime without relying on any macros. The API is very similar to the
-  macros API:
+  It's also possible schemas via runtime without relying on any macros.
+  The API is almost the same comparing to the macro's examples:
 
       schema = %{
         first_name: [key: "firstName", type: :string, required: true],
@@ -113,9 +93,9 @@ defmodule Parameter.Schema do
         phones: [type: {:has_many, %{country: [type: :string, required: true]}}]
       }
 
-      {:ok, schema} = Parameter.Schema.compile(schema)
+      compiled_schema = Parameter.Schema.compile!(schema)
 
-      Parameter.load(schema, %{"firstName" => "John"})
+      Parameter.load(compiled_schema, %{"firstName" => "John"})
       ...
 
 
@@ -136,6 +116,26 @@ defmodule Parameter.Schema do
       end
 
     This makes it easy to dynamically create schemas or just avoid using any macros.
+
+  ## Required fields
+  By default, `Parameter.Schema` considers all fields to be optional when validating the schema.
+  This behaviour can be changed by passing the module attribute `@fields_required true` on
+  the module where the schema is declared.
+
+  ### Example
+      defmodule MyApp.UserSchema do
+        use Parameter.Schema
+
+        @fields_required true
+
+        param do
+          field :name, :string
+          field :age, :integer
+        end
+      end
+
+      Parameter.load(MyApp.UserSchema, %{})
+      {:error, %{age: "is required", name: "is required"}}
   """
 
   alias Parameter.Field

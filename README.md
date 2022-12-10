@@ -8,9 +8,7 @@
 [![License](https://img.shields.io/hexpm/l/parameter.svg)](https://hex.pm/packages/parameter)
 
 
-`Parameter` helps you shape data that comes from external sources into Elixir internal types.
-  The main use case is to use `Parameter` when dealing with any external data in general such as
-  integrating with APIs, parsing user input or validating data that comes into your system.
+`Parameter` helps you shape data from external sources into Elixir internal types. Use it to deal with any external data in general, such as API integrations, parsing user input, or validating data that comes into your system.
 
   `Parameter` offers the following helpers:
   - Schema creation and validation
