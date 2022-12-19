@@ -11,6 +11,7 @@
 ### Bug fixes
 * [Parameter] Fix a bug where `load/3` and `validate/3` was evaluating the `validator` option wrongly.
 * [Parameter.Field] Validator typespec.
+* [Parameter.Enum] Fix evaluation of enum values inside `Enum` macro
 
 ## v0.7.x (2022-11-07)
 

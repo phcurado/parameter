@@ -106,10 +106,10 @@ defmodule Parameter.Enum do
     end
   end
 
-  defmacro enum(module_name, values: values) when is_list(values) do
+  defmacro enum(module_name, values: values) do
     block =
-      quote do
-        Enum.map(unquote(values), fn val ->
+      quote bind_quoted: [values: values] do
+        Enum.map(values, fn val ->
           value(val, key: to_string(val))
         end)
       end
@@ -157,7 +157,7 @@ defmodule Parameter.Enum do
       @impl true
       def load(value) do
         @enum_values
-        |> Enum.find(fn {key, _enum_value} ->
+        |> Enum.find(fn {key, enum_value} ->
           key == value
         end)
         |> case do
@@ -169,7 +169,7 @@ defmodule Parameter.Enum do
       @impl true
       def dump(value) do
         @enum_values
-        |> Enum.find(fn {_key, enum_value} ->
+        |> Enum.find(fn {key, enum_value} ->
           value == enum_value
         end)
         |> case do

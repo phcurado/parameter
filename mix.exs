@@ -2,7 +2,7 @@ defmodule Parameter.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/phcurado/parameter"
-  @version "0.8.1"
+  @version "0.8.2"
 
   def project do
     [

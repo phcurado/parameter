@@ -1,6 +1,11 @@
 defmodule Parameter.EnumTest do
   use ExUnit.Case
 
+
+  defmodule DynamicVal do
+    def dynamic_values, do: [:super_admin, :admin]
+  end
+
   defmodule EnumTest do
     import Parameter.Enum
 
@@ -19,6 +24,9 @@ defmodule Parameter.EnumTest do
       value :unemployed, key: 3
       value :employed, key: 4
     end
+
+    enum Dynamic, values: DynamicVal.dynamic_values()
+
   end
 
   describe "load/1" do
@@ -45,6 +53,13 @@ defmodule Parameter.EnumTest do
       assert EnumTest.JobTypeInteger.load(5) == {:error, "invalid enum type"}
       assert EnumTest.JobTypeInteger.load("5") == {:error, "invalid enum type"}
       assert EnumTest.JobTypeInteger.load("employed") == {:error, "invalid enum type"}
+    end
+
+    test "load DynamicEnumTest" do
+      assert EnumTest.Dynamic.load("super_admin") == {:ok, :super_admin}
+      assert EnumTest.Dynamic.load("admin") == {:ok, :admin}
+      assert EnumTest.Dynamic.load(:super_admin) == {:error, "invalid enum type"}
+      assert EnumTest.Dynamic.load("superAdmin") == {:error, "invalid enum type"}
     end
   end
 
@@ -73,6 +88,13 @@ defmodule Parameter.EnumTest do
       assert EnumTest.JobTypeInteger.dump("5") == {:error, "invalid enum type"}
       assert EnumTest.JobTypeInteger.dump(1) == {:error, "invalid enum type"}
       assert EnumTest.JobTypeInteger.dump("employed") == {:error, "invalid enum type"}
+    end
+
+    test "dump DynamicEnumTest" do
+      assert EnumTest.Dynamic.dump(:super_admin) == {:ok, "super_admin"}
+      assert EnumTest.Dynamic.dump(:admin) == {:ok, "admin"}
+      assert EnumTest.Dynamic.dump("super_admin") == {:error, "invalid enum type"}
+      assert EnumTest.Dynamic.dump(:superAdmin) == {:error, "invalid enum type"}
     end
   end
 end
