@@ -1,7 +1,6 @@
 defmodule Parameter.EnumTest do
   use ExUnit.Case
 
-
   defmodule DynamicVal do
     def dynamic_values, do: [:super_admin, :admin]
   end
@@ -26,7 +25,6 @@ defmodule Parameter.EnumTest do
     end
 
     enum Dynamic, values: DynamicVal.dynamic_values()
-
   end
 
   describe "load/1" do
