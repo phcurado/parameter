@@ -41,11 +41,12 @@ defmodule Parameter.Field do
     :name,
     :key,
     :default,
+    :load,
     :load_default,
     :dump_default,
+    :validator,
     type: :string,
     required: false,
-    validator: nil,
     virtual: false
   ]
 
@@ -53,6 +54,7 @@ defmodule Parameter.Field do
           name: atom(),
           key: binary(),
           default: any(),
+          load: fun() | nil,
           load_default: any(),
           dump_default: any(),
           type: Types.t(),
@@ -96,16 +98,16 @@ defmodule Parameter.Field do
     dump_default = Keyword.get(opts, :dump_default)
     required = Keyword.get(opts, :required, false)
     validator = Keyword.get(opts, :validator)
+    load = Keyword.get(opts, :load)
     virtual = Keyword.get(opts, :virtual, false)
-
-    validator_valid? = validator_valid?(validator)
 
     # Using Types module to validate field parameters
     with {:ok, opts} <- default_valid?(type, opts, default, load_default, dump_default),
          :ok <- Types.validate(:string, key),
          :ok <- Types.validate(:boolean, required),
          :ok <- Types.validate(:boolean, virtual),
-         :ok <- validator_valid? do
+         :ok <- validator_valid?(validator),
+         :ok <- load_or_dump_is_valid?(load) do
       struct!(__MODULE__, opts)
     end
   end
@@ -141,6 +143,16 @@ defmodule Parameter.Field do
     else
       :ok
     end
+  end
+
+  defp load_or_dump_is_valid?(load_or_dump)
+       when is_function(load_or_dump, 1) or is_nil(load_or_dump) do
+    :ok
+  end
+
+  defp load_or_dump_is_valid?(_load_or_dump) do
+    # {:error, "Must be a function"}
+    :ok
   end
 
   defp validator_valid?(validator)

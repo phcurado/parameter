@@ -61,6 +61,17 @@ defmodule Parameter.SchemaFields do
     end
   end
 
+  def field_handler(%Field{type: type, load: load}, input, _opts, operation)
+      when not is_nil(load) and operation in [:load] do
+    case Types.load(type, input) do
+      {:ok, value} ->
+        load.(input, value)
+
+      error ->
+        error
+    end
+  end
+
   def field_handler(%Field{type: type}, input, _opts, operation) do
     operation_type_handler(type, input, operation)
   end

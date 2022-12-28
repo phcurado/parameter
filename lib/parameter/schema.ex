@@ -176,6 +176,21 @@ defmodule Parameter.Schema do
       required_attrs = [required: @fields_required]
 
       field = Field.new!(main_attrs ++ required_attrs ++ opts)
+
+      fn_branches =
+        if field.load do
+          fn_branches =
+            for {head, body} <- field.load do
+              {:->, [], [[head], body]}
+            end
+
+          {:fn, [], fn_branches}
+        else
+          nil
+        end
+
+      field = %{field | load: fn_branches}
+
       Module.put_attribute(__MODULE__, :param_fields, field)
       Module.put_attribute(__MODULE__, :param_struct_fields, field.name)
     end
