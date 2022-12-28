@@ -4,21 +4,12 @@ defmodule Parameter.Dumper do
   alias Parameter.Field
   alias Parameter.Schema
   alias Parameter.SchemaFields
-  alias Parameter.Types
 
   @type opts :: [exclude: list(), many: boolean()]
 
-  @spec dump(module() | atom() | list(Field.t()), map() | list(map()), opts) ::
+  @spec dump(module() | list(Field.t()), map() | list(map()), opts) ::
           {:ok, any()} | {:error, any()}
-  def dump(schema, input, opts) do
-    if schema in Types.base_types() do
-      dump_type(schema, input, opts)
-    else
-      dump_schema(schema, input, opts)
-    end
-  end
-
-  defp dump_schema(schema, input, opts) when is_map(input) do
+  def dump(schema, input, opts) when is_map(input) do
     schema_keys = Schema.field_keys(schema)
 
     Enum.reduce(schema_keys, {%{}, %{}}, fn schema_key, {result, errors} ->
@@ -40,17 +31,13 @@ defmodule Parameter.Dumper do
     |> parse_loaded_input()
   end
 
-  defp dump_schema(schema, input, opts) when is_list(input) do
+  def dump(schema, input, opts) when is_list(input) do
     if Keyword.get(opts, :many) do
       SchemaFields.list_field_handler(schema, input, opts, :dump)
     else
       {:error,
        "received a list with `many: false`, if a list is expected pass `many: true` on options"}
     end
-  end
-
-  defp dump_type(type, input, opts) do
-    SchemaFields.field_handler(type, input, opts, :dump)
   end
 
   defp parse_loaded_input({result, errors}) do

@@ -64,6 +64,7 @@ defmodule ParameterTest do
     param do
       field :first_name, :string, key: "firstName", required: true
       field :last_name, :string, key: "lastName", required: true, default: ""
+      # , load_func: &__MODULE__.load_age/2
       field :age, :integer
       field :metadata, :map, dump_default: %{"key" => "value"}
       field :hex_amount, CustomTypeHexToDecimal, key: "hexAmount", default: "0"
@@ -81,6 +82,15 @@ defmodule ParameterTest do
 
       has_many :info, Info do
         field :id, :string
+        # field :age, :integer
+      end
+    end
+
+    def load_age(value, input) do
+      if age = input["info"]["age"] do
+        {:ok, age}
+      else
+        {:ok, value}
       end
     end
   end
@@ -1676,7 +1686,7 @@ defmodule ParameterTest do
       user: "personal",
       roles: [
         %{
-          name: "admin",
+          name: 1,
           permissions: [
             %{name: "not_create"},
             %{name: "unread"},
@@ -1704,11 +1714,10 @@ defmodule ParameterTest do
             %{
               roles: %{
                 0 => %{
-                  name: "is invalid",
                   permissions: %{0 => %{name: "is invalid"}, 1 => %{name: "is invalid"}}
                 },
                 1 => %{
-                  name: "is invalid",
+                  name: "invalid integer type",
                   permissions: %{2 => %{name: "is invalid"}}
                 },
                 2 => %{name: "is required"}

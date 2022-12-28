@@ -4,7 +4,6 @@ defmodule Parameter.Loader do
   alias Parameter.Field
   alias Parameter.Schema
   alias Parameter.SchemaFields
-  alias Parameter.Types
 
   @type opts :: [
           struct: boolean(),
@@ -13,17 +12,9 @@ defmodule Parameter.Loader do
           many: boolean()
         ]
 
-  @spec load(module() | atom() | list(Field.t()), map() | list(map()), opts) ::
+  @spec load(module() | list(Field.t()), map() | list(map()), opts) ::
           {:ok, any()} | {:error, any()}
-  def load(schema, input, opts) do
-    if schema in Types.base_types() do
-      load_type(schema, input, opts)
-    else
-      load_schema(schema, input, opts)
-    end
-  end
-
-  defp load_schema(schema, input, opts) when is_map(input) do
+  def load(schema, input, opts) when is_map(input) do
     unknown = Keyword.get(opts, :unknown)
     struct = Keyword.get(opts, :struct)
 
@@ -38,17 +29,13 @@ defmodule Parameter.Loader do
     end
   end
 
-  defp load_schema(schema, input, opts) when is_list(input) do
+  def load(schema, input, opts) when is_list(input) do
     if Keyword.get(opts, :many) do
       SchemaFields.list_field_handler(schema, input, opts, :load)
     else
       {:error,
        "received a list with `many: false`, if a list is expected pass `many: true` on options"}
     end
-  end
-
-  defp load_type(type, input, opts) do
-    SchemaFields.field_handler(type, input, opts, :load)
   end
 
   defp iterate_schema(schema, input, opts) do

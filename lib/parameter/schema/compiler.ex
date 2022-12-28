@@ -20,6 +20,14 @@ defmodule Parameter.Schema.Compiler do
       raise ArgumentError, "validator cannot be used on nested fields"
     end
 
+    if :load_func in keys do
+      raise ArgumentError, "load_func cannot be used on nested fields"
+    end
+
+    if :dump_func in keys do
+      raise ArgumentError, "dump_func cannot be used on nested fields"
+    end
+
     opts
   end
 end

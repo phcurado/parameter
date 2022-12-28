@@ -7,7 +7,7 @@ defmodule Parameter.SchemaFields do
   alias Parameter.Types
   alias Parameter.Validator
 
-  @spec process_map_value(atom | Field.t(), map(), Keyword.t(), :load | :dump | :validate) ::
+  @spec process_map_value(Field.t(), map(), Keyword.t(), :load | :dump | :validate) ::
           {:ok, :ignore} | {:ok, map()} | {:ok, list()} | :ok | {:error, String.t()}
   def process_map_value(field, input, opts, operation) do
     exclude_fields = Keyword.get(opts, :exclude)
@@ -44,16 +44,17 @@ defmodule Parameter.SchemaFields do
     list_field_handler(schema, inputs, opts, operation)
   end
 
-  def field_handler(%Field{type: type, validator: validator}, input, _opts, operation)
+  def field_handler(%Field{validator: validator} = field, input, opts, operation)
       when not is_nil(validator) and operation in [:load, :validate] do
-    case operation do
-      :load -> Types.load(type, input)
-      :validate -> {:ok, input}
-    end
-    |> case do
+    case operation_handler(field, input, opts, operation) do
       {:ok, value} ->
         validator
         |> run_validator(value)
+        |> parse_validator_result(operation)
+
+      :ok ->
+        validator
+        |> run_validator(input)
         |> parse_validator_result(operation)
 
       error ->
@@ -61,18 +62,29 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  def field_handler(%Field{type: type}, input, _opts, operation) do
-    operation_type_handler(type, input, operation)
+  # def field_handler(%Field{type: type, load_func: load_func}, input, _opts, operation)
+  #     when not is_nil(load_func) and operation in [:load] do
+  #   # load_func.(value, input)
+  #   {:ok, input}
+  # end
+
+  # def field_handler(%Field{type: type, dump_func: dump_func}, input, _opts, operation)
+  #     when not is_nil(dump_func) and operation in [:dump] do
+  #   # dump_func.(value, input)
+  #   {:ok, input}
+  # end
+
+  def field_handler(%Field{type: _type} = field, input, opts, operation) do
+    operation_handler(field, input, opts, operation)
   end
 
-  def field_handler(type, input, _opts, operation) do
-    operation_type_handler(type, input, operation)
+  def field_handler(type, input, opts, operation) do
+    operation_handler(%Field{type: type}, input, opts, operation)
   end
 
   @spec list_field_handler(module(), list(map()), Keyword.t(), atom()) ::
           {:error, list()} | {:ok, list()}
-  def list_field_handler(schema, inputs, opts, operation)
-      when is_list(inputs) do
+  def list_field_handler(schema, inputs, opts, operation) when is_list(inputs) do
     inputs
     |> Enum.with_index()
     |> Enum.reduce({[], %{}}, fn {value, index}, {acc_list, errors} ->
@@ -152,19 +164,23 @@ defmodule Parameter.SchemaFields do
     error
   end
 
-  defp operation_handler(schema, input, opts, operation) do
-    case operation do
-      :dump -> Dumper.dump(schema, input, opts)
-      :load -> Loader.load(schema, input, opts)
-      :validate -> Validator.validate(schema, input, opts)
-    end
-  end
-
-  defp operation_type_handler(type, input, operation) do
+  defp operation_handler(%Field{type: type}, input, _opts, operation) do
     case operation do
       :dump -> Types.dump(type, input)
       :load -> Types.load(type, input)
       :validate -> Types.validate(type, input)
+    end
+  end
+
+  defp operation_handler(schema, input, opts, operation) do
+    if schema in Types.base_types() do
+      field_handler(schema, input, opts, operation)
+    else
+      case operation do
+        :dump -> Dumper.dump(schema, input, opts)
+        :load -> Loader.load(schema, input, opts)
+        :validate -> Validator.validate(schema, input, opts)
+      end
     end
   end
 

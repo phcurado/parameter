@@ -216,7 +216,7 @@ defmodule Parameter do
       }}
 
   """
-  @spec load(module() | atom() | list(Field.t()), map() | list(map()), Keyword.t()) ::
+  @spec load(module() | list(Field.t()), map() | list(map()), Keyword.t()) ::
           {:ok, any()} | {:error, any()}
   def load(schema, input, opts \\ []) do
     opts = parse_opts(opts)
@@ -270,7 +270,7 @@ defmodule Parameter do
         "lastName" => "Doe"
       }}
   """
-  @spec dump(module() | atom() | list(Field.t()), map() | list(map), Keyword.t()) ::
+  @spec dump(module() | list(Field.t()), map() | list(map), Keyword.t()) ::
           {:ok, any()} | {:error, any()}
   def dump(schema, input, opts \\ []) do
     exclude = Keyword.get(opts, :exclude, [])
@@ -333,7 +333,7 @@ defmodule Parameter do
         }
       }
   """
-  @spec validate(module() | atom() | list(Field.t()), map() | list(map), Keyword.t()) ::
+  @spec validate(module() | list(Field.t()), map() | list(map), Keyword.t()) ::
           :ok | {:error, any()}
   def validate(schema, input, opts \\ []) do
     exclude = Keyword.get(opts, :exclude, [])

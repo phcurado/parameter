@@ -16,6 +16,14 @@ defmodule Parameter.Schema.CompilerTest do
       Compiler.fetch_nested_opts!(dump_default: nil)
     end
 
+    assert_raise ArgumentError, "load_func cannot be used on nested fields", fn ->
+      Compiler.fetch_nested_opts!(load_func: nil)
+    end
+
+    assert_raise ArgumentError, "dump_func cannot be used on nested fields", fn ->
+      Compiler.fetch_nested_opts!(dump_func: nil)
+    end
+
     assert_raise ArgumentError, "validator cannot be used on nested fields", fn ->
       Compiler.fetch_nested_opts!(validator: nil)
     end
