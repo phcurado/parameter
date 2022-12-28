@@ -171,25 +171,30 @@ defmodule Parameter.Schema do
 
   @doc false
   defmacro field(name, type, opts \\ []) do
-    quote bind_quoted: [name: name, type: type, opts: opts] do
+    load = Macro.escape(Keyword.get(opts, :load))
+
+    quote location: :keep,
+          bind_quoted: [
+            name: name,
+            type: type,
+            opts: opts,
+            load: load
+          ] do
       main_attrs = [name: name, type: type]
       required_attrs = [required: @fields_required]
 
       field = Field.new!(main_attrs ++ required_attrs ++ opts)
 
-      fn_branches =
+      field =
         if field.load do
-          fn_branches =
-            for {head, body} <- field.load do
-              {:->, [], [[head], body]}
-            end
+          def unquote(name)(input, params) do
+            unquote(load).(input, params)
+          end
 
-          {:fn, [], fn_branches}
+          %{field | load: Function.capture(__MODULE__, name, 2)}
         else
-          nil
+          field
         end
-
-      field = %{field | load: fn_branches}
 
       Module.put_attribute(__MODULE__, :param_fields, field)
       Module.put_attribute(__MODULE__, :param_struct_fields, field.name)

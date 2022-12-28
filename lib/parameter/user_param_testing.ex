@@ -8,7 +8,7 @@ defmodule UserParam do
     field :last_name, :string,
       key: "lastName",
       load: fn param_1, _param_2 ->
-        param_1
+        {:ok, param_1}
       end
 
     field :email, :string, validator: &Validators.email/1
