@@ -61,11 +61,11 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  def field_handler(%Field{type: type, load: load}, input, _opts, operation)
-      when not is_nil(load) and operation in [:load] do
+  def field_handler(%Field{type: type, load: load}, input, _opts, operation) when not is_nil(load) and operation in [:load] do
     case Types.load(type, input) do
       {:ok, value} ->
-        load.(input, value)
+        {func, []} = Code.eval_quoted(load)
+        func.(input, value)
 
       error ->
         error
