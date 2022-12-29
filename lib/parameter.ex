@@ -66,6 +66,7 @@ defmodule Parameter do
   alias Parameter.Dumper
   alias Parameter.Field
   alias Parameter.Loader
+  alias Parameter.Meta
   alias Parameter.Types
   alias Parameter.Validator
 
@@ -216,11 +217,13 @@ defmodule Parameter do
       }}
 
   """
-  @spec load(module() | atom() | list(Field.t()), map() | list(map()), Keyword.t()) ::
+  @spec load(module() | list(Field.t()), map() | list(map()), Keyword.t()) ::
           {:ok, any()} | {:error, any()}
   def load(schema, input, opts \\ []) do
     opts = parse_opts(opts)
-    Loader.load(schema, input, opts)
+
+    meta = Meta.new(schema, input, operation: :load)
+    Loader.load(meta, opts)
   end
 
   @doc """
@@ -270,7 +273,7 @@ defmodule Parameter do
         "lastName" => "Doe"
       }}
   """
-  @spec dump(module() | atom() | list(Field.t()), map() | list(map), Keyword.t()) ::
+  @spec dump(module() | list(Field.t()), map() | list(map), Keyword.t()) ::
           {:ok, any()} | {:error, any()}
   def dump(schema, input, opts \\ []) do
     exclude = Keyword.get(opts, :exclude, [])
@@ -278,7 +281,9 @@ defmodule Parameter do
 
     Types.validate!(:list, exclude)
     Types.validate!(:boolean, many)
-    Dumper.dump(schema, input, exclude: exclude, many: many)
+
+    meta = Meta.new(schema, input, operation: :dump)
+    Dumper.dump(meta, exclude: exclude, many: many)
   end
 
   @doc """
@@ -333,7 +338,7 @@ defmodule Parameter do
         }
       }
   """
-  @spec validate(module() | atom() | list(Field.t()), map() | list(map), Keyword.t()) ::
+  @spec validate(module() | list(Field.t()), map() | list(map), Keyword.t()) ::
           :ok | {:error, any()}
   def validate(schema, input, opts \\ []) do
     exclude = Keyword.get(opts, :exclude, [])
@@ -341,7 +346,9 @@ defmodule Parameter do
 
     Types.validate!(:list, exclude)
     Types.validate!(:boolean, many)
-    Validator.validate(schema, input, exclude: exclude, many: many)
+
+    meta = Meta.new(schema, input, operation: :validate)
+    Validator.validate(meta, exclude: exclude, many: many)
   end
 
   defp parse_opts(opts) do

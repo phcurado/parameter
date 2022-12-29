@@ -27,6 +27,12 @@ defmodule Parameter.Field do
 
   * `:virtual` - If `true` the field will be ignored on `Parameter.load/3` and `Parameter.dump/3` functions.
 
+  * `:load_func` - Function to specify how to load the field. The function must have two arguments where the first one is the field value and the second one
+  will be the data to be loaded.
+
+  * `:dump_func` - Function to specify how to dump the field. The function must have two arguments where the first one is the field value and the second one
+  will be the data to be dumped.
+
   > NOTE: Validation only occurs on `Parameter.load/3`.
   > By desgin, data passed into `Parameter.dump/3` are considered valid.
 
@@ -43,6 +49,8 @@ defmodule Parameter.Field do
     :default,
     :load_default,
     :dump_default,
+    :load_func,
+    :dump_func,
     type: :string,
     required: false,
     validator: nil,
@@ -55,6 +63,8 @@ defmodule Parameter.Field do
           default: any(),
           load_default: any(),
           dump_default: any(),
+          load_func: fun() | nil,
+          dump_func: fun() | nil,
           type: Types.t(),
           required: boolean(),
           validator: fun() | nil,
@@ -94,18 +104,20 @@ defmodule Parameter.Field do
     default = Keyword.get(opts, :default)
     load_default = Keyword.get(opts, :load_default)
     dump_default = Keyword.get(opts, :dump_default)
+    load_func = Keyword.get(opts, :load_func)
+    dump_func = Keyword.get(opts, :dump_func)
     required = Keyword.get(opts, :required, false)
     validator = Keyword.get(opts, :validator)
     virtual = Keyword.get(opts, :virtual, false)
-
-    validator_valid? = validator_valid?(validator)
 
     # Using Types module to validate field parameters
     with {:ok, opts} <- default_valid?(type, opts, default, load_default, dump_default),
          :ok <- Types.validate(:string, key),
          :ok <- Types.validate(:boolean, required),
          :ok <- Types.validate(:boolean, virtual),
-         :ok <- validator_valid? do
+         :ok <- load_func_valid?(load_func),
+         :ok <- dump_func_valid?(dump_func),
+         :ok <- validator_valid?(validator) do
       struct!(__MODULE__, opts)
     end
   end
@@ -143,12 +155,24 @@ defmodule Parameter.Field do
     end
   end
 
-  defp validator_valid?(validator)
-       when is_function(validator, 1) or is_nil(validator) or is_tuple(validator) do
+  defp load_func_valid?(load_func) do
+    function_valid?(load_func, 2, "load_func must be a function")
+  end
+
+  defp dump_func_valid?(dump_func) do
+    function_valid?(dump_func, 2, "dump_func must be a function")
+  end
+
+  defp validator_valid?(validator) do
+    function_valid?(validator, 1, "validator must be a function")
+  end
+
+  defp function_valid?(function, arity, _message)
+       when is_function(function, arity) or is_nil(function) or is_tuple(function) do
     :ok
   end
 
-  defp validator_valid?(_validator) do
-    {:error, "validator must be a function"}
+  defp function_valid?(_validator, _arity, message) do
+    {:error, message}
   end
 end
