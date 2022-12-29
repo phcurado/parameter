@@ -64,8 +64,7 @@ defmodule ParameterTest do
     param do
       field :first_name, :string, key: "firstName", required: true
       field :last_name, :string, key: "lastName", required: true, default: ""
-      # , load_func: &__MODULE__.load_age/2
-      field :age, :integer
+      field :age, :integer, load_func: &__MODULE__.load_age/2
       field :metadata, :map, dump_default: %{"key" => "value"}
       field :hex_amount, CustomTypeHexToDecimal, key: "hexAmount", default: "0"
       field :paid_amount, :decimal, key: "paidAmount", default: Decimal.new("1")
@@ -78,16 +77,47 @@ defmodule ParameterTest do
       has_one :id_info, IdInfo, key: "idInfo" do
         field :number, :integer, load_default: 0, dump_default: 25
         field :type, :string
+
+        field :age, :integer,
+          load_func: &ParameterTest.UserTestSchema.load_info_age/2,
+          dump_func: &ParameterTest.UserTestSchema.dump_age/2
       end
 
       has_many :info, Info do
         field :id, :string
-        # field :age, :integer
+
+        field :age, :string,
+          load_func: &ParameterTest.UserTestSchema.load_info_age/2,
+          dump_func: &ParameterTest.UserTestSchema.dump_info_age/2
       end
     end
 
     def load_age(value, input) do
-      if age = input["info"]["age"] do
+      if age = input["idInfo"]["age"] do
+        {:ok, age}
+      else
+        {:ok, value}
+      end
+    end
+
+    def load_info_age(value, input) do
+      if age = input["age"] do
+        {:ok, age}
+      else
+        {:ok, value}
+      end
+    end
+
+    def dump_info_age(value, input) do
+      if age = input.age do
+        {:ok, age}
+      else
+        {:ok, value}
+      end
+    end
+
+    def dump_age(value, input) do
+      if age = input[:id_info][:age] do
         {:ok, age}
       else
         {:ok, value}
@@ -238,7 +268,8 @@ defmodule ParameterTest do
         "hexAmount" => "0x0",
         "idInfo" => %{
           "number" => 123_456,
-          "type" => "identity"
+          "type" => "identity",
+          "age" => "12"
         }
       }
 
@@ -246,7 +277,7 @@ defmodule ParameterTest do
               %{
                 first_name: "John",
                 last_name: "Doe",
-                age: 32,
+                age: 12,
                 main_address: %{city: "Some City", street: "Some street", number: 15},
                 other_addresses: [
                   %{city: "Some City", street: "Some street", number: 15},
@@ -258,7 +289,7 @@ defmodule ParameterTest do
                 map_values: [%{"test" => "test"}],
                 metadata: %{"key" => "value", "other_key" => "value"},
                 hex_amount: 0,
-                id_info: %{number: 123_456, type: "identity"}
+                id_info: %{number: 123_456, type: "identity", age: 32}
               }} == Parameter.load(UserTestSchema, params)
     end
 
@@ -801,7 +832,8 @@ defmodule ParameterTest do
           "hexAmount" => "0x0",
           "idInfo" => %{
             "number" => 123_456,
-            "type" => "identity"
+            "type" => "identity",
+            "age" => "12"
           }
         },
         %{
@@ -830,7 +862,7 @@ defmodule ParameterTest do
                 %{
                   first_name: "John",
                   last_name: "Doe",
-                  age: 32,
+                  age: 12,
                   main_address: %{city: "Some City", street: "Some street", number: 15},
                   other_addresses: [
                     %{city: "Some City", street: "Some street", number: 15},
@@ -841,7 +873,7 @@ defmodule ParameterTest do
                   numbers: [1, 2, 5, 10],
                   metadata: %{"key" => "value", "other_key" => "value"},
                   hex_amount: 0,
-                  id_info: %{number: 123_456, type: "identity"}
+                  id_info: %{number: 123_456, type: "identity", age: 32}
                 },
                 %{
                   first_name: "Jane",
@@ -866,7 +898,7 @@ defmodule ParameterTest do
                 %UserTestSchema{
                   first_name: "John",
                   last_name: "Doe",
-                  age: 32,
+                  age: 12,
                   main_address: %AddressTestSchema{
                     city: "Some City",
                     street: "Some street",
@@ -881,7 +913,7 @@ defmodule ParameterTest do
                   numbers: [1, 2, 5, 10],
                   metadata: %{"key" => "value", "other_key" => "value"},
                   hex_amount: 0,
-                  id_info: %UserTestSchema.IdInfo{number: 123_456, type: "identity"}
+                  id_info: %UserTestSchema.IdInfo{number: 123_456, type: "identity", age: 32}
                 },
                 %UserTestSchema{
                   first_name: "Jane",
@@ -1123,8 +1155,8 @@ defmodule ParameterTest do
         paid_amount: Decimal.new("10.5"),
         numbers: [1, 2, 5, 10],
         hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908,
-        id_info: %UserTestSchema.IdInfo{type: nil},
-        info: [%UserTestSchema.Info{id: "1"}]
+        id_info: %UserTestSchema.IdInfo{type: nil, age: nil},
+        info: [%UserTestSchema.Info{id: "1", age: 12}]
       }
 
       assert {:ok,
@@ -1147,8 +1179,8 @@ defmodule ParameterTest do
                 "numbers" => [1, 2, 5, 10],
                 "metadata" => %{"key" => "value"},
                 "hexAmount" => 0,
-                "idInfo" => %{"number" => 25, "type" => nil},
-                "info" => [%{"id" => "1"}]
+                "idInfo" => %{"number" => 25, "type" => nil, "age" => nil},
+                "info" => [%{"id" => "1", "age" => "32"}]
               }} == Parameter.dump(UserTestSchema, loaded_schema)
     end
 

@@ -66,6 +66,7 @@ defmodule Parameter do
   alias Parameter.Dumper
   alias Parameter.Field
   alias Parameter.Loader
+  alias Parameter.Meta
   alias Parameter.Types
   alias Parameter.Validator
 
@@ -220,7 +221,9 @@ defmodule Parameter do
           {:ok, any()} | {:error, any()}
   def load(schema, input, opts \\ []) do
     opts = parse_opts(opts)
-    Loader.load(schema, input, opts)
+
+    meta = Meta.new(schema, input, operation: :load)
+    Loader.load(meta, opts)
   end
 
   @doc """
@@ -278,7 +281,9 @@ defmodule Parameter do
 
     Types.validate!(:list, exclude)
     Types.validate!(:boolean, many)
-    Dumper.dump(schema, input, exclude: exclude, many: many)
+
+    meta = Meta.new(schema, input, operation: :dump)
+    Dumper.dump(meta, exclude: exclude, many: many)
   end
 
   @doc """
@@ -341,7 +346,9 @@ defmodule Parameter do
 
     Types.validate!(:list, exclude)
     Types.validate!(:boolean, many)
-    Validator.validate(schema, input, exclude: exclude, many: many)
+
+    meta = Meta.new(schema, input, operation: :validate)
+    Validator.validate(meta, exclude: exclude, many: many)
   end
 
   defp parse_opts(opts) do

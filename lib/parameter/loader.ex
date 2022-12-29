@@ -1,7 +1,7 @@
 defmodule Parameter.Loader do
   @moduledoc false
 
-  alias Parameter.Field
+  alias Parameter.Meta
   alias Parameter.Schema
   alias Parameter.SchemaFields
 
@@ -12,39 +12,38 @@ defmodule Parameter.Loader do
           many: boolean()
         ]
 
-  @spec load(module() | list(Field.t()), map() | list(map()), opts) ::
-          {:ok, any()} | {:error, any()}
-  def load(schema, input, opts) when is_map(input) do
+  @spec load(Meta.t(), opts) :: {:ok, any()} | {:error, any()}
+  def load(%Meta{input: input} = meta, opts) when is_map(input) do
     unknown = Keyword.get(opts, :unknown)
     struct = Keyword.get(opts, :struct)
 
-    case unknow_fields(schema, input, unknown) do
+    case unknow_fields(meta, unknown) do
       :ok ->
-        iterate_schema(schema, input, opts)
+        iterate_schema(meta, opts)
         |> parse_loaded_input()
-        |> parse_to_struct_or_map(schema, struct: struct)
+        |> parse_to_struct_or_map(meta, struct: struct)
 
       error ->
         error
     end
   end
 
-  def load(schema, input, opts) when is_list(input) do
+  def load(%Meta{input: input} = meta, opts) when is_list(input) do
     if Keyword.get(opts, :many) do
-      SchemaFields.list_field_handler(schema, input, opts, :load)
+      SchemaFields.process_list_value(meta, input, opts)
     else
       {:error,
        "received a list with `many: false`, if a list is expected pass `many: true` on options"}
     end
   end
 
-  defp iterate_schema(schema, input, opts) do
-    schema_keys = Schema.field_keys(schema)
+  defp iterate_schema(meta, opts) do
+    schema_keys = Schema.field_keys(meta.schema)
 
     Enum.reduce(schema_keys, {%{}, %{}}, fn schema_key, {result, errors} ->
-      field = Schema.field_key(schema, schema_key)
+      field = Schema.field_key(meta.schema, schema_key)
 
-      case SchemaFields.process_map_value(field, input, opts, :load) do
+      case SchemaFields.process_map_value(meta, field, opts) do
         {:error, error} ->
           errors = Map.put(errors, field.name, error)
           {result, errors}
@@ -59,7 +58,7 @@ defmodule Parameter.Loader do
     end)
   end
 
-  defp unknow_fields(schema, input, :error) do
+  defp unknow_fields(%Meta{schema: schema, input: input}, :error) do
     schema_keys = Schema.field_keys(schema)
 
     unknow_fields =
@@ -78,7 +77,7 @@ defmodule Parameter.Loader do
     end
   end
 
-  defp unknow_fields(_schema, _input, _ignore), do: :ok
+  defp unknow_fields(_meta, _ignore), do: :ok
 
   defp parse_loaded_input({result, errors}) do
     if errors == %{} do
@@ -88,11 +87,14 @@ defmodule Parameter.Loader do
     end
   end
 
-  defp parse_to_struct_or_map({:error, _error} = result, _schema, _opts), do: result
+  defp parse_to_struct_or_map({:error, _error} = result, _meta, _opts), do: result
 
-  defp parse_to_struct_or_map(result, _schema, struct: false), do: result
+  defp parse_to_struct_or_map(result, _meta, struct: false), do: result
 
-  defp parse_to_struct_or_map({:ok, result}, schema, struct: true) do
+  defp parse_to_struct_or_map({:ok, result}, %Meta{schema: schema}, struct: true)
+       when is_atom(schema) do
     {:ok, struct!(schema, result)}
   end
+
+  defp parse_to_struct_or_map(result, _meta, _opts), do: result
 end

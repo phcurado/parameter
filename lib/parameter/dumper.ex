@@ -1,21 +1,20 @@
 defmodule Parameter.Dumper do
   @moduledoc false
 
-  alias Parameter.Field
+  alias Parameter.Meta
   alias Parameter.Schema
   alias Parameter.SchemaFields
 
   @type opts :: [exclude: list(), many: boolean()]
 
-  @spec dump(module() | list(Field.t()), map() | list(map()), opts) ::
-          {:ok, any()} | {:error, any()}
-  def dump(schema, input, opts) when is_map(input) do
+  @spec dump(Meta.t(), opts) :: {:ok, any()} | {:error, any()}
+  def dump(%Meta{schema: schema, input: input} = meta, opts) when is_map(input) do
     schema_keys = Schema.field_keys(schema)
 
     Enum.reduce(schema_keys, {%{}, %{}}, fn schema_key, {result, errors} ->
       field = Schema.field_key(schema, schema_key)
 
-      case SchemaFields.process_map_value(field, input, opts, :dump) do
+      case SchemaFields.process_map_value(meta, field, opts) do
         {:error, error} ->
           errors = Map.put(errors, field.name, error)
           {result, errors}
@@ -31,9 +30,9 @@ defmodule Parameter.Dumper do
     |> parse_loaded_input()
   end
 
-  def dump(schema, input, opts) when is_list(input) do
+  def dump(%Meta{input: input} = meta, opts) when is_list(input) do
     if Keyword.get(opts, :many) do
-      SchemaFields.list_field_handler(schema, input, opts, :dump)
+      SchemaFields.process_list_value(meta, input, opts)
     else
       {:error,
        "received a list with `many: false`, if a list is expected pass `many: true` on options"}

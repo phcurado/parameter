@@ -320,6 +320,14 @@ defmodule Parameter.Schema do
     end
   end
 
+  def fields(module) when is_atom(module) do
+    module.__param__(:fields)
+  end
+
+  def fields(fields) when is_list(fields) do
+    fields
+  end
+
   def field_keys(module) when is_atom(module) do
     module.__param__(:field_keys)
   end
