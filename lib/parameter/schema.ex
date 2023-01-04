@@ -89,14 +89,12 @@ defmodule Parameter.Schema do
 
       schema = %{
         first_name: [key: "firstName", type: :string, required: true],
-        address: [required: true, type: {:has_one, %{street: [type: :string, required: true]}}],
+        address: [type: {:has_one, %{street: [type: :string, required: true]}}],
         phones: [type: {:has_many, %{country: [type: :string, required: true]}}]
-      }
+      } |> Parameter.Schema.compile!()
 
-      compiled_schema = Parameter.Schema.compile!(schema)
-
-      Parameter.load(compiled_schema, %{"firstName" => "John"})
-      ...
+      Parameter.load(schema, %{"firstName" => "John"})
+      {:ok, %{first_name: "John"}}
 
 
     The same API can also be evaluated on compile time by using module attributes:
@@ -118,6 +116,7 @@ defmodule Parameter.Schema do
     This makes it easy to dynamically create schemas or just avoid using any macros.
 
   ## Required fields
+
   By default, `Parameter.Schema` considers all fields to be optional when validating the schema.
   This behaviour can be changed by passing the module attribute `@fields_required true` on
   the module where the schema is declared.
@@ -136,6 +135,49 @@ defmodule Parameter.Schema do
 
       Parameter.load(MyApp.UserSchema, %{})
       {:error, %{age: "is required", name: "is required"}}
+
+
+  ## Custom field loading and dumping
+
+  The `load` and `dump` behavior can be customized per field by implementing `on_load` or `on_dump` functions in the field definition.
+  This can be useful if the field needs to be fetched or even validate in a different way than the defaults implemented by `Parameter`.
+  Both functions should return `{:ok, value}` or `{:error, reason}` tuple.
+
+  For example, imagine that there is a parameter called `full_name` in your schema that you want to customize on how it will be parsed:
+
+      defmodule MyApp.UserSchema do
+        use Parameter.Schema
+
+        param do
+          field :first_name, :string
+          field :last_name, :string
+          field :full_name, :string, on_load: &__MODULE__.load_full_name/2
+        end
+
+        def load_full_name(value, params) do
+          # if `full_name` is not `nil` it just return the `full_name`
+          if value do
+            {:ok, value}
+          else
+            # Otherwise it will join the `first_name` and `last_name` params
+            {:ok, params["first_name"] <> " " <> params["last_name"]}
+          end
+        end
+      end
+
+  Now when loading, the full_name field will be handled by the `load_full_name/2` function:
+
+      Parameter.load(MyApp.UserSchema, %{first_name: "John", last_name: "Doe", full_name: nil})
+      {:ok, %{first_name:  "John", full_name: "John Doe", last_name: "Doe"}}
+
+  The same behavior is possible when dumping the schema parameters by using `on_dump/2` function:
+
+      schema = %{
+        level: [type: :integer, on_dump: fn value, _input -> {:ok, value || 0}  end]
+      } |> Parameter.Schema.compile!()
+
+      Parameter.dump(schema, %{level: nil})
+      {:ok, %{"level" => 0}}
   """
 
   alias Parameter.Field

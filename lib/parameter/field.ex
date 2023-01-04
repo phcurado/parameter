@@ -27,11 +27,11 @@ defmodule Parameter.Field do
 
   * `:virtual` - If `true` the field will be ignored on `Parameter.load/3` and `Parameter.dump/3` functions.
 
-  * `:load_func` - Function to specify how to load the field. The function must have two arguments where the first one is the field value and the second one
-  will be the data to be loaded.
+  * `:on_load` - Function to specify how to load the field. The function must have two arguments where the first one is the field value and the second one
+  will be the data to be loaded. Should return `{:ok, value}` or `{:error, reason}` tuple.
 
-  * `:dump_func` - Function to specify how to dump the field. The function must have two arguments where the first one is the field value and the second one
-  will be the data to be dumped.
+  * `:on_dump` - Function to specify how to dump the field. The function must have two arguments where the first one is the field value and the second one
+  will be the data to be dumped. Should return `{:ok, value}` or `{:error, reason}` tuple.
 
   > NOTE: Validation only occurs on `Parameter.load/3`.
   > By desgin, data passed into `Parameter.dump/3` are considered valid.
@@ -49,8 +49,8 @@ defmodule Parameter.Field do
     :default,
     :load_default,
     :dump_default,
-    :load_func,
-    :dump_func,
+    :on_load,
+    :on_dump,
     type: :string,
     required: false,
     validator: nil,
@@ -63,8 +63,8 @@ defmodule Parameter.Field do
           default: any(),
           load_default: any(),
           dump_default: any(),
-          load_func: fun() | nil,
-          dump_func: fun() | nil,
+          on_load: fun() | nil,
+          on_dump: fun() | nil,
           type: Types.t(),
           required: boolean(),
           validator: fun() | nil,
@@ -104,8 +104,8 @@ defmodule Parameter.Field do
     default = Keyword.get(opts, :default)
     load_default = Keyword.get(opts, :load_default)
     dump_default = Keyword.get(opts, :dump_default)
-    load_func = Keyword.get(opts, :load_func)
-    dump_func = Keyword.get(opts, :dump_func)
+    on_load = Keyword.get(opts, :on_load)
+    on_dump = Keyword.get(opts, :on_dump)
     required = Keyword.get(opts, :required, false)
     validator = Keyword.get(opts, :validator)
     virtual = Keyword.get(opts, :virtual, false)
@@ -115,8 +115,8 @@ defmodule Parameter.Field do
          :ok <- Types.validate(:string, key),
          :ok <- Types.validate(:boolean, required),
          :ok <- Types.validate(:boolean, virtual),
-         :ok <- load_func_valid?(load_func),
-         :ok <- dump_func_valid?(dump_func),
+         :ok <- on_load_valid?(on_load),
+         :ok <- on_dump_valid?(on_dump),
          :ok <- validator_valid?(validator) do
       struct!(__MODULE__, opts)
     end
@@ -155,12 +155,12 @@ defmodule Parameter.Field do
     end
   end
 
-  defp load_func_valid?(load_func) do
-    function_valid?(load_func, 2, "load_func must be a function")
+  defp on_load_valid?(on_load) do
+    function_valid?(on_load, 2, "on_load must be a function")
   end
 
-  defp dump_func_valid?(dump_func) do
-    function_valid?(dump_func, 2, "dump_func must be a function")
+  defp on_dump_valid?(on_dump) do
+    function_valid?(on_dump, 2, "on_dump must be a function")
   end
 
   defp validator_valid?(validator) do

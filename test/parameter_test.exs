@@ -64,7 +64,7 @@ defmodule ParameterTest do
     param do
       field :first_name, :string, key: "firstName", required: true
       field :last_name, :string, key: "lastName", required: true, default: ""
-      field :age, :integer, load_func: &__MODULE__.load_age/2
+      field :age, :integer, on_load: &__MODULE__.load_age/2
       field :metadata, :map, dump_default: %{"key" => "value"}
       field :hex_amount, CustomTypeHexToDecimal, key: "hexAmount", default: "0"
       field :paid_amount, :decimal, key: "paidAmount", default: Decimal.new("1")
@@ -79,16 +79,16 @@ defmodule ParameterTest do
         field :type, :string
 
         field :age, :integer,
-          load_func: &ParameterTest.UserTestSchema.load_info_age/2,
-          dump_func: &ParameterTest.UserTestSchema.dump_age/2
+          on_load: &ParameterTest.UserTestSchema.load_info_age/2,
+          on_dump: &ParameterTest.UserTestSchema.dump_age/2
       end
 
       has_many :info, Info do
         field :id, :string
 
         field :age, :string,
-          load_func: &ParameterTest.UserTestSchema.load_info_age/2,
-          dump_func: &ParameterTest.UserTestSchema.dump_info_age/2
+          on_load: &ParameterTest.UserTestSchema.load_info_age/2,
+          on_dump: &ParameterTest.UserTestSchema.dump_info_age/2
       end
     end
 
@@ -117,7 +117,7 @@ defmodule ParameterTest do
     end
 
     def dump_age(value, input) do
-      if age = input[:id_info][:age] do
+      if age = input.id_info.age do
         {:ok, age}
       else
         {:ok, value}

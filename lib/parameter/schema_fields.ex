@@ -106,13 +106,13 @@ defmodule Parameter.SchemaFields do
   end
 
   def field_handler(
-        %Meta{parent_input: parent_input, operation: operation} = meta,
-        %Field{load_func: load_func} = field,
+        %Meta{parent_input: parent_input, operation: :load} = meta,
+        %Field{on_load: on_load} = field,
         value,
         opts
       )
-      when not is_nil(load_func) and operation in [:load] do
-    case load_func.(value, parent_input) do
+      when not is_nil(on_load) do
+    case on_load.(value, parent_input) do
       {:ok, value} ->
         operation_handler(meta, field, value, opts)
 
@@ -122,13 +122,13 @@ defmodule Parameter.SchemaFields do
   end
 
   def field_handler(
-        %Meta{parent_input: parent_input, operation: operation} = meta,
-        %Field{dump_func: dump_func} = field,
+        %Meta{parent_input: parent_input, operation: :dump} = meta,
+        %Field{on_dump: on_dump} = field,
         value,
         opts
       )
-      when not is_nil(dump_func) and operation in [:dump] do
-    case dump_func.(value, parent_input) do
+      when not is_nil(on_dump) do
+    case on_dump.(value, parent_input) do
       {:ok, value} -> operation_handler(meta, field, value, opts)
       error -> error
     end
@@ -200,6 +200,10 @@ defmodule Parameter.SchemaFields do
     error
   end
 
+  defp operation_handler(_meta, _field, nil, _opts) do
+    {:ok, nil}
+  end
+
   defp operation_handler(meta, %Field{type: type}, value, _opts) do
     case meta.operation do
       :dump -> Types.dump(type, value)
@@ -226,7 +230,10 @@ defmodule Parameter.SchemaFields do
         check_required(field, :ignore, meta.operation)
 
       {:ok, nil} ->
-        check_required(field, nil, meta.operation)
+        case check_required(field, nil, meta.operation) do
+          {:ok, value} -> field_handler(meta, field, value, opts)
+          other -> other
+        end
 
       {:ok, value} ->
         field_handler(meta, field, value, opts)

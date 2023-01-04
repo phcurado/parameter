@@ -89,7 +89,7 @@ defmodule Parameter.Types do
     end
   end
 
-  @spec validate(atom(), any()) :: :ok | {:error, any()}
+  @spec validate(atom() | composite_types(), any()) :: :ok | {:error, any()}
   def validate(type, values)
 
   def validate({:has_one, inner_type}, values) when is_map(values) do
