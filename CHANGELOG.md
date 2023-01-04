@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.9.x (2023-01-04)
+
+### Enhancements
+
+* [Parameter.Field] Support for `on_load/2` and `on_dump/2` functions in field definition.
+
 ## v0.8.x (2022-12-10)
 
 ### Enhancements

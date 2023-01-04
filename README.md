@@ -74,7 +74,7 @@ Parameter.dump(UserParam, params)
 }}
 ```
 
-Parameter offers a similar Schema model from [Ecto](https://github.com/elixir-ecto/ecto) library to deal with parameters. The main use case is to parse response from external apis. This library provides a well structured schema model which tries to parse the external data. Check the [official documentation](https://hexdocs.pm/parameter/) for more information.
+Parameter offers a similar Schema model from [Ecto](https://github.com/elixir-ecto/ecto) library to deal with parameters. The main use case is to parse response from external APIs. This library provides a well structured schema model which tries to parse the external data. Check the [official documentation](https://hexdocs.pm/parameter/) for more information.
 
 
 ## Installation
@@ -93,7 +93,7 @@ end
 add `:parameter` on `.formatter.exs`:
 
 ```elixir
-import_deps: [:ecto, :phoenix, ..., :parameter],
+import_deps: [:parameter]
 ```
 
 For `Parameter` with `Ecto` integration check out the [parameter_ecto](https://github.com/phcurado/parameter_ecto) project.
