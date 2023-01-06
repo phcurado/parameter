@@ -290,8 +290,15 @@ defmodule Parameter.SchemaFields do
 
       {:ok, nil} ->
         case check_required(field, nil, meta.operation) do
-          {:ok, value} -> field_handler(meta, field, value, opts)
-          other -> other
+          {:ok, value} ->
+            if opts[:ignore_nil] do
+              {:ok, :ignore}
+            else
+              field_handler(meta, field, value, opts)
+            end
+
+          other ->
+            other
         end
 
       {:ok, value} ->

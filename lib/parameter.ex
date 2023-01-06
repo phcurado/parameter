@@ -87,6 +87,8 @@ defmodule Parameter do
     option is useful if you have fields in your schema are only for dump. The field will not
     be checked for any validation if it's on the exclude list.
 
+    * `:ignore_nil` - When `true` will ignore `nil` values when loading the parameters, when `false` (default) it will load the `nil` values.
+
     * `:many` - When `true` will parse the input data as list, when `false` (default) it parses as map
 
 
@@ -234,6 +236,8 @@ defmodule Parameter do
     * `:exclude` - Accepts a list of fields to be excluded when dumping the loaded parameter. This
     option is useful if you have fields in your schema are only for loading.
 
+    * `:ignore_nil` - When `true` will ignore `nil` values when dumping the parameters, when `false` (default) it will dump the `nil` values.
+
     * `:many` - When `true` will parse the input data as list, when `false` (default) it parses as map
 
 
@@ -278,12 +282,14 @@ defmodule Parameter do
   def dump(schema, input, opts \\ []) do
     exclude = Keyword.get(opts, :exclude, [])
     many = Keyword.get(opts, :many, false)
+    ignore_nil = Keyword.get(opts, :ignore_nil, false)
 
     Types.validate!(:array, exclude)
     Types.validate!(:boolean, many)
+    Types.validate!(:boolean, ignore_nil)
 
     meta = Meta.new(schema, input, operation: :dump)
-    Dumper.dump(meta, exclude: exclude, many: many)
+    Dumper.dump(meta, exclude: exclude, many: many, ignore_nil: ignore_nil)
   end
 
   @doc """
@@ -361,11 +367,13 @@ defmodule Parameter do
     struct = Keyword.get(opts, :struct, false)
     exclude = Keyword.get(opts, :exclude, [])
     many = Keyword.get(opts, :many, false)
+    ignore_nil = Keyword.get(opts, :ignore_nil, false)
 
     Types.validate!(:boolean, struct)
     Types.validate!(:array, exclude)
     Types.validate!(:boolean, many)
+    Types.validate!(:boolean, ignore_nil)
 
-    [struct: struct, unknown: unknown, exclude: exclude, many: many]
+    [struct: struct, unknown: unknown, exclude: exclude, many: many, ignore_nil: ignore_nil]
   end
 end

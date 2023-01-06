@@ -9,6 +9,7 @@ defmodule Parameter.Loader do
           struct: boolean(),
           unknow_fields: :error | :ignore,
           exclude: list(),
+          ignore_nil: boolean(),
           many: boolean()
         ]
 

@@ -384,6 +384,44 @@ defmodule ParameterTest do
                Parameter.load(UserTestSchema, params)
     end
 
+    test "load user schema with ignore_nil true" do
+      params = %{
+        "firstName" => "John",
+        "lastName" => "Doe",
+        "age" => "32",
+        "mainAddress" => %{"city" => "Some City", "street" => nil, "number" => nil},
+        "otherAddresses" => [
+          %{"city" => "Some City", "street" => "Some street", "number" => nil},
+          %{"city" => "Other city", "street" => "Other street", "number" => 10}
+        ],
+        "status" => "userValid",
+        "metadata" => %{"key" => "value", "other_key" => nil},
+        "hexAmount" => nil,
+        "idInfo" => %{"number" => "25"},
+        "info" => [%{"id" => "1"}]
+      }
+
+      assert {:ok,
+              %{
+                first_name: "John",
+                last_name: "Doe",
+                age: 32,
+                main_address: %{
+                  city: "Some City"
+                },
+                other_addresses: [
+                  %{city: "Some City", street: "Some street"},
+                  %{city: "Other city", street: "Other street", number: 10}
+                ],
+                status: :user_valid,
+                paid_amount: Decimal.new("1"),
+                numbers: [1, 2],
+                metadata: %{"key" => "value", "other_key" => nil},
+                id_info: %{number: 25},
+                info: [%{id: "1"}]
+              }} == Parameter.load(UserTestSchema, params, ignore_nil: true)
+    end
+
     test "load user schema with struct true" do
       params = %{
         "firstName" => "John",
@@ -1222,6 +1260,44 @@ defmodule ParameterTest do
                 "idInfo" => %{"number" => 25, "type" => nil, "age" => nil},
                 "info" => [%{"id" => "1", "age" => "32"}]
               }} == Parameter.dump(UserTestSchema, loaded_schema)
+    end
+
+    test "dump user schema with ignore_nil true" do
+      params = %{
+        first_name: "John",
+        last_name: "Doe",
+        age: 32,
+        main_address: %{city: "Some City", street: nil, number: nil},
+        other_addresses: [
+          %{city: "Some City", street: "Some street", number: nil},
+          %{city: "Other city", street: "Other street", number: 10}
+        ],
+        status: :user_valid,
+        metadata: %{key: "value", other_key: nil},
+        hex_amount: nil,
+        id_info: %{number: "25"},
+        info: [%{id: "1"}]
+      }
+
+      assert {:ok,
+              %{
+                "firstName" => "John",
+                "lastName" => "Doe",
+                "age" => 32,
+                "mainAddress" => %{
+                  "city" => "Some City"
+                },
+                "otherAddresses" => [
+                  %{"city" => "Some City", "street" => "Some street"},
+                  %{"city" => "Other city", "street" => "Other street", "number" => 10}
+                ],
+                "status" => "userValid",
+                "paidAmount" => Decimal.new("1"),
+                "numbers" => [1, 2],
+                "metadata" => %{key: "value", other_key: nil},
+                "idInfo" => %{"number" => 25},
+                "info" => [%{"id" => "1"}]
+              }} == Parameter.dump(UserTestSchema, params, ignore_nil: true)
     end
 
     test "dump schema with invalid input should return error" do
