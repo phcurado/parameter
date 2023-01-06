@@ -289,17 +289,7 @@ defmodule Parameter.SchemaFields do
         check_required(field, :ignore, meta.operation)
 
       {:ok, nil} ->
-        case check_required(field, nil, meta.operation) do
-          {:ok, value} ->
-            if opts[:ignore_nil] do
-              {:ok, :ignore}
-            else
-              field_handler(meta, field, value, opts)
-            end
-
-          other ->
-            other
-        end
+        check_nil(meta, field, opts)
 
       {:ok, value} ->
         field_handler(meta, field, value, opts)
@@ -352,5 +342,19 @@ defmodule Parameter.SchemaFields do
 
   defp check_required(%Field{dump_default: default}, value, :dump) do
     {:ok, default || value}
+  end
+
+  defp check_nil(meta, field, opts) do
+    case check_required(field, nil, meta.operation) do
+      {:ok, value} ->
+        if opts[:ignore_nil] do
+          {:ok, :ignore}
+        else
+          field_handler(meta, field, value, opts)
+        end
+
+      other ->
+        other
+    end
   end
 end
