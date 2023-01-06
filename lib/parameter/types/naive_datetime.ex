@@ -5,6 +5,25 @@ defmodule Parameter.Types.NaiveDateTime do
 
   use Parameter.Parametrizable
 
+  @doc """
+  loads NaiveDateTime type
+
+  ## Examples
+      iex> Parameter.Types.NaiveDateTime.load(~N[2000-01-01 23:00:07])
+      {:ok, ~N[2000-01-01 23:00:07]}
+
+      iex> Parameter.Types.NaiveDateTime.load("2000-01-01 22:00:07")
+      {:ok, ~N[2000-01-01 22:00:07]}
+
+      iex> Parameter.Types.NaiveDateTime.load({{2021, 05, 11}, {22, 30, 10}})
+      {:ok, ~N[2021-05-11 22:30:10]}
+
+      iex> Parameter.Types.NaiveDateTime.load({{2021, 25, 11}, {22, 30, 10}})
+      {:error, "invalid naive_datetime type"}
+
+      iex> Parameter.Types.NaiveDateTime.load("2015-25-23")
+      {:error, "invalid naive_datetime type"}
+  """
   @impl true
   def load(%NaiveDateTime{} = value) do
     {:ok, value}

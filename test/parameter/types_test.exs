@@ -9,6 +9,24 @@ defmodule Parameter.TypesTest do
     enum values: [:user_online, :user_offline]
   end
 
+  test "base_type?/1" do
+    assert Types.base_type?(:any)
+    refute Types.base_type?(:not_type)
+  end
+
+  test "composite_inner_type?/1" do
+    assert Types.composite_inner_type?({:array, :any})
+    assert Types.composite_inner_type?({:map, :not_type})
+    refute Types.composite_inner_type?(:not_type)
+  end
+
+  test "assoc_type?/1" do
+    assert Types.assoc_type?({:has_one, :any})
+    assert Types.assoc_type?({:has_many, :any})
+    refute Types.assoc_type?({:map, :not_type})
+    refute Types.assoc_type?(:not_type)
+  end
+
   describe "load/2" do
     test "load any type" do
       assert Types.load(:any, "Test") == {:ok, "Test"}
@@ -353,6 +371,38 @@ defmodule Parameter.TypesTest do
                {:error, "invalid string type"}
 
       assert Types.validate({:has_one, :float}, "21") == {:error, "invalid inner data type"}
+    end
+
+    test "validate map with inner type" do
+      assert Types.validate({:map, :string}, %{}) == :ok
+      assert Types.validate({:map, :string}, %{key: "value", other_key: "other value"}) == :ok
+
+      assert Types.validate({:map, :string}, %{key: "value", other_key: 22}) ==
+               {:error, "invalid string type"}
+
+      assert Types.validate({:map, :float}, "21") == {:error, "invalid map type"}
+      assert Types.validate({:map, {:array, :float}}, "21") == {:error, "invalid map type"}
+      assert Types.validate({:map, {:array, :float}}, %{k: [1.5]}) == :ok
+    end
+
+    test "validate array with inner type" do
+      assert Types.validate({:array, :string}, []) == :ok
+      assert Types.validate({:array, :string}, ["value", "other value"]) == :ok
+
+      assert Types.validate({:array, :float}, ["value", "other value"]) ==
+               {:error, "invalid float type"}
+
+      assert Types.validate({:array, :float}, "21") == {:error, "invalid array type"}
+      assert Types.validate({:array, {:array, :float}}, "21") == {:error, "invalid array type"}
+      assert Types.validate({:array, {:array, :float}}, [[1.5, 5.5], [1.2]]) == :ok
+    end
+  end
+
+  test "validate!/2" do
+    assert Types.validate!(:any, %{}) == :ok
+
+    assert_raise ArgumentError, "invalid inner data type", fn ->
+      Types.validate!({:has_one, :float}, "21") == {:error, "invalid inner data type"}
     end
   end
 end

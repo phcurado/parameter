@@ -36,6 +36,30 @@ defmodule Parameter.FieldTest do
       assert {:error, "invalid float type"} == Field.new(opts)
     end
 
+    test "fails if name is not an atom" do
+      opts = [
+        name: "main_address",
+        type: :float,
+        key: "mainAddress",
+        required: true,
+        default: "Hello"
+      ]
+
+      assert {:error, "invalid atom type"} == Field.new(opts)
+    end
+
+    test "fails on invalid function" do
+      opts = [
+        name: :address,
+        type: :float,
+        on_load: fn val -> val end,
+        key: "mainAddress",
+        required: true
+      ]
+
+      assert {:error, "on_load must be a function with 2 arity"} == Field.new(opts)
+    end
+
     test "fails if a default value used at the sametime with load_default and dump_default" do
       opts = [
         name: :main_address,

@@ -107,6 +107,30 @@ defmodule Parameter.SchemaTest do
     end
   end
 
+  describe "fields/1" do
+    import Parameter.Schema
+
+    param ModuleSchema do
+      field :first_name, :string
+    end
+
+    test "module schema schema fields" do
+      assert [%Parameter.Field{}] = Schema.fields(__MODULE__.ModuleSchema)
+    end
+
+    test "runtime schema fields" do
+      schema =
+        %{
+          first_name: [key: "firstName", type: :string, required: true],
+          address: [required: true, type: {:has_one, %{street: [type: :string, required: true]}}],
+          phones: [type: {:has_many, %{country: [type: :string, required: true]}}]
+        }
+        |> Schema.compile!()
+
+      assert [%Parameter.Field{}, %Parameter.Field{}, %Parameter.Field{}] = Schema.fields(schema)
+    end
+  end
+
   defp from_name(parameters, name) do
     Enum.find(parameters, &(&1.name == name))
   end

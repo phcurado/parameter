@@ -5,6 +5,25 @@ defmodule Parameter.Types.Float do
 
   use Parameter.Parametrizable
 
+  @doc """
+  loads float type
+
+  ## Examples
+      iex> Parameter.Types.Float.load(1.5)
+      {:ok, 1.5}
+
+      iex> Parameter.Types.Float.load("2.5")
+      {:ok, 2.5}
+
+      iex> Parameter.Types.Float.load(1)
+      {:ok, 1.0}
+
+      iex> Parameter.Types.Float.load("not float")
+      {:error, "invalid float type"}
+
+      iex> Parameter.Types.Float.load(:atom)
+      {:error, "invalid float type"}
+  """
   @impl true
   def load(value) when is_float(value) do
     {:ok, value}

@@ -172,7 +172,7 @@ defmodule Parameter.Field do
     :ok
   end
 
-  defp function_valid?(_validator, _arity, message) do
-    {:error, message}
+  defp function_valid?(_validator, arity, message) do
+    {:error, "#{message} with #{arity} arity"}
   end
 end

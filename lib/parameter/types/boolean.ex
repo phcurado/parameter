@@ -9,7 +9,13 @@ defmodule Parameter.Types.Boolean do
   loads boolean type
 
   ## Examples
+      iex> Parameter.Types.Boolean.load(true)
+      {:ok, true}
+
       iex> Parameter.Types.Boolean.load("true")
+      {:ok, true}
+
+      iex> Parameter.Types.Boolean.load("True")
       {:ok, true}
 
       iex> Parameter.Types.Boolean.load("false")

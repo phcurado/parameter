@@ -64,6 +64,7 @@ defmodule Parameter.Types do
 
   @spec assoc_type?(any) :: boolean
   def assoc_type?({type, _}), do: type in @assoc_types
+  def assoc_type?(_), do: false
 
   @types_mod %{
     any: Parameter.Types.Any,
@@ -128,7 +129,7 @@ defmodule Parameter.Types do
   end
 
   def validate({:map, _inner_type}, _values) do
-    {:error, "invalid array type"}
+    {:error, "invalid map type"}
   end
 
   def validate({:has_one, inner_type}, values) when is_map(values) do
