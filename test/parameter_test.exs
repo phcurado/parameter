@@ -259,6 +259,11 @@ defmodule ParameterTest do
       end
     end
 
+    test "passing wrong value should return an error" do
+      assert {:error, "input parameters should be loaded as maps"} ==
+               Parameter.load(UserTestSchema, "not a map")
+    end
+
     test "load user schema with correct input on all fields" do
       params = %{
         "firstName" => "John",
@@ -1172,6 +1177,11 @@ defmodule ParameterTest do
   end
 
   describe "dump/3" do
+    test "passing wrong value should return an error" do
+      assert {:error, "input parameters should be dumped as maps"} ==
+               Parameter.dump(UserTestSchema, "not a map")
+    end
+
     test "dump schema input" do
       loaded_schema = %{
         first_name: "John",
@@ -1642,6 +1652,11 @@ defmodule ParameterTest do
   end
 
   describe "validate/3" do
+    test "passing wrong value should return an error" do
+      assert {:error, "input parameters should be validated as maps"} ==
+               Parameter.validate(UserTestSchema, "not a map")
+    end
+
     test "validate schema input" do
       params = %{
         first_name: "John",

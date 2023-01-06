@@ -38,6 +38,10 @@ defmodule Parameter.Loader do
     end
   end
 
+  def load(_meta, _opts) do
+    {:error, "input parameters should be loaded as maps"}
+  end
+
   defp iterate_schema(meta, opts) do
     schema_keys = Schema.field_keys(meta.schema)
 

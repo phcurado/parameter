@@ -37,6 +37,10 @@ defmodule Parameter.Validator do
     end
   end
 
+  def validate(_meta, _opts) do
+    {:error, "input parameters should be validated as maps"}
+  end
+
   defp parse_result(errors) do
     if errors == %{} do
       :ok

@@ -39,6 +39,10 @@ defmodule Parameter.Dumper do
     end
   end
 
+  def dump(_meta, _opts) do
+    {:error, "input parameters should be dumped as maps"}
+  end
+
   defp parse_loaded_input({result, errors}) do
     if errors == %{} do
       {:ok, result}
