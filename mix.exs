@@ -2,7 +2,7 @@ defmodule Parameter.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/phcurado/parameter"
-  @version "0.9.0"
+  @version "0.10.0"
 
   def project do
     [
@@ -79,7 +79,7 @@ defmodule Parameter.MixProject do
           Parameter.Types.Decimal,
           Parameter.Types.Float,
           Parameter.Types.Integer,
-          Parameter.Types.List,
+          Parameter.Types.Array,
           Parameter.Types.Map,
           Parameter.Types.NaiveDateTime,
           Parameter.Types.String,

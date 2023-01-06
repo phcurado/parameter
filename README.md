@@ -3,6 +3,7 @@
 <img src="logo.png" alt="parameter" width="150">
 
 [![CI](https://github.com/phcurado/parameter/workflows/ci/badge.svg?branch=main)](https://github.com/phcurado/parameter/actions?query=branch%3Amain+workflow%3Aci)
+[![Coverage Status](https://coveralls.io/repos/github/phcurado/parameter/badge.svg?branch=main)](https://coveralls.io/github/phcurado/parameter?branch=main)
 [![Hex.pm](https://img.shields.io/hexpm/v/parameter)](https://hex.pm/packages/parameter)
 [![HexDocs.pm](https://img.shields.io/badge/Docs-HexDocs-blue)](https://hexdocs.pm/parameter)
 [![License](https://img.shields.io/hexpm/l/parameter.svg)](https://hex.pm/packages/parameter)
@@ -85,7 +86,7 @@ Add `parameter` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:parameter, "~> 0.9"}
+    {:parameter, "~> 0.10"}
   ]
 end
 ```

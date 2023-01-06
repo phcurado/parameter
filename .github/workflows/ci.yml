@@ -66,3 +66,8 @@ jobs:
       - name: Run dialyzer
         run: mix dialyzer
         if: ${{ matrix.lint }}
+
+      - name: Run Coveralls
+        run: mix coveralls.github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
