@@ -20,6 +20,9 @@ defmodule Parameter.Types.Date do
 
       iex> Parameter.Types.Date.load("2015-25-23")
       {:error, "invalid date type"}
+
+      iex> Parameter.Types.Date.load(:not_valid_type)
+      {:error, "invalid date type"}
   """
   @impl true
   def load(%Date{} = value) do

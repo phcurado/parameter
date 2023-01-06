@@ -389,6 +389,39 @@ defmodule ParameterTest do
                Parameter.load(UserTestSchema, params)
     end
 
+    test "load user schema with invalid input type on nested paramaters shoud return an error" do
+      params = %{
+        "firstName" => "John",
+        "lastName" => "Doe",
+        "age" => 12,
+        "mainAddress" => "not a map",
+        "otherAddresses" => "not a list",
+        "status" => "anotherStatus",
+        "metadata" => "not a map",
+        "hexAmount" => 12,
+        "idInfo" => %{
+          "number" => "random",
+          "type" => "identity",
+          type: 12
+        }
+      }
+
+      assert {
+               :error,
+               %{
+                 hex_amount: "invalid hex",
+                 id_info: %{
+                   number: "invalid integer type",
+                   type: "field is present as atom and string keys"
+                 },
+                 main_address: "invalid inner data type",
+                 metadata: "invalid map type",
+                 other_addresses: "invalid list type",
+                 status: "invalid enum type"
+               }
+             } == Parameter.load(UserTestSchema, params)
+    end
+
     test "load user schema with ignore_nil true" do
       params = %{
         "firstName" => "John",
@@ -1096,7 +1129,11 @@ defmodule ParameterTest do
                     ]
                   }
                 ]
-              }} == Parameter.load(@attr_schema, params)
+              }} = result = Parameter.load(@attr_schema, params)
+
+      # also loading with struct should not have any effect
+
+      assert result == Parameter.load(@attr_schema, params, struct: true)
     end
 
     test "load runtime schema with wrong parameters should fail" do
@@ -1173,6 +1210,37 @@ defmodule ParameterTest do
                    c: %{val: "not valid"}
                  }
                })
+    end
+
+    test "nested params with invalid inner data should fail" do
+      assert {:error,
+              %{
+                nested_array: %{
+                  1 => "invalid array type",
+                  0 => %{0 => "invalid array type", 1 => "invalid array type"}
+                },
+                nested_map: %{a: "invalid map type"}
+              }} ==
+               Parameter.load(NestedSchemaTest, %{
+                 nested_array: [[%{}, %{}], :string],
+                 nested_map: %{
+                   a: []
+                 }
+               })
+    end
+
+    test "runtime schema with on_load returning errors should parse correctly" do
+      schema =
+        %{
+          name: [
+            type: :string,
+            on_load: fn _val, _input -> {:error, "this input will always load error"} end
+          ]
+        }
+        |> Schema.compile!()
+
+      assert {:error, %{name: "this input will always load error"}} ==
+               Parameter.load(schema, %{name: "name"})
     end
   end
 
@@ -1648,6 +1716,20 @@ defmodule ParameterTest do
                    c: %{val: "not valid"}
                  }
                })
+    end
+
+    test "runtime schema with on_dump returning errors should parse correctly" do
+      schema =
+        %{
+          name: [
+            type: :string,
+            on_dump: fn _val, _input -> {:error, "this input will always dump error"} end
+          ]
+        }
+        |> Schema.compile!()
+
+      assert {:error, %{name: "this input will always dump error"}} ==
+               Parameter.dump(schema, %{name: "name"})
     end
   end
 

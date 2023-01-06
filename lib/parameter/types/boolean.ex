@@ -29,6 +29,9 @@ defmodule Parameter.Types.Boolean do
 
       iex> Parameter.Types.Boolean.load("not boolean")
       {:error, "invalid boolean type"}
+
+      iex> Parameter.Types.Boolean.load(:not_boolean)
+      {:error, "invalid boolean type"}
   """
   @impl true
   def load(value) when is_boolean(value) do
