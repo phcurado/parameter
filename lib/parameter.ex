@@ -279,7 +279,7 @@ defmodule Parameter do
     exclude = Keyword.get(opts, :exclude, [])
     many = Keyword.get(opts, :many, false)
 
-    Types.validate!(:list, exclude)
+    Types.validate!(:array, exclude)
     Types.validate!(:boolean, many)
 
     meta = Meta.new(schema, input, operation: :dump)
@@ -344,7 +344,7 @@ defmodule Parameter do
     exclude = Keyword.get(opts, :exclude, [])
     many = Keyword.get(opts, :many, false)
 
-    Types.validate!(:list, exclude)
+    Types.validate!(:array, exclude)
     Types.validate!(:boolean, many)
 
     meta = Meta.new(schema, input, operation: :validate)
@@ -363,7 +363,7 @@ defmodule Parameter do
     many = Keyword.get(opts, :many, false)
 
     Types.validate!(:boolean, struct)
-    Types.validate!(:list, exclude)
+    Types.validate!(:array, exclude)
     Types.validate!(:boolean, many)
 
     [struct: struct, unknown: unknown, exclude: exclude, many: many]

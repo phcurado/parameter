@@ -9,7 +9,9 @@ defmodule Parameter.Types do
   * `float`
   * `boolean`
   * `map`
+  * `{map, nested_type}`
   * `array`
+  * `{array, nested_type}`
   * `date`
   * `time`
   * `datetime`
@@ -24,7 +26,7 @@ defmodule Parameter.Types do
 
   For implementing custom types check the `Parameter.Parametrizable` module. Implementing this behavour in a module makes eligible to be a field in the schema definition.
   """
-  @type t :: base_types | composite_types
+  @type t :: base_types | composite_types | assoc_types
 
   @type base_types ::
           :string
@@ -36,22 +38,32 @@ defmodule Parameter.Types do
           | :decimal
           | :float
           | :integer
-          | :list
-          | :map
           | :naive_datetime
           | :string
           | :time
+          | :array
+          | :map
 
-  @type composite_types :: {:has_many, t()} | {:has_one, t()}
+  @type composite_types :: {:array, t()} | {:map, t()}
+  @type assoc_types :: {:has_many, t()} | {:has_one, t()}
 
-  @base_types ~w(atom any boolean date datetime decimal float integer list map naive_datetime string time)a
-  @composite_types ~w(has_one has_many)a
+  @base_types ~w(atom any boolean date datetime decimal float integer naive_datetime string time)a
+  @composite_types ~w(array map)a
+  @assoc_types ~w(has_one has_many)a
 
-  @spec base_types() :: [atom()]
-  def base_types, do: @base_types
+  @spec base_type?(any) :: boolean
+  def base_type?(type), do: type in @base_types
 
-  @spec composite_types() :: [atom()]
-  def composite_types, do: @composite_types
+  @spec composite_inner_type?(any) :: boolean
+  def composite_inner_type?({type, _}), do: type in @composite_types
+  def composite_inner_type?(_), do: false
+
+  @spec composite_type?(any) :: boolean
+  def composite_type?({type, _}), do: type in @composite_types
+  def composite_type?(type), do: type in @composite_types
+
+  @spec assoc_type?(any) :: boolean
+  def assoc_type?({type, _}), do: type in @assoc_types
 
   @types_mod %{
     any: Parameter.Types.Any,
@@ -63,13 +75,14 @@ defmodule Parameter.Types do
     float: Parameter.Types.Float,
     integer: Parameter.Types.Integer,
     list: Parameter.Types.List,
+    array: Parameter.Types.Array,
     map: Parameter.Types.Map,
     naive_datetime: Parameter.Types.NaiveDateTime,
     string: Parameter.Types.String,
     time: Parameter.Types.Time
   }
 
-  @spec load(atom(), any()) :: {:ok, any()} | {:error, any()}
+  @spec load(atom(), any) :: {:ok, any()} | {:error, any()}
   def load(type, value) do
     type_module = Map.get(@types_mod, type, type)
     type_module.load(value)
@@ -81,7 +94,7 @@ defmodule Parameter.Types do
     type_module.dump(value)
   end
 
-  @spec validate!(atom(), any()) :: :ok | no_return()
+  @spec validate!(t(), any()) :: :ok | no_return()
   def validate!(type, value) do
     case validate(type, value) do
       {:error, error} -> raise ArgumentError, message: error
@@ -89,8 +102,34 @@ defmodule Parameter.Types do
     end
   end
 
-  @spec validate(atom() | composite_types(), any()) :: :ok | {:error, any()}
+  @spec validate(t(), any()) :: :ok | {:error, any()}
   def validate(type, values)
+
+  def validate({:array, inner_type}, values) when is_list(values) do
+    Enum.reduce_while(values, :ok, fn value, acc ->
+      case validate(inner_type, value) do
+        :ok -> {:cont, acc}
+        error -> {:halt, error}
+      end
+    end)
+  end
+
+  def validate({:array, _inner_type}, _values) do
+    {:error, "invalid array type"}
+  end
+
+  def validate({:map, inner_type}, values) when is_map(values) do
+    Enum.reduce_while(values, :ok, fn {_key, value}, acc ->
+      case validate(inner_type, value) do
+        :ok -> {:cont, acc}
+        error -> {:halt, error}
+      end
+    end)
+  end
+
+  def validate({:map, _inner_type}, _values) do
+    {:error, "invalid array type"}
+  end
 
   def validate({:has_one, inner_type}, values) when is_map(values) do
     Enum.reduce_while(values, :ok, fn {_key, value}, acc ->

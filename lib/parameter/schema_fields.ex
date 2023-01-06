@@ -82,6 +82,37 @@ defmodule Parameter.SchemaFields do
     {:error, "invalid list type"}
   end
 
+  def field_handler(meta, %Field{type: {:map, schema}}, value, opts) when is_map(value) do
+    value
+    |> Enum.reduce({%{}, %{}}, fn {key, value}, {acc_map, errors} ->
+      case operation_handler(meta, schema, value, opts) do
+        {:error, reason} ->
+          {acc_map, Map.put(errors, key, reason)}
+
+        {:ok, result} ->
+          {Map.put(acc_map, key, result), errors}
+
+        :ok ->
+          {acc_map, errors}
+      end
+    end)
+    |> parse_map_values(meta.operation)
+  end
+
+  def field_handler(_meta, %Field{type: {:map, _schema}}, _value, _opts) do
+    {:error, "invalid map type"}
+  end
+
+  def field_handler(meta, %Field{type: {:array, schema}}, values, opts) when is_list(values) do
+    meta
+    |> Meta.set_schema(schema)
+    |> process_list_value(values, opts, false)
+  end
+
+  def field_handler(_meta, %Field{type: {:array, _schema}}, _values, _opts) do
+    {:error, "invalid array type"}
+  end
+
   def field_handler(
         %Meta{operation: operation} = meta,
         %Field{validator: validator} = field,
@@ -174,6 +205,22 @@ defmodule Parameter.SchemaFields do
     end
   end
 
+  defp parse_map_values({_result, errors}, :validate) do
+    if errors == %{} do
+      :ok
+    else
+      {:error, errors}
+    end
+  end
+
+  defp parse_map_values({result, errors}, _operation) do
+    if errors == %{} do
+      {:ok, result}
+    else
+      {:error, errors}
+    end
+  end
+
   defp run_validator({func, args}, value) do
     case apply(func, [value | [args]]) do
       :ok -> {:ok, value}
@@ -204,23 +251,35 @@ defmodule Parameter.SchemaFields do
     {:ok, nil}
   end
 
-  defp operation_handler(meta, %Field{type: type}, value, _opts) do
-    case meta.operation do
-      :dump -> Types.dump(type, value)
-      :load -> Types.load(type, value)
-      :validate -> Types.validate(type, value)
+  defp operation_handler(meta, %Field{type: type} = field, value, opts) do
+    cond do
+      Types.composite_inner_type?(type) ->
+        field_handler(meta, field, value, opts)
+
+      meta.operation == :dump ->
+        Types.dump(type, value)
+
+      meta.operation == :load ->
+        Types.load(type, value)
+
+      meta.operation == :validate ->
+        Types.validate(type, value)
     end
   end
 
   defp operation_handler(meta, schema, value, opts) do
-    if schema in Types.base_types() do
-      field_handler(meta, schema, value, opts)
-    else
-      case meta.operation do
-        :dump -> Dumper.dump(meta, opts)
-        :load -> Loader.load(meta, opts)
-        :validate -> Validator.validate(meta, opts)
-      end
+    cond do
+      Types.base_type?(schema) or Types.composite_type?(schema) ->
+        field_handler(meta, schema, value, opts)
+
+      meta.operation == :dump ->
+        Dumper.dump(meta, opts)
+
+      meta.operation == :load ->
+        Loader.load(meta, opts)
+
+      meta.operation == :validate ->
+        Validator.validate(meta, opts)
     end
   end
 

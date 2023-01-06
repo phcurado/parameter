@@ -216,6 +216,15 @@ defmodule ParameterTest do
     end
   end
 
+  defmodule NestedSchemaTest do
+    use Parameter.Schema
+
+    param do
+      field :nested_array, {:array, {:array, {:array, :float}}}
+      field :nested_map, {:map, {:map, {:map, :integer}}}
+    end
+  end
+
   @attr_schema %{
                  user: [type: :string, required: true],
                  roles: [
@@ -1091,6 +1100,37 @@ defmodule ParameterTest do
                 }
               }} == Parameter.load(@attr_schema, params)
     end
+
+    test "nested params with valid data" do
+      assert {:ok,
+              %{
+                nested_array: [[[1.5], [2.0]], [[5.3, 2.2]]],
+                nested_map: %{a: %{a: %{a: 2, b: 3}}, b: %{b: %{a: 5, b: 2}}}
+              }} ==
+               Parameter.load(NestedSchemaTest, %{
+                 nested_array: [[[1.5], [2.0]], [[5.3, 2.2]]],
+                 nested_map: %{a: %{a: %{a: 2, b: 3}}, b: %{b: %{a: 5, b: 2}}}
+               })
+    end
+
+    test "nested params with invalid data should fail" do
+      assert {:error,
+              %{
+                nested_array: %{1 => %{0 => %{2 => "invalid float type"}}},
+                nested_map: %{
+                  b: %{b: %{d: "invalid integer type"}},
+                  c: %{val: "invalid map type"}
+                }
+              }} ==
+               Parameter.load(NestedSchemaTest, %{
+                 nested_array: [[[1.5], [2.0]], [[5.3, 2.2, "not valid", 5.5]]],
+                 nested_map: %{
+                   a: %{a: %{a: 2, b: 3}},
+                   b: %{b: %{a: 5, b: 2, d: "not valid"}},
+                   c: %{val: "not valid"}
+                 }
+               })
+    end
   end
 
   describe "dump/3" do
@@ -1492,6 +1532,37 @@ defmodule ParameterTest do
       assert {:error, %{roles: %{0 => %{name: "invalid integer type"}}}} ==
                Parameter.dump(@attr_schema, params)
     end
+
+    test "nested params with valid data" do
+      assert {:ok,
+              %{
+                "nested_array" => [[[1.5], [2.0]], [[5.3, 2.2]]],
+                "nested_map" => %{a: %{a: %{a: 2, b: 3}}, b: %{b: %{a: 5, b: 2}}}
+              }} ==
+               Parameter.dump(NestedSchemaTest, %{
+                 nested_array: [[[1.5], [2.0]], [[5.3, 2.2]]],
+                 nested_map: %{a: %{a: %{a: 2, b: 3}}, b: %{b: %{a: 5, b: 2}}}
+               })
+    end
+
+    test "nested params with invalid data should fail" do
+      assert {:error,
+              %{
+                nested_array: %{1 => %{0 => %{2 => "invalid float type"}}},
+                nested_map: %{
+                  b: %{b: %{d: "invalid integer type"}},
+                  c: %{val: "invalid map type"}
+                }
+              }} ==
+               Parameter.dump(NestedSchemaTest, %{
+                 nested_array: [[[1.5], [2.0]], [[5.3, 2.2, "not valid", 5.5]]],
+                 nested_map: %{
+                   a: %{a: %{a: 2, b: 3}},
+                   b: %{b: %{a: 5, b: 2, d: "not valid"}},
+                   c: %{val: "not valid"}
+                 }
+               })
+    end
   end
 
   describe "validate/3" do
@@ -1684,76 +1755,103 @@ defmodule ParameterTest do
                 }
               }} == Parameter.validate(UserTestSchema, loaded_schema, many: true)
     end
-  end
 
-  test "validate runtime schema with correct parameters" do
-    params = %{
-      user: "personal",
-      roles: [
-        %{
-          name: 1,
-          permissions: [
-            %{name: "create"},
-            %{name: "read"},
-            %{name: "update"}
-          ]
-        },
-        %{
-          name: 2,
-          permissions: [
-            %{name: "create"},
-            %{name: "read"},
-            %{name: "update"},
-            %{name: "delete"}
-          ]
-        }
-      ]
-    }
+    test "validate runtime schema with correct parameters" do
+      params = %{
+        user: "personal",
+        roles: [
+          %{
+            name: 1,
+            permissions: [
+              %{name: "create"},
+              %{name: "read"},
+              %{name: "update"}
+            ]
+          },
+          %{
+            name: 2,
+            permissions: [
+              %{name: "create"},
+              %{name: "read"},
+              %{name: "update"},
+              %{name: "delete"}
+            ]
+          }
+        ]
+      }
 
-    assert :ok == Parameter.validate(@attr_schema, params)
-  end
+      assert :ok == Parameter.validate(@attr_schema, params)
+    end
 
-  test "validate runtime schema with wrong parameters should fail" do
-    params = %{
-      user: "personal",
-      roles: [
-        %{
-          name: 1,
-          permissions: [
-            %{name: "not_create"},
-            %{name: "unread"},
-            %{name: "update"}
-          ]
-        },
-        %{
-          name: "super_admin",
-          permissions: [
-            %{name: "create"},
-            %{name: "read"},
-            %{name: "not_update"},
-            %{name: "delete"}
-          ]
-        },
-        %{
-          permissions: [
-            %{name: "create"}
-          ]
-        }
-      ]
-    }
+    test "validate runtime schema with wrong parameters should fail" do
+      params = %{
+        user: "personal",
+        roles: [
+          %{
+            name: 1,
+            permissions: [
+              %{name: "not_create"},
+              %{name: "unread"},
+              %{name: "update"}
+            ]
+          },
+          %{
+            name: "super_admin",
+            permissions: [
+              %{name: "create"},
+              %{name: "read"},
+              %{name: "not_update"},
+              %{name: "delete"}
+            ]
+          },
+          %{
+            permissions: [
+              %{name: "create"}
+            ]
+          }
+        ]
+      }
 
-    assert {:error,
-            %{
-              roles: %{
-                0 => %{
-                  permissions: %{0 => %{name: "is invalid"}, 1 => %{name: "is invalid"}}
-                },
-                1 => %{
-                  name: "invalid integer type",
-                  permissions: %{2 => %{name: "is invalid"}}
-                },
-                2 => %{name: "is required"}
-              }
-            }} == Parameter.validate(@attr_schema, params)
+      assert {:error,
+              %{
+                roles: %{
+                  0 => %{
+                    permissions: %{0 => %{name: "is invalid"}, 1 => %{name: "is invalid"}}
+                  },
+                  1 => %{
+                    name: "invalid integer type",
+                    permissions: %{2 => %{name: "is invalid"}}
+                  },
+                  2 => %{name: "is required"}
+                }
+              }} == Parameter.validate(@attr_schema, params)
+    end
+
+    test "nested params with valid data" do
+      assert :ok ==
+               Parameter.validate(NestedSchemaTest, %{
+                 nested_array: [[[1.5], [2.0]], [[5.3, 2.2]]],
+                 nested_map: %{a: %{a: %{a: 2, b: 3}}, b: %{b: %{a: 5, b: 2}}}
+               })
+    end
+
+    test "nested params with invalid data should fail" do
+      assert {:error,
+              %{
+                nested_array: %{1 => %{0 => %{2 => "invalid float type"}}},
+                nested_map: %{
+                  b: %{b: %{d: "invalid integer type"}},
+                  c: %{val: "invalid map type"}
+                }
+              }} ==
+               Parameter.validate(NestedSchemaTest, %{
+                 nested_array: [[[1.5], [2.0]], [[5.3, 2.2, "not valid", 5.5]]],
+                 nested_map: %{
+                   a: %{a: %{a: 2, b: 3}},
+                   b: %{b: %{a: 5, b: 2, d: "not valid"}},
+                   c: %{val: "not valid"}
+                 }
+               })
+    end
   end
 end

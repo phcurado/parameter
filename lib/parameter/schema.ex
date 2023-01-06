@@ -285,7 +285,7 @@ defmodule Parameter.Schema do
 
   defmacro has_many(name, type, opts) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
-      if type not in Types.base_types() do
+      if not Types.base_type?(type) do
         Compiler.fetch_nested_opts!(opts)
       end
 
