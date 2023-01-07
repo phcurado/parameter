@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.10.x (2023-01-07)
+
+### Enhancements
+
+* [Parameter] Extra option `ignore_nil` for `load/2` and `dump/2` functions.
+* [Parameter.Types] New `array` type.
+* [Parameter.Schema] Support for nested type on `map` and `array`.
+* Improved code test coverage to 100%.
+
 ## v0.9.x (2023-01-04)
 
 ### Enhancements
