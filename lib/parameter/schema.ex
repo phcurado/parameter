@@ -307,24 +307,24 @@ defmodule Parameter.Schema do
   def compile!(schema) when is_map(schema) do
     for {name, opts} <- schema do
       {type, opts} = Keyword.pop(opts, :type, :string)
-      type = compile_type(type)
+      type = compile_type!(type)
       compile!([name: name, type: type] ++ opts)
     end
   end
 
-  def compile_type({:map, schema}) do
+  defp compile_type!({:map, schema}) do
     {:map, compile!(schema)}
   end
 
-  def compile_type({:array, schema}) do
+  defp compile_type!({:array, schema}) do
     {:array, compile!(schema)}
   end
 
-  def compile_type({_not_assoc, _schema}) do
-    {:error, "not a valid inner type, please use `has_one` or `has_many` for nested associations"}
+  defp compile_type!({_not_assoc, _schema}) do
+    raise ArgumentError, message: "not a valid inner type, please use `has_one` or `has_many` for nested associations"
   end
 
-  def compile_type(type) when is_atom(type) do
+  defp compile_type!(type) when is_atom(type) do
     type
   end
 
