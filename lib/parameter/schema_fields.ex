@@ -61,42 +61,28 @@ defmodule Parameter.SchemaFields do
     {:ok, :ignore}
   end
 
-  def field_handler(meta, %Field{type: {:has_one, schema}}, value, opts) when is_map(value) do
-    meta
-    |> Meta.set_schema(schema)
-    |> Meta.set_input(value)
-    |> operation_handler(schema, value, opts)
-  end
-
-  def field_handler(_meta, %Field{type: {:has_one, _schema}}, _value, _opts) do
-    {:error, "invalid inner data type"}
-  end
-
-  def field_handler(meta, %Field{type: {:has_many, schema}}, values, opts) when is_list(values) do
-    meta
-    |> Meta.set_schema(schema)
-    |> process_list_value(values, opts, false)
-  end
-
-  def field_handler(_meta, %Field{type: {:has_many, _schema}}, _values, _opts) do
-    {:error, "invalid list type"}
-  end
-
   def field_handler(meta, %Field{type: {:map, schema}}, value, opts) when is_map(value) do
-    value
-    |> Enum.reduce({%{}, %{}}, fn {key, value}, {acc_map, errors} ->
-      case operation_handler(meta, schema, value, opts) do
-        {:error, reason} ->
-          {acc_map, Map.put(errors, key, reason)}
+    if Types.base_type?(schema) or Types.composite_type?(schema) do
+      value
+      |> Enum.reduce({%{}, %{}}, fn {key, value}, {acc_map, errors} ->
+        case operation_handler(meta, schema, value, opts) do
+          {:error, reason} ->
+            {acc_map, Map.put(errors, key, reason)}
 
-        {:ok, result} ->
-          {Map.put(acc_map, key, result), errors}
+          {:ok, result} ->
+            {Map.put(acc_map, key, result), errors}
 
-        :ok ->
-          {acc_map, errors}
-      end
-    end)
-    |> parse_map_values(meta.operation)
+          :ok ->
+            {acc_map, errors}
+        end
+      end)
+      |> parse_map_values(meta.operation)
+    else
+      meta
+      |> Meta.set_schema(schema)
+      |> Meta.set_input(value)
+      |> operation_handler(schema, value, opts)
+    end
   end
 
   def field_handler(_meta, %Field{type: {:map, _schema}}, _value, _opts) do

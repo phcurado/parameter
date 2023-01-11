@@ -8,8 +8,8 @@ defmodule Parameter.SchemaTest do
     test "compile a schema" do
       schema = %{
         first_name: [key: "firstName", type: :string, required: true],
-        address: [required: true, type: {:has_one, %{street: [type: :string, required: true]}}],
-        phones: [type: {:has_many, %{country: [type: :string, required: true]}}]
+        address: [required: true, type: {:map, %{street: [type: :string, required: true]}}],
+        phones: [type: {:array, %{country: [type: :string, required: true]}}]
       }
 
       expected_compiled_schema = [
@@ -31,7 +31,7 @@ defmodule Parameter.SchemaTest do
           load_default: nil,
           dump_default: nil,
           type:
-            {:has_one,
+            {:map,
              [
                %Field{
                  name: :street,
@@ -56,7 +56,7 @@ defmodule Parameter.SchemaTest do
           load_default: nil,
           dump_default: nil,
           type:
-            {:has_many,
+            {:array,
              [
                %Field{
                  name: :country,
@@ -98,7 +98,7 @@ defmodule Parameter.SchemaTest do
       schema = %{
         first_name: [key: :first_name, type: :string, required: :atom],
         address: [required: true, type: {:not_nested, %{street: [type: :string, required: true]}}],
-        phones: [type: {:has_many, %{country: [type: :string, virtual: :not_virtual]}}]
+        phones: [type: {:array, %{country: [type: :string, virtual: :not_virtual]}}]
       }
 
       assert_raise ArgumentError, fn ->
@@ -122,8 +122,8 @@ defmodule Parameter.SchemaTest do
       schema =
         %{
           first_name: [key: "firstName", type: :string, required: true],
-          address: [required: true, type: {:has_one, %{street: [type: :string, required: true]}}],
-          phones: [type: {:has_many, %{country: [type: :string, required: true]}}]
+          address: [required: true, type: {:map, %{street: [type: :string, required: true]}}],
+          phones: [type: {:array, %{country: [type: :string, required: true]}}]
         }
         |> Schema.compile!()
 

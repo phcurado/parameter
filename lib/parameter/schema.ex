@@ -89,8 +89,8 @@ defmodule Parameter.Schema do
 
       schema = %{
         first_name: [key: "firstName", type: :string, required: true],
-        address: [type: {:has_one, %{street: [type: :string, required: true]}}],
-        phones: [type: {:has_many, %{country: [type: :string, required: true]}}]
+        address: [type: {:map, %{street: [type: :string, required: true]}}],
+        phones: [type: {:array, %{country: [type: :string, required: true]}}]
       } |> Parameter.Schema.compile!()
 
       Parameter.load(schema, %{"firstName" => "John"})
@@ -104,8 +104,8 @@ defmodule Parameter.Schema do
 
         @schema %{
           first_name: [key: "firstName", type: :string, required: true],
-          address: [required: true, type: {:has_one, %{street: [type: :string, required: true]}}],
-          phones: [type: {:has_many, %{country: [type: :string, required: true]}}]
+          address: [required: true, type: {:map, %{street: [type: :string, required: true]}}],
+          phones: [type: {:array, %{country: [type: :string, required: true]}}]
         } |> Schema.compile!()
 
         def load(params) do
@@ -249,14 +249,14 @@ defmodule Parameter.Schema do
   defmacro has_one(name, type, opts) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
       opts = Compiler.fetch_nested_opts!(opts)
-      field name, {:has_one, type}, opts
+      field name, {:map, type}, opts
     end
   end
 
   @doc false
   defmacro has_one(name, type) do
     quote bind_quoted: [name: name, type: type] do
-      field name, {:has_one, type}
+      field name, {:map, type}
     end
   end
 
@@ -289,14 +289,14 @@ defmodule Parameter.Schema do
         Compiler.fetch_nested_opts!(opts)
       end
 
-      field name, {:has_many, type}, opts
+      field name, {:array, type}, opts
     end
   end
 
   @doc false
   defmacro has_many(name, type) do
     quote bind_quoted: [name: name, type: type] do
-      field name, {:has_many, type}
+      field name, {:array, type}
     end
   end
 
@@ -312,12 +312,12 @@ defmodule Parameter.Schema do
     end
   end
 
-  def compile_type({:has_one, schema}) do
-    {:has_one, compile!(schema)}
+  def compile_type({:map, schema}) do
+    {:map, compile!(schema)}
   end
 
-  def compile_type({:has_many, schema}) do
-    {:has_many, compile!(schema)}
+  def compile_type({:array, schema}) do
+    {:array, compile!(schema)}
   end
 
   def compile_type({_not_assoc, _schema}) do
