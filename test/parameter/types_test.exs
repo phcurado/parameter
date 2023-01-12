@@ -20,13 +20,6 @@ defmodule Parameter.TypesTest do
     refute Types.composite_inner_type?(:not_type)
   end
 
-  test "assoc_type?/1" do
-    assert Types.assoc_type?({:has_one, :any})
-    assert Types.assoc_type?({:has_many, :any})
-    refute Types.assoc_type?({:map, :not_type})
-    refute Types.assoc_type?(:not_type)
-  end
-
   describe "load/2" do
     test "load any type" do
       assert Types.load(:any, "Test") == {:ok, "Test"}
@@ -353,26 +346,6 @@ defmodule Parameter.TypesTest do
       assert Types.validate(EnumTest, :user_offline) == :ok
     end
 
-    test "validate has_many with inner type" do
-      assert Types.validate({:has_many, :string}, []) == :ok
-      assert Types.validate({:has_many, :string}, ["hello", "world"]) == :ok
-
-      assert Types.validate({:has_many, :string}, ["hello", :world]) ==
-               {:error, "invalid string type"}
-
-      assert Types.validate({:has_many, :string}, 3) == {:error, "invalid list type"}
-    end
-
-    test "validate has_one with inner type" do
-      assert Types.validate({:has_one, :string}, %{}) == :ok
-      assert Types.validate({:has_one, :string}, %{key: "value", other_key: "other value"}) == :ok
-
-      assert Types.validate({:has_one, :string}, %{key: "value", other_key: 22}) ==
-               {:error, "invalid string type"}
-
-      assert Types.validate({:has_one, :float}, "21") == {:error, "invalid inner data type"}
-    end
-
     test "validate map with inner type" do
       assert Types.validate({:map, :string}, %{}) == :ok
       assert Types.validate({:map, :string}, %{key: "value", other_key: "other value"}) == :ok
@@ -401,8 +374,8 @@ defmodule Parameter.TypesTest do
   test "validate!/2" do
     assert Types.validate!(:any, %{}) == :ok
 
-    assert_raise ArgumentError, "invalid inner data type", fn ->
-      Types.validate!({:has_one, :float}, "21") == {:error, "invalid inner data type"}
+    assert_raise ArgumentError, "invalid map type", fn ->
+      Types.validate!({:map, :float}, "21")
     end
   end
 end

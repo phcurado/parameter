@@ -26,7 +26,8 @@ defmodule Parameter.Types do
 
   For implementing custom types check the `Parameter.Parametrizable` module. Implementing this behavour in a module makes eligible to be a field in the schema definition.
   """
-  @type t :: base_types | composite_types | assoc_types
+
+  @type t :: base_types | composite_types
 
   @type base_types ::
           :string
@@ -45,11 +46,9 @@ defmodule Parameter.Types do
           | :map
 
   @type composite_types :: {:array, t()} | {:map, t()}
-  @type assoc_types :: {:has_many, t()} | {:has_one, t()}
 
   @base_types ~w(atom any boolean date datetime decimal float integer naive_datetime string time)a
   @composite_types ~w(array map)a
-  @assoc_types ~w(has_one has_many)a
 
   @spec base_type?(any) :: boolean
   def base_type?(type), do: type in @base_types
@@ -61,10 +60,6 @@ defmodule Parameter.Types do
   @spec composite_type?(any) :: boolean
   def composite_type?({type, _}), do: type in @composite_types
   def composite_type?(type), do: type in @composite_types
-
-  @spec assoc_type?(any) :: boolean
-  def assoc_type?({type, _}), do: type in @assoc_types
-  def assoc_type?(_), do: false
 
   @types_mod %{
     any: Parameter.Types.Any,
@@ -130,32 +125,6 @@ defmodule Parameter.Types do
 
   def validate({:map, _inner_type}, _values) do
     {:error, "invalid map type"}
-  end
-
-  def validate({:has_one, inner_type}, values) when is_map(values) do
-    Enum.reduce_while(values, :ok, fn {_key, value}, acc ->
-      case validate(inner_type, value) do
-        :ok -> {:cont, acc}
-        error -> {:halt, error}
-      end
-    end)
-  end
-
-  def validate({:has_one, _inner_type}, _values) do
-    {:error, "invalid inner data type"}
-  end
-
-  def validate({:has_many, inner_type}, values) when is_list(values) do
-    Enum.reduce_while(values, :ok, fn value, acc ->
-      case validate(inner_type, value) do
-        :ok -> {:cont, acc}
-        error -> {:halt, error}
-      end
-    end)
-  end
-
-  def validate({:has_many, _inner_type}, _values) do
-    {:error, "invalid list type"}
   end
 
   def validate(type, value) do

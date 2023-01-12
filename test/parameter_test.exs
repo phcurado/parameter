@@ -229,7 +229,7 @@ defmodule ParameterTest do
                  user: [type: :string, required: true],
                  roles: [
                    type:
-                     {:has_many,
+                     {:array,
                       %{
                         name: [
                           type: :integer,
@@ -238,7 +238,7 @@ defmodule ParameterTest do
                         ],
                         permissions: [
                           type:
-                            {:has_many,
+                            {:array,
                              %{
                                name: [
                                  type: :string,
@@ -414,9 +414,9 @@ defmodule ParameterTest do
                    number: "invalid integer type",
                    type: "field is present as atom and string keys"
                  },
-                 main_address: "invalid inner data type",
+                 main_address: "invalid map type",
                  metadata: "invalid map type",
-                 other_addresses: "invalid list type",
+                 other_addresses: "invalid array type",
                  status: "invalid enum type"
                }
              } == Parameter.load(UserTestSchema, params)
@@ -1399,7 +1399,7 @@ defmodule ParameterTest do
                %{
                  age: "invalid integer type",
                  metadata: "invalid map type",
-                 numbers: "invalid list type",
+                 numbers: "invalid array type",
                  other_addresses: %{
                    0 => %{number: "invalid integer type"}
                  }
@@ -1804,7 +1804,7 @@ defmodule ParameterTest do
                %{
                  age: "invalid integer type",
                  metadata: "invalid map type",
-                 numbers: "invalid list type",
+                 numbers: "invalid array type",
                  other_addresses: %{
                    0 => %{number: "invalid integer type", street: "invalid string type"}
                  },
