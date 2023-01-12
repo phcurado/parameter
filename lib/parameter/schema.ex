@@ -321,7 +321,9 @@ defmodule Parameter.Schema do
   end
 
   defp compile_type!({_not_assoc, _schema}) do
-    raise ArgumentError, message: "not a valid inner type, please use `has_one` or `has_many` for nested associations"
+    raise ArgumentError,
+      message:
+        "not a valid inner type, please use `{map, inner_type}` or `{array, inner_type}` for nested associations"
   end
 
   defp compile_type!(type) when is_atom(type) do
