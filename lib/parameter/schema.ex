@@ -377,6 +377,16 @@ defmodule Parameter.Schema do
     fields
   end
 
+  def assoc_fields(module_or_fields) do
+    module_or_fields
+    |> fields()
+    |> Enum.filter(fn
+      %Field{type: {:array, _schema}} -> true
+      %Field{type: {:map, _schema}} -> true
+      _ -> false
+    end)
+  end
+
   def field_keys(module) when is_atom(module) do
     module.__param__(:field_keys)
   end
