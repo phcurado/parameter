@@ -120,23 +120,6 @@ defmodule Parameter.Enum do
   end
 
   @doc false
-  defmacro value(key, as: value) do
-    quote bind_quoted: [key: key, value: value] do
-      IO.warn(
-        """
-
-        This Enum format is now deprecated:
-            value \"#{key}\", as: #{value}
-        instead use the new form:
-            value #{value}, key: \"#{key}\"
-        """,
-        Macro.Env.stacktrace(__ENV__)
-      )
-
-      Module.put_attribute(__MODULE__, :enum_values, {key, value})
-    end
-  end
-
   defmacro value(value, key: key) do
     quote bind_quoted: [key: key, value: value] do
       Module.put_attribute(__MODULE__, :enum_values, {key, value})
