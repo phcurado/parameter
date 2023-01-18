@@ -277,6 +277,9 @@ defmodule Parameter.SchemaFields do
       {:ok, nil} ->
         check_nil(meta, field, opts)
 
+      {:ok, ""} ->
+        check_empty(meta, field, opts)
+
       {:ok, value} ->
         field_handler(meta, field, value, opts)
 
@@ -313,34 +316,49 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  defp check_required(%Field{required: true, load_default: nil}, _value, operation)
-       when operation in [:load, :validate] do
+  defp check_required(%Field{required: true, load_default: nil}, value, :load)
+       when value in [:ignore, nil] do
     {:error, "is required"}
   end
 
-  defp check_required(%Field{load_default: default}, value, :load) do
-    {:ok, default || value}
+  defp check_required(%Field{required: true, dump_default: nil}, value, :validate)
+       when value in [:ignore, nil] do
+    {:error, "is required"}
+  end
+
+  defp check_required(%Field{load_default: default}, :ignore, :load) when not is_nil(default) do
+    {:ok, default}
+  end
+
+  defp check_required(%Field{dump_default: default}, :ignore, :dump) when not is_nil(default) do
+    {:ok, default}
+  end
+
+  defp check_required(_field, value, :load) do
+    {:ok, value}
+  end
+
+  defp check_required(_field, value, :dump) do
+    {:ok, value}
   end
 
   defp check_required(_field, _value, :validate) do
     :ok
   end
 
-  defp check_required(%Field{dump_default: default}, value, :dump) do
-    {:ok, default || value}
+  defp check_nil(meta, field, opts) do
+    if opts[:ignore_nil] do
+      check_required(field, :ignore, meta.operation)
+    else
+      check_required(field, nil, meta.operation)
+    end
   end
 
-  defp check_nil(meta, field, opts) do
-    case check_required(field, nil, meta.operation) do
-      {:ok, value} ->
-        if opts[:ignore_nil] do
-          {:ok, :ignore}
-        else
-          field_handler(meta, field, value, opts)
-        end
-
-      other ->
-        other
+  defp check_empty(meta, field, opts) do
+    if opts[:ignore_empty] do
+      check_required(field, :ignore, meta.operation)
+    else
+      check_required(field, "", meta.operation)
     end
   end
 end

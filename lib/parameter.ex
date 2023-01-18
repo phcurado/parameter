@@ -89,6 +89,8 @@ defmodule Parameter do
 
     * `:ignore_nil` - When `true` will ignore `nil` values when loading the parameters, when `false` (default) it will load the `nil` values.
 
+    * `:ignore_empty` - When `true` will ignore empty `""` values when loading the parameters, when `false` (default) it will load the empty values.
+
     * `:many` - When `true` will parse the input data as list, when `false` (default) it parses as map
 
 
@@ -238,6 +240,8 @@ defmodule Parameter do
 
     * `:ignore_nil` - When `true` will ignore `nil` values when dumping the parameters, when `false` (default) it will dump the `nil` values.
 
+    * `:ignore_empty` - When `true` will ignore empty `""` values when dumping the parameters, when `false` (default) it will dump the empty values.
+
     * `:many` - When `true` will parse the input data as list, when `false` (default) it parses as map
 
 
@@ -283,13 +287,20 @@ defmodule Parameter do
     exclude = Keyword.get(opts, :exclude, [])
     many = Keyword.get(opts, :many, false)
     ignore_nil = Keyword.get(opts, :ignore_nil, false)
+    ignore_empty = Keyword.get(opts, :ignore_empty, false)
 
     Types.validate!(:array, exclude)
     Types.validate!(:boolean, many)
     Types.validate!(:boolean, ignore_nil)
 
     meta = Meta.new(schema, input, operation: :dump)
-    Dumper.dump(meta, exclude: exclude, many: many, ignore_nil: ignore_nil)
+
+    Dumper.dump(meta,
+      exclude: exclude,
+      many: many,
+      ignore_nil: ignore_nil,
+      ignore_empty: ignore_empty
+    )
   end
 
   @doc """
@@ -368,12 +379,21 @@ defmodule Parameter do
     exclude = Keyword.get(opts, :exclude, [])
     many = Keyword.get(opts, :many, false)
     ignore_nil = Keyword.get(opts, :ignore_nil, false)
+    ignore_empty = Keyword.get(opts, :ignore_empty, false)
 
     Types.validate!(:boolean, struct)
     Types.validate!(:array, exclude)
     Types.validate!(:boolean, many)
     Types.validate!(:boolean, ignore_nil)
+    Types.validate!(:boolean, ignore_empty)
 
-    [struct: struct, unknown: unknown, exclude: exclude, many: many, ignore_nil: ignore_nil]
+    [
+      struct: struct,
+      unknown: unknown,
+      exclude: exclude,
+      many: many,
+      ignore_nil: ignore_nil,
+      ignore_empty: ignore_empty
+    ]
   end
 end

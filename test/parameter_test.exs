@@ -48,7 +48,7 @@ defmodule ParameterTest do
 
     param do
       field :city, :string, required: true
-      field :street, :string
+      field :street, :string, default: "Some street"
       field :number, :integer
     end
   end
@@ -264,6 +264,54 @@ defmodule ParameterTest do
                Parameter.load(UserTestSchema, "not a map")
     end
 
+    test "validating required fields with nil and empty values" do
+      assert {:error, %{city: "is required"}} == Parameter.load(AddressTestSchema, %{})
+
+      assert {:error, %{city: "is required"}} ==
+               Parameter.load(AddressTestSchema, %{city: nil, street: nil})
+
+      assert {:ok, %{city: "", street: ""}} ==
+               Parameter.load(AddressTestSchema, %{city: "", street: ""})
+
+      assert {:ok, %{city: "Some city", street: ""}} ==
+               Parameter.load(AddressTestSchema, %{city: "Some city", street: ""})
+
+      assert {:ok, %{city: "Some city", street: nil}} ==
+               Parameter.load(AddressTestSchema, %{city: "Some city", street: nil})
+
+      assert {:ok, %{city: "Some city", street: "Some street"}} ==
+               Parameter.load(AddressTestSchema, %{city: "Some city"})
+    end
+
+    test "validating required fields with nil and empty values with `ignore_nil` and `ignore_empty` options" do
+      assert {:error, %{city: "is required"}} ==
+               Parameter.load(AddressTestSchema, %{}, ignore_nil: true, ignore_empty: true)
+
+      assert {:error, %{city: "is required"}} ==
+               Parameter.load(AddressTestSchema, %{city: nil, street: nil},
+                 ignore_nil: true,
+                 ignore_empty: true
+               )
+
+      assert {:error, %{city: "is required"}} ==
+               Parameter.load(AddressTestSchema, %{city: "", street: ""},
+                 ignore_nil: true,
+                 ignore_empty: true
+               )
+
+      assert {:ok, %{city: "Some city", street: "Some street"}} ==
+               Parameter.load(AddressTestSchema, %{city: "Some city", street: ""},
+                 ignore_nil: true,
+                 ignore_empty: true
+               )
+
+      assert {:ok, %{city: "Some city", street: "Some street"}} ==
+               Parameter.load(AddressTestSchema, %{city: "Some city", street: nil},
+                 ignore_nil: true,
+                 ignore_empty: true
+               )
+    end
+
     test "load user schema with correct input on all fields" do
       params = %{
         "firstName" => "John",
@@ -445,7 +493,8 @@ defmodule ParameterTest do
                 last_name: "Doe",
                 age: 32,
                 main_address: %{
-                  city: "Some City"
+                  city: "Some City",
+                  street: "Some street"
                 },
                 other_addresses: [
                   %{city: "Some City", street: "Some street"},
@@ -456,7 +505,8 @@ defmodule ParameterTest do
                 numbers: [1, 2],
                 metadata: %{"key" => "value", "other_key" => nil},
                 id_info: %{number: 25},
-                info: [%{id: "1"}]
+                info: [%{id: "1"}],
+                hex_amount: "0"
               }} == Parameter.load(UserTestSchema, params, ignore_nil: true)
     end
 
@@ -501,7 +551,7 @@ defmodule ParameterTest do
               }} == Parameter.load(UserTestSchema, params, struct: true)
     end
 
-    test "uses default value if value is nil" do
+    test "don't use default value if value is nil" do
       params = %{
         "firstName" => "John",
         "lastName" => nil,
@@ -515,7 +565,7 @@ defmodule ParameterTest do
         "numbers" => ["1", 2, 5, "10"]
       }
 
-      assert {:ok, %{last_name: ""}} = Parameter.load(UserTestSchema, params, struct: true)
+      assert {:ok, %{last_name: nil}} = Parameter.load(UserTestSchema, params, struct: true)
     end
 
     test "fails a required value is not set" do
@@ -1250,6 +1300,54 @@ defmodule ParameterTest do
                Parameter.dump(UserTestSchema, "not a map")
     end
 
+    test "validating required fields with nil and empty values" do
+      assert {:ok, %{"street" => "Some street"}} == Parameter.dump(AddressTestSchema, %{})
+
+      assert {:ok, %{"city" => nil, "street" => nil}} ==
+               Parameter.dump(AddressTestSchema, %{city: nil, street: nil})
+
+      assert {:ok, %{"city" => "", "street" => ""}} ==
+               Parameter.dump(AddressTestSchema, %{city: "", street: ""})
+
+      assert {:ok, %{"city" => "Some city", "street" => ""}} ==
+               Parameter.dump(AddressTestSchema, %{city: "Some city", street: ""})
+
+      assert {:ok, %{"city" => "Some city", "street" => nil}} ==
+               Parameter.dump(AddressTestSchema, %{city: "Some city", street: nil})
+
+      assert {:ok, %{"city" => "Some city", "street" => "Some street"}} ==
+               Parameter.dump(AddressTestSchema, %{city: "Some city"})
+    end
+
+    test "validating required fields with nil and empty values with `ignore_nil` and `ignore_empty` options" do
+      assert {:ok, %{"street" => "Some street"}} ==
+               Parameter.dump(AddressTestSchema, %{}, ignore_nil: true, ignore_empty: true)
+
+      assert {:ok, %{"street" => "Some street"}} ==
+               Parameter.dump(AddressTestSchema, %{city: nil, street: nil},
+                 ignore_nil: true,
+                 ignore_empty: true
+               )
+
+      assert {:ok, %{"street" => "Some street"}} ==
+               Parameter.dump(AddressTestSchema, %{city: "", street: ""},
+                 ignore_nil: true,
+                 ignore_empty: true
+               )
+
+      assert {:ok, %{"city" => "Some city", "street" => "Some street"}} ==
+               Parameter.dump(AddressTestSchema, %{city: "Some city", street: ""},
+                 ignore_nil: true,
+                 ignore_empty: true
+               )
+
+      assert {:ok, %{"city" => "Some city", "street" => "Some street"}} ==
+               Parameter.dump(AddressTestSchema, %{city: "Some city", street: nil},
+                 ignore_nil: true,
+                 ignore_empty: true
+               )
+    end
+
     test "dump schema input" do
       loaded_schema = %{
         first_name: "John",
@@ -1333,9 +1431,9 @@ defmodule ParameterTest do
                 "status" => "userValid",
                 "paidAmount" => Decimal.new("10.5"),
                 "numbers" => [1, 2, 5, 10],
-                "metadata" => %{"key" => "value"},
+                "metadata" => nil,
                 "hexAmount" => 0,
-                "idInfo" => %{"number" => 25, "type" => nil, "age" => nil},
+                "idInfo" => %{"number" => nil, "type" => nil, "age" => nil},
                 "info" => [%{"id" => "1", "age" => "32"}]
               }} == Parameter.dump(UserTestSchema, loaded_schema)
     end
@@ -1363,7 +1461,8 @@ defmodule ParameterTest do
                 "lastName" => "Doe",
                 "age" => 32,
                 "mainAddress" => %{
-                  "city" => "Some City"
+                  "city" => "Some City",
+                  "street" => "Some street"
                 },
                 "otherAddresses" => [
                   %{"city" => "Some City", "street" => "Some street"},
@@ -1374,7 +1473,8 @@ defmodule ParameterTest do
                 "numbers" => [1, 2],
                 "metadata" => %{key: "value", other_key: nil},
                 "idInfo" => %{"number" => 25},
-                "info" => [%{"id" => "1"}]
+                "info" => [%{"id" => "1"}],
+                "hexAmount" => "0"
               }} == Parameter.dump(UserTestSchema, params, ignore_nil: true)
     end
 

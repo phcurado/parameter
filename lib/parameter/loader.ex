@@ -10,6 +10,7 @@ defmodule Parameter.Loader do
           unknow_fields: :error | :ignore,
           exclude: list(),
           ignore_nil: boolean(),
+          ignore_empty: boolean(),
           many: boolean()
         ]
 
