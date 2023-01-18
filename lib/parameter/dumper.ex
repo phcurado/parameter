@@ -5,7 +5,7 @@ defmodule Parameter.Dumper do
   alias Parameter.Schema
   alias Parameter.SchemaFields
 
-  @type opts :: [exclude: list(), many: boolean(), ignore_nil: boolean()]
+  @type opts :: [exclude: list(), many: boolean(), ignore_nil: boolean(), ignore_empty: boolean()]
 
   @spec dump(Meta.t(), opts) :: {:ok, any()} | {:error, any()}
   def dump(%Meta{schema: schema, input: input} = meta, opts) when is_map(input) do
