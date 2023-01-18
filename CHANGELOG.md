@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.x (2023-01-18)
+
+### Enhancements
+
+* [Parameter] Extra option `ignore_empty` for `load/2` and `dump/2` functions.
+* [Parameter.Schema] `has_one` and `has_many` nested types as `map` and `array` composite types.
+
+### Deprecations
+
+* [Parameter.Enum] removed enum value macro with the `as` key.
+
 ## v0.10.x (2023-01-07)
 
 ### Enhancements
