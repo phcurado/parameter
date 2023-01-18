@@ -233,10 +233,6 @@ defmodule Parameter.SchemaFields do
     error
   end
 
-  defp operation_handler(_meta, _field, nil, _opts) do
-    {:ok, nil}
-  end
-
   defp operation_handler(meta, %Field{type: type} = field, value, opts) do
     cond do
       Types.composite_inner_type?(type) ->
