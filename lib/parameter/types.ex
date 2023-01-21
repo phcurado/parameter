@@ -70,7 +70,6 @@ defmodule Parameter.Types do
     decimal: Parameter.Types.Decimal,
     float: Parameter.Types.Float,
     integer: Parameter.Types.Integer,
-    list: Parameter.Types.List,
     array: Parameter.Types.Array,
     map: Parameter.Types.Map,
     naive_datetime: Parameter.Types.NaiveDateTime,

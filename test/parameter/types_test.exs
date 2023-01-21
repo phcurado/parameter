@@ -62,16 +62,6 @@ defmodule Parameter.TypesTest do
       assert Types.load(:integer, 1.5) == {:error, "invalid integer type"}
     end
 
-    test "load list type" do
-      assert Types.load(:list, []) == {:ok, []}
-
-      assert Types.load(:list, [%{"meta" => "data"}, %{"meta" => "data"}]) ==
-               {:ok, [%{"meta" => "data"}, %{"meta" => "data"}]}
-
-      assert Types.load(:list, %{}) == {:error, "invalid list type"}
-      assert Types.load(:list, nil) == {:error, "invalid list type"}
-    end
-
     test "load array type" do
       assert Types.load(:array, []) == {:ok, []}
 
@@ -194,13 +184,6 @@ defmodule Parameter.TypesTest do
       assert Types.dump(:array, %{}) == {:error, "invalid array type"}
     end
 
-    test "dump list type" do
-      assert Types.dump(:list, []) == {:ok, []}
-      assert Types.dump(:list, [%{"meta" => "data"}]) == {:ok, [%{"meta" => "data"}]}
-      assert Types.dump(:list, nil) == {:error, "invalid list type"}
-      assert Types.dump(:list, %{}) == {:error, "invalid list type"}
-    end
-
     test "dump map type" do
       assert Types.dump(:map, %{}) == {:ok, %{}}
       assert Types.dump(:map, %{"meta" => "data"}) == {:ok, %{"meta" => "data"}}
@@ -281,13 +264,6 @@ defmodule Parameter.TypesTest do
       assert Types.validate(:integer, 1) == :ok
       assert Types.validate(:integer, "1") == {:error, "invalid integer type"}
       assert Types.validate(:integer, 1.5) == {:error, "invalid integer type"}
-    end
-
-    test "validate list type" do
-      assert Types.validate(:list, []) == :ok
-      assert Types.validate(:list, [%{"meta" => "data"}]) == :ok
-      assert Types.validate(:list, nil) == {:error, "invalid list type"}
-      assert Types.validate(:list, %{}) == {:error, "invalid list type"}
     end
 
     test "validate array type" do
