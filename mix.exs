@@ -71,7 +71,7 @@ defmodule Parameter.MixProject do
         Types: [
           Parameter.Enum,
           Parameter.Parametrizable,
-          Parameter.Types.Any,
+          Parameter.Types.AnyType,
           Parameter.Types.Atom,
           Parameter.Types.Boolean,
           Parameter.Types.Date,

@@ -1,4 +1,4 @@
-defmodule Parameter.Types.Any do
+defmodule Parameter.Types.AnyType do
   @moduledoc """
   Any parameter type. It will accept any input value without validations.
   The same value loaded will be the same dumped.
@@ -10,29 +10,29 @@ defmodule Parameter.Types.Any do
   `Any` type will just return the same type value that is passed to load function
 
   ## Examples
-      iex> Parameter.Types.Any.load(:any_atom)
+      iex> Parameter.Types.AnyType.load(:any_atom)
       {:ok, :any_atom}
 
-      iex> Parameter.Types.Any.load("some string")
+      iex> Parameter.Types.AnyType.load("some string")
       {:ok, "some string"}
 
-      iex> Parameter.Types.Any.load(nil)
+      iex> Parameter.Types.AnyType.load(nil)
       {:ok, nil}
   """
   @impl true
   def load(value), do: {:ok, value}
 
   @doc """
-  `Any` type will just return the same type value that is passed to dump function
+  `AnyType` type will just return the same type value that is passed to dump function
 
   ## Examples
-      iex> Parameter.Types.Any.load(:any_atom)
+      iex> Parameter.Types.AnyType.load(:any_atom)
       {:ok, :any_atom}
 
-      iex> Parameter.Types.Any.load("some string")
+      iex> Parameter.Types.AnyType.load("some string")
       {:ok, "some string"}
 
-      iex> Parameter.Types.Any.load(nil)
+      iex> Parameter.Types.AnyType.load(nil)
       {:ok, nil}
   """
   @impl true

@@ -62,7 +62,7 @@ defmodule Parameter.Types do
   def composite_type?(type), do: type in @composite_types
 
   @types_mod %{
-    any: Parameter.Types.Any,
+    any: Parameter.Types.AnyType,
     atom: Parameter.Types.Atom,
     boolean: Parameter.Types.Boolean,
     date: Parameter.Types.Date,

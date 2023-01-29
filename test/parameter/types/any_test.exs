@@ -1,4 +1,4 @@
-defmodule Parameter.Types.AnyTest do
+defmodule Parameter.Types.AnyTypeTest do
   use ExUnit.Case
-  doctest Parameter.Types.Any
+  doctest Parameter.Types.AnyType
 end
