@@ -1,7 +1,50 @@
 defmodule Parameter.Schema.Compiler do
   @moduledoc false
+  alias Parameter.Field
 
-  def fetch_nested_opts!(opts) do
+  def compile_schema!(schema) when is_map(schema) do
+    for {name, opts} <- schema do
+      {type, opts} = Keyword.pop(opts, :type, :string)
+      type = compile_type!(type)
+      Field.new!([name: name, type: type] ++ opts)
+    end
+  end
+
+  defp compile_type!({:map, schema}) when is_atom(schema) do
+    {:map, schema}
+  end
+
+  defp compile_type!({:map, schema}) when is_tuple(schema) do
+    {:map, compile_type!(schema)}
+  end
+
+  defp compile_type!({:map, schema}) do
+    {:map, compile_schema!(schema)}
+  end
+
+  defp compile_type!({:array, schema}) when is_atom(schema) do
+    {:array, schema}
+  end
+
+  defp compile_type!({:array, schema}) when is_tuple(schema) do
+    {:array, compile_type!(schema)}
+  end
+
+  defp compile_type!({:array, schema}) do
+    {:array, compile_schema!(schema)}
+  end
+
+  defp compile_type!({_not_assoc, _schema}) do
+    raise ArgumentError,
+      message:
+        "not a valid inner type, please use `{map, inner_type}` or `{array, inner_type}` for nested associations"
+  end
+
+  defp compile_type!(type) when is_atom(type) do
+    type
+  end
+
+  def validate_nested_opts!(opts) do
     keys = Keyword.keys(opts)
 
     if :default in keys do

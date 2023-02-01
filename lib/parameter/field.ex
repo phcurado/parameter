@@ -73,7 +73,7 @@ defmodule Parameter.Field do
 
   @doc false
   @spec new!(Keyword.t()) :: t() | no_return()
-  def new!(opts \\ []) do
+  def new!(opts) do
     case new(opts) do
       {:error, error} -> raise ArgumentError, message: error
       %__MODULE__{} = result -> result
@@ -82,24 +82,19 @@ defmodule Parameter.Field do
 
   @doc false
   @spec new(opts :: Keyword.t()) :: t() | {:error, String.t()}
-  def new(opts \\ []) do
+  def new(opts) do
     name = Keyword.get(opts, :name)
+    type = Keyword.get(opts, :type)
 
-    case Types.validate(:atom, name) do
-      :ok ->
-        key = Keyword.get(opts, :key, to_string(name))
-
-        opts
-        |> Keyword.put(:key, key)
-        |> do_new()
-
-      error ->
-        error
+    if name != nil and type != nil do
+      do_new(opts)
+    else
+      {:error, "a field should have at least a name and a type"}
     end
   end
 
   defp do_new(opts) do
-    key = Keyword.fetch!(opts, :key)
+    name = Keyword.fetch!(opts, :name)
     type = Keyword.get(opts, :type, :string)
     default = Keyword.get(opts, :default)
     load_default = Keyword.get(opts, :load_default)
@@ -111,7 +106,9 @@ defmodule Parameter.Field do
     virtual = Keyword.get(opts, :virtual, false)
 
     # Using Types module to validate field parameters
-    with {:ok, opts} <- default_valid?(type, opts, default, load_default, dump_default),
+    with {:ok, opts} <- name_valid?(name, opts),
+         key = Keyword.fetch!(opts, :key),
+         {:ok, opts} <- default_valid?(type, opts, default, load_default, dump_default),
          :ok <- Types.validate(:string, key),
          :ok <- Types.validate(:boolean, required),
          :ok <- Types.validate(:boolean, virtual),
@@ -119,6 +116,18 @@ defmodule Parameter.Field do
          :ok <- on_dump_valid?(on_dump),
          :ok <- validator_valid?(validator) do
       struct!(__MODULE__, opts)
+    end
+  end
+
+  defp name_valid?(name, opts) do
+    case Types.validate(:atom, name) do
+      :ok ->
+        key = Keyword.get(opts, :key, to_string(name))
+
+        {:ok, Keyword.put(opts, :key, key)}
+
+      error ->
+        error
     end
   end
 

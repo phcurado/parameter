@@ -180,7 +180,6 @@ defmodule Parameter.Schema do
       {:ok, %{"level" => 0}}
   """
 
-  alias Parameter.Field
   alias Parameter.Schema.Compiler
   alias Parameter.Types
 
@@ -191,13 +190,14 @@ defmodule Parameter.Schema do
       import Parameter.Enum
 
       Module.put_attribute(__MODULE__, :fields_required, false)
-      Module.register_attribute(__MODULE__, :param_fields, accumulate: true)
+      Module.put_attribute(__MODULE__, :param_raw_fields, %{})
+      Module.register_attribute(__MODULE__, :param_fields, accumulate: false)
     end
   end
 
   @doc false
   defmacro param(do: block) do
-    mount_schema(__CALLER__, block)
+    schema(__CALLER__, block)
   end
 
   @doc false
@@ -217,9 +217,12 @@ defmodule Parameter.Schema do
       main_attrs = [name: name, type: type]
       required_attrs = [required: @fields_required]
 
-      field = Field.new!(main_attrs ++ required_attrs ++ opts)
-      Module.put_attribute(__MODULE__, :param_fields, field)
-      Module.put_attribute(__MODULE__, :param_struct_fields, field.name)
+      param_raw_fields = Module.get_attribute(__MODULE__, :param_raw_fields)
+
+      raw_fields = Map.put(param_raw_fields, name, [type: type] ++ required_attrs ++ opts)
+
+      Module.put_attribute(__MODULE__, :param_raw_fields, raw_fields)
+      Module.put_attribute(__MODULE__, :param_struct_fields, name)
     end
   end
 
@@ -228,7 +231,7 @@ defmodule Parameter.Schema do
     block = Macro.escape(block)
 
     quote bind_quoted: [name: name, module_name: module_name, opts: opts, block: block] do
-      opts = Compiler.fetch_nested_opts!(opts)
+      opts = Compiler.validate_nested_opts!(opts)
       module_name = Parameter.Schema.__mount_nested_schema__(module_name, __ENV__, block)
 
       has_one name, module_name, opts
@@ -248,7 +251,7 @@ defmodule Parameter.Schema do
 
   defmacro has_one(name, type, opts) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
-      opts = Compiler.fetch_nested_opts!(opts)
+      opts = Compiler.validate_nested_opts!(opts)
       field name, {:map, type}, opts
     end
   end
@@ -265,7 +268,7 @@ defmodule Parameter.Schema do
     block = Macro.escape(block)
 
     quote bind_quoted: [name: name, module_name: module_name, opts: opts, block: block] do
-      opts = Compiler.fetch_nested_opts!(opts)
+      opts = Compiler.validate_nested_opts!(opts)
       module_name = Parameter.Schema.__mount_nested_schema__(module_name, __ENV__, block)
 
       has_many name, module_name, opts
@@ -286,7 +289,7 @@ defmodule Parameter.Schema do
   defmacro has_many(name, type, opts) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
       if not Types.base_type?(type) do
-        Compiler.fetch_nested_opts!(opts)
+        Compiler.validate_nested_opts!(opts)
       end
 
       field name, {:array, type}, opts
@@ -300,67 +303,55 @@ defmodule Parameter.Schema do
     end
   end
 
-  def compile!(opts) when is_list(opts) do
-    Field.new!(opts)
-  end
+  defdelegate compile!(opts), to: Compiler, as: :compile_schema!
 
-  def compile!(schema) when is_map(schema) do
-    for {name, opts} <- schema do
-      {type, opts} = Keyword.pop(opts, :type, :string)
-      type = compile_type!(type)
-      compile!([name: name, type: type] ++ opts)
-    end
-  end
+  defp schema(caller, block) do
+    precompile =
+      quote do
+        if line = Module.get_attribute(__MODULE__, :param_schema_defined) do
+          raise "param already defined for #{inspect(__MODULE__)} on line #{line}"
+        end
 
-  defp compile_type!({:map, schema}) do
-    {:map, compile!(schema)}
-  end
+        @param_schema_defined unquote(caller.line)
 
-  defp compile_type!({:array, schema}) do
-    {:array, compile!(schema)}
-  end
+        Module.register_attribute(__MODULE__, :param_struct_fields, accumulate: true)
 
-  defp compile_type!({_not_assoc, _schema}) do
-    raise ArgumentError,
-      message:
-        "not a valid inner type, please use `{map, inner_type}` or `{array, inner_type}` for nested associations"
-  end
+        unquote(block)
+      end
 
-  defp compile_type!(type) when is_atom(type) do
-    type
-  end
+    compile =
+      quote do
+        raw_params = Module.get_attribute(__MODULE__, :param_raw_fields)
+        Module.put_attribute(__MODULE__, :param_fields, Parameter.Schema.compile!(raw_params))
+      end
 
-  defp mount_schema(caller, block) do
+    postcompile =
+      quote unquote: false do
+        defstruct Enum.reverse(@param_struct_fields)
+
+        def __param__(:fields), do: Enum.reverse(@param_fields)
+
+        def __param__(:field_names) do
+          Enum.map(__param__(:fields), & &1.name)
+        end
+
+        def __param__(:field_keys) do
+          field_keys(__param__(:fields))
+        end
+
+        def __param__(:field, key: key) do
+          field_key(__param__(:fields), key)
+        end
+
+        def __param__(:field, name: name) do
+          Enum.find(__param__(:fields), &(&1.name == name))
+        end
+      end
+
     quote do
-      if line = Module.get_attribute(__MODULE__, :param_schema_defined) do
-        raise "param already defined for #{inspect(__MODULE__)} on line #{line}"
-      end
-
-      @param_schema_defined unquote(caller.line)
-
-      Module.register_attribute(__MODULE__, :param_struct_fields, accumulate: true)
-
-      unquote(block)
-
-      defstruct Enum.reverse(@param_struct_fields)
-
-      def __param__(:fields), do: Enum.reverse(@param_fields)
-
-      def __param__(:field_names) do
-        Enum.map(__param__(:fields), & &1.name)
-      end
-
-      def __param__(:field_keys) do
-        field_keys(__param__(:fields))
-      end
-
-      def __param__(:field, key: key) do
-        field_key(__param__(:fields), key)
-      end
-
-      def __param__(:field, name: name) do
-        Enum.find(__param__(:fields), &(&1.name == name))
-      end
+      unquote(precompile)
+      unquote(compile)
+      unquote(postcompile)
     end
   end
 
@@ -394,7 +385,7 @@ defmodule Parameter.Schema do
         use Parameter.Schema
         import Parameter.Schema
 
-        Module.register_attribute(__MODULE__, :param_fields, accumulate: true)
+        # Module.register_attribute(__MODULE__, :param_fields, accumulate: true)
 
         fields_required = Parameter.Schema.__fetch_fields_required_attr__(unquote(env.module))
 
