@@ -95,7 +95,6 @@ defmodule Parameter.Field do
 
   defp do_new(opts) do
     name = Keyword.fetch!(opts, :name)
-    type = Keyword.get(opts, :type, :string)
     default = Keyword.get(opts, :default)
     load_default = Keyword.get(opts, :load_default)
     dump_default = Keyword.get(opts, :dump_default)
@@ -108,7 +107,7 @@ defmodule Parameter.Field do
     # Using Types module to validate field parameters
     with {:ok, opts} <- name_valid?(name, opts),
          key = Keyword.fetch!(opts, :key),
-         {:ok, opts} <- default_valid?(type, opts, default, load_default, dump_default),
+         {:ok, opts} <- fetch_default(opts, default, load_default, dump_default),
          :ok <- Types.validate(:string, key),
          :ok <- Types.validate(:boolean, required),
          :ok <- Types.validate(:boolean, virtual),
@@ -131,37 +130,21 @@ defmodule Parameter.Field do
     end
   end
 
-  defp default_valid?(type, opts, default, nil, nil) when not is_nil(default) do
-    case validate_default(type, default) do
-      :ok ->
-        opts =
-          opts
-          |> Keyword.put(:load_default, default)
-          |> Keyword.put(:dump_default, default)
+  defp fetch_default(opts, default, nil, nil) when not is_nil(default) do
+    opts =
+      opts
+      |> Keyword.put(:load_default, default)
+      |> Keyword.put(:dump_default, default)
 
-        {:ok, opts}
-
-      error ->
-        error
-    end
+    {:ok, opts}
   end
 
-  defp default_valid?(type, opts, nil, load_default, dump_default) do
-    with :ok <- validate_default(type, load_default),
-         :ok <- validate_default(type, dump_default),
-         do: {:ok, opts}
+  defp fetch_default(opts, nil, _load_default, _dump_default) do
+    {:ok, opts}
   end
 
-  defp default_valid?(_type, _opts, _default, _load_default, _dump_default) do
+  defp fetch_default(_opts, _default, _load_default, _dump_default) do
     {:error, "`default` opts should not be used with `load_default` or `dump_default`"}
-  end
-
-  defp validate_default(type, default_value) do
-    if default_value do
-      Types.validate(type, default_value)
-    else
-      :ok
-    end
   end
 
   defp on_load_valid?(on_load) do

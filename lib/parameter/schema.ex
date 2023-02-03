@@ -215,9 +215,16 @@ defmodule Parameter.Schema do
   defmacro field(name, type, opts \\ []) do
     quote bind_quoted: [name: name, type: type, opts: opts] do
       main_attrs = [name: name, type: type]
-      required_attrs = [required: @fields_required]
+      {required?, opts} = Keyword.pop(opts, :required)
 
       param_raw_fields = Module.get_attribute(__MODULE__, :param_raw_fields)
+
+      required_attrs =
+        if required? != nil do
+          [required: required?]
+        else
+          [required: @fields_required]
+        end
 
       raw_fields = Map.put(param_raw_fields, name, [type: type] ++ required_attrs ++ opts)
 
@@ -384,8 +391,6 @@ defmodule Parameter.Schema do
       quote do
         use Parameter.Schema
         import Parameter.Schema
-
-        # Module.register_attribute(__MODULE__, :param_fields, accumulate: true)
 
         fields_required = Parameter.Schema.__fetch_fields_required_attr__(unquote(env.module))
 

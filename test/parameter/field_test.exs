@@ -24,18 +24,6 @@ defmodule Parameter.FieldTest do
              } == Field.new(opts)
     end
 
-    test "fails if a default value of wrong type" do
-      opts = [
-        name: :main_address,
-        type: :float,
-        key: "mainAddress",
-        required: true,
-        default: "Hello"
-      ]
-
-      assert {:error, "invalid float type"} == Field.new(opts)
-    end
-
     test "fails if name is not an atom" do
       opts = [
         name: "main_address",
@@ -94,20 +82,6 @@ defmodule Parameter.FieldTest do
                dump_default: "Default",
                load_default: "Default"
              } == Field.new!(opts)
-    end
-
-    test "fails if a default value of wrong type" do
-      opts = [
-        name: :address,
-        type: :float,
-        key: "address",
-        required: true,
-        default: "Hello"
-      ]
-
-      assert_raise ArgumentError, "invalid float type", fn ->
-        Field.new!(opts)
-      end
     end
   end
 end
