@@ -21,6 +21,18 @@ defmodule Parameter.Schema.CompilerTest do
                  first_name: [key: "firstName", required: true]
                })
     end
+
+    test "invalid inner type should raise error" do
+      assert_raise(
+        ArgumentError,
+        "not a valid inner type, please use `{map, inner_type}` or `{array, inner_type}` for nested associations",
+        fn ->
+          Compiler.compile_schema!(%{
+            address: [type: {:not_map, %{number: [type: :integer]}}]
+          })
+        end
+      )
+    end
   end
 
   describe "validate_nested_opts/1" do

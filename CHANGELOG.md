@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.12.x (2023-02-04) - To be Release
+### Enhancements
+
+* [Parameter.Schema.Compiler] Unify schema compiler for macro and functional API.
+* [Parameter.Types.Any] Renamed module to `Parameter.Types.AnyType` to fix elixir warnings
+
+### Deprecations
+
+* [Parameter.Types.List] removed type in favor of `Array` type
+
 ## v0.11.x (2023-01-18)
 
 ### Enhancements

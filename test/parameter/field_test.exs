@@ -48,7 +48,7 @@ defmodule Parameter.FieldTest do
       assert {:error, "on_load must be a function with 2 arity"} == Field.new(opts)
     end
 
-    test "fails if a default value used at the sametime with load_default and dump_default" do
+    test "fails if a default value used at the same time with load_default and dump_default" do
       opts = [
         name: :main_address,
         type: :string,
@@ -60,6 +60,26 @@ defmodule Parameter.FieldTest do
 
       assert {:error, "`default` opts should not be used with `load_default` or `dump_default`"} ==
                Field.new(opts)
+    end
+
+    test "load_default and dump_default should work as long don't pass default key" do
+      opts = [
+        name: :main_address,
+        type: :string,
+        key: "mainAddress",
+        required: true,
+        load_default: "Default",
+        dump_default: "default"
+      ]
+
+      assert %Parameter.Field{
+               key: "mainAddress",
+               name: :main_address,
+               required: true,
+               type: :string,
+               load_default: "Default",
+               dump_default: "default"
+             } == Field.new(opts)
     end
   end
 
