@@ -95,4 +95,28 @@ defmodule Parameter.EnumTest do
       assert EnumTest.Dynamic.dump(:superAdmin) == {:error, "invalid enum type"}
     end
   end
+
+  describe "enum on schema" do
+    test "enum in schema with valid value should load correctly" do
+      schema =
+        %{
+          job_type: [type: EnumTest.JobType]
+        }
+        |> Parameter.Schema.compile!()
+
+      assert {:ok, %{job_type: :freelancer}} ==
+               Parameter.load(schema, %{"job_type" => "freelancer"})
+    end
+
+    test "enum in schema with valid nested value should load correctly" do
+      schema =
+        %{
+          job_type: [type: {:array, EnumTest.JobType}]
+        }
+        |> Parameter.Schema.compile!()
+
+      assert {:ok, %{job_type: [:freelancer]}} ==
+               Parameter.load(schema, %{"job_type" => ["freelancer"]})
+    end
+  end
 end

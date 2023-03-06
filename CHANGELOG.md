@@ -1,10 +1,11 @@
 # Changelog
 
-## v0.12.x (2023-02-04) - To be Release
+## v0.12.x (2023-03-06)
 ### Enhancements
 
 * [Parameter.Schema.Compiler] Unify schema compiler for macro and functional API.
 * [Parameter.Types.Any] Renamed module to `Parameter.Types.AnyType` to fix elixir warnings
+* [Parameter] Fix `load`, `dump` and `validate` functions to correctly parse Enum values in nested schema.
 
 ### Deprecations
 
