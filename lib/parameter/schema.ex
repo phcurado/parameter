@@ -187,6 +187,7 @@ defmodule Parameter.Schema do
       {:ok, %{"level" => 0}}
   """
 
+  alias Parameter.Field
   alias Parameter.Schema.Compiler
   alias Parameter.Types
 
@@ -369,11 +370,21 @@ defmodule Parameter.Schema do
     end
   end
 
-  def fields(module) when is_atom(module) do
-    module.__param__(:fields)
+  def module(module) when is_atom(module) do
+    module
   end
 
-  def fields(fields) when is_list(fields) do
+  def module(fields) when is_list(fields) do
+    nil
+  end
+
+  def fields(module) when is_atom(module) do
+    module.__param__(:fields)
+  rescue
+    _error -> module
+  end
+
+  def fields(fields) do
     fields
   end
 

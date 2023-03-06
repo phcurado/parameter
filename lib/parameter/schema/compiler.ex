@@ -18,7 +18,8 @@ defmodule Parameter.Schema.Compiler do
   end
 
   def compile_schema!(schema) when is_atom(schema) do
-    schema
+    Parameter.Schema.fields(schema)
+    # schema
   end
 
   defp compile_type!({type, schema}) when is_tuple(schema) do
