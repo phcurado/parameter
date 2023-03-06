@@ -81,12 +81,16 @@ defmodule Parameter.Types do
   def load(type, value) do
     type_module = Map.get(@types_mod, type, type)
     type_module.load(value)
+  rescue
+    _error -> {:error, "invalid input value"}
   end
 
   @spec dump(atom(), any()) :: {:ok, any()} | {:error, any()}
   def dump(type, value) do
     type_module = Map.get(@types_mod, type, type)
     type_module.dump(value)
+  rescue
+    _error -> {:error, "invalid input value"}
   end
 
   @spec validate!(t(), any()) :: :ok | no_return()
@@ -129,5 +133,7 @@ defmodule Parameter.Types do
   def validate(type, value) do
     type_module = Map.get(@types_mod, type, type)
     type_module.validate(value)
+  rescue
+    _error -> {:error, "invalid input value"}
   end
 end

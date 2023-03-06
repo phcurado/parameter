@@ -4,6 +4,7 @@ defmodule Parameter.Validator do
   alias Parameter.Meta
   alias Parameter.Schema
   alias Parameter.SchemaFields
+  alias Parameter.Types
 
   @type opts :: [exclude: list(), many: boolean()]
 
@@ -37,8 +38,8 @@ defmodule Parameter.Validator do
     end
   end
 
-  def validate(_meta, _opts) do
-    {:error, "input parameters should be validated as maps"}
+  def validate(meta, _opts) do
+    Types.validate(meta.schema, meta.input)
   end
 
   defp parse_result(errors) do

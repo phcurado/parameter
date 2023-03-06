@@ -260,7 +260,7 @@ defmodule ParameterTest do
     end
 
     test "passing wrong value should return an error" do
-      assert {:error, "input parameters should be loaded as maps"} ==
+      assert {:error, "invalid input value"} ==
                Parameter.load(UserTestSchema, "not a map")
     end
 
@@ -1296,7 +1296,7 @@ defmodule ParameterTest do
 
   describe "dump/3" do
     test "passing wrong value should return an error" do
-      assert {:error, "input parameters should be dumped as maps"} ==
+      assert {:error, "invalid input value"} ==
                Parameter.dump(UserTestSchema, "not a map")
     end
 
@@ -1835,7 +1835,7 @@ defmodule ParameterTest do
 
   describe "validate/3" do
     test "passing wrong value should return an error" do
-      assert {:error, "input parameters should be validated as maps"} ==
+      assert {:error, "invalid input value"} ==
                Parameter.validate(UserTestSchema, "not a map")
     end
 

@@ -4,6 +4,7 @@ defmodule Parameter.Loader do
   alias Parameter.Meta
   alias Parameter.Schema
   alias Parameter.SchemaFields
+  alias Parameter.Types
 
   @type opts :: [
           struct: boolean(),
@@ -39,8 +40,8 @@ defmodule Parameter.Loader do
     end
   end
 
-  def load(_meta, _opts) do
-    {:error, "input parameters should be loaded as maps"}
+  def load(meta, _opts) do
+    Types.load(meta.schema, meta.input)
   end
 
   defp iterate_schema(meta, opts) do

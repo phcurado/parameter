@@ -4,6 +4,7 @@ defmodule Parameter.Dumper do
   alias Parameter.Meta
   alias Parameter.Schema
   alias Parameter.SchemaFields
+  alias Parameter.Types
 
   @type opts :: [exclude: list(), many: boolean(), ignore_nil: boolean(), ignore_empty: boolean()]
 
@@ -39,8 +40,8 @@ defmodule Parameter.Dumper do
     end
   end
 
-  def dump(_meta, _opts) do
-    {:error, "input parameters should be dumped as maps"}
+  def dump(meta, _opts) do
+    Types.dump(meta.schema, meta.input)
   end
 
   defp parse_loaded_input({result, errors}) do
