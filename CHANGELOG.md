@@ -6,6 +6,7 @@
 * [Parameter.Schema.Compiler] Unify schema compiler for macro and functional API.
 * [Parameter.Types.Any] Renamed module to `Parameter.Types.AnyType` to fix elixir warnings
 * [Parameter] Fix `load`, `dump` and `validate` functions to correctly parse Enum values in nested schema.
+* [Parameter.Schema] default options for nested schema is now available.
 
 ### Deprecations
 
