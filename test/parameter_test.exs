@@ -260,8 +260,8 @@ defmodule ParameterTest do
     end
 
     test "passing wrong value should return an error" do
-      assert {:error, "invalid input value"} ==
-               Parameter.load(UserTestSchema, "not a map")
+      assert {:error, message} = Parameter.load(UserTestSchema, "not a map")
+      assert message =~ "invalid input value %UndefinedFunctionError{"
     end
 
     test "validating required fields with nil and empty values" do
@@ -1296,8 +1296,8 @@ defmodule ParameterTest do
 
   describe "dump/3" do
     test "passing wrong value should return an error" do
-      assert {:error, "invalid input value"} ==
-               Parameter.dump(UserTestSchema, "not a map")
+      assert {:error, message} = Parameter.dump(UserTestSchema, "not a map")
+      assert message =~ "invalid input value %UndefinedFunctionError{"
     end
 
     test "validating required fields with nil and empty values" do
@@ -1835,8 +1835,8 @@ defmodule ParameterTest do
 
   describe "validate/3" do
     test "passing wrong value should return an error" do
-      assert {:error, "invalid input value"} ==
-               Parameter.validate(UserTestSchema, "not a map")
+      assert {:error, message} = Parameter.validate(UserTestSchema, "not a map")
+      assert message =~ "invalid input value %UndefinedFunctionError{"
     end
 
     test "validate schema input" do
