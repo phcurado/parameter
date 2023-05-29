@@ -82,6 +82,13 @@ defmodule Parameter.Schema do
 
   It's recommended to use this approach when the schema will only be used in a single module.
 
+  > #### `use Parameter.Schema` {: .info}
+  >
+  > When you `use Parameter.Schema`, the `Schema` module will register
+  > module attributes and inject functions that are necessary for
+  > `Parameter.load/3`, `Parameter.validate/3` and `Parameter.dump/3` to fetch the schema
+  > on runtime.
+
   ## Runtime Schemas
 
   It's also possible to create schemas via runtime without relying on any macros.
