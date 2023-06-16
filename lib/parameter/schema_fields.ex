@@ -265,11 +265,17 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  defp fetch_and_verify_input(meta, field, opts) do
+
+  defp fetch_and_verify_input(meta, %Field{on_load: on_load, on_dump: on_dump} = field, opts) do
     case fetch_input(meta, field) do
       :error ->
-        check_required(field, :ignore, meta.operation)
-
+        cond do
+          on_load && meta.operation == :load ->
+            field_handler(meta, field, nil, opts)
+          on_dump && meta.operation == :dump ->
+            field_handler(meta, field, nil, opts)
+          true -> check_required(field, :ignore, meta.operation)
+        end
       {:ok, nil} ->
         check_nil(meta, field, opts)
 
@@ -311,6 +317,9 @@ defmodule Parameter.SchemaFields do
         fetched_input
     end
   end
+
+  # defp check_required(%Field{required: true, on_load: on_load}, value, :load) when not is_nil(on_load)
+  # end
 
   defp check_required(%Field{required: true, load_default: nil}, value, :load)
        when value in [:ignore, nil] do
