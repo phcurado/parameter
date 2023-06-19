@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.13.x (2023-06-19)
+### Breaking Changes
+
+* [Parameter] `on_load/2` or `on_dump/2` now always run when parsing the schema. Previously, both functions were only triggered when the field was present on the params.
+
 ## v0.12.x (2023-03-06)
 ### Enhancements
 
