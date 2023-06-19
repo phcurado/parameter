@@ -101,7 +101,7 @@ defmodule ParameterTest do
     end
 
     def load_info_age(value, input) do
-      if age = input["age"] do
+      if age = input["age"] || get_in(input, [:age]) do
         {:ok, age}
       else
         {:ok, value}
@@ -116,11 +116,19 @@ defmodule ParameterTest do
       end
     end
 
-    def dump_age(value, input) do
-      if age = input.id_info.age do
-        {:ok, age}
-      else
+    def dump_age(value, %UserTestSchema{} = input) do
+      if value do
         {:ok, value}
+      else
+        {:ok, input.age}
+      end
+    end
+
+    def dump_age(value, input) do
+      if value do
+        {:ok, value}
+      else
+        {:ok, get_in(input, [:age])}
       end
     end
   end
@@ -388,7 +396,8 @@ defmodule ParameterTest do
                 numbers: [1, 2, 5, 10],
                 map_values: [%{"test" => "test"}],
                 metadata: %{"key" => "value", "other_key" => "value"},
-                hex_amount: "0"
+                hex_amount: "0",
+                id_info: %{age: 32, number: 123_456, type: "identity"}
               }} == Parameter.load(UserTestSchema, params)
     end
 
@@ -431,7 +440,8 @@ defmodule ParameterTest do
                 status: "invalid enum type",
                 id_info: %{
                   number: "invalid integer type",
-                  type: "field is present as atom and string keys"
+                  type: "field is present as atom and string keys",
+                  age: "invalid integer type"
                 }
               }} ==
                Parameter.load(UserTestSchema, params)
@@ -504,8 +514,8 @@ defmodule ParameterTest do
                 paid_amount: Decimal.new("1"),
                 numbers: [1, 2],
                 metadata: %{"key" => "value", "other_key" => nil},
-                id_info: %{number: 25},
-                info: [%{id: "1"}],
+                id_info: %{number: 25, age: 32},
+                info: [%{id: "1", age: "32"}],
                 hex_amount: "0"
               }} == Parameter.load(UserTestSchema, params, ignore_nil: true)
     end
@@ -546,8 +556,8 @@ defmodule ParameterTest do
                 numbers: [1, 2],
                 metadata: %{"key" => "value", "other_key" => "value"},
                 hex_amount: 1_087_573_706_314_634_443_003_985_449_474_964_098_995_406_820_908,
-                id_info: %UserTestSchema.IdInfo{number: 25, type: nil},
-                info: [%UserTestSchema.Info{id: "1"}]
+                id_info: %UserTestSchema.IdInfo{number: 25, type: nil, age: 32},
+                info: [%UserTestSchema.Info{id: "1", age: "32"}]
               }} == Parameter.load(UserTestSchema, params, struct: true)
     end
 
@@ -855,7 +865,7 @@ defmodule ParameterTest do
                 paid_amount: Decimal.new("25.0"),
                 numbers: [1, 2, 5, 10],
                 hex_amount: 0,
-                id_info: %{number: 123_456}
+                id_info: %{number: 123_456, age: 32}
               }} ==
                Parameter.load(UserTestSchema, params,
                  exclude: [
@@ -904,7 +914,7 @@ defmodule ParameterTest do
                 paid_amount: Decimal.new("25.0"),
                 numbers: [1, 2, 5, 10],
                 hex_amount: 0,
-                id_info: %UserTestSchema.IdInfo{number: 123_456, type: nil},
+                id_info: %UserTestSchema.IdInfo{number: 123_456, type: nil, age: 32},
                 info: nil,
                 metadata: nil,
                 status: nil
@@ -1024,7 +1034,7 @@ defmodule ParameterTest do
                   numbers: [1, 2, 5, 10],
                   metadata: %{"key" => "value", "other_key" => "value"},
                   hex_amount: 0,
-                  id_info: %{number: 123_456, type: "identity"}
+                  id_info: %{number: 123_456, type: "identity", age: 32}
                 }
               ]} == Parameter.load(UserTestSchema, params, many: true)
 
@@ -1068,7 +1078,7 @@ defmodule ParameterTest do
                   numbers: [1, 2, 5, 10],
                   metadata: %{"key" => "value", "other_key" => "value"},
                   hex_amount: 0,
-                  id_info: %UserTestSchema.IdInfo{number: 123_456, type: "identity"}
+                  id_info: %UserTestSchema.IdInfo{number: 123_456, type: "identity", age: 32}
                 }
               ]} == Parameter.load(UserTestSchema, params, struct: true, many: true)
     end
@@ -1120,7 +1130,8 @@ defmodule ParameterTest do
                 0 => %{
                   age: "invalid integer type",
                   main_address: %{number: "invalid integer type"},
-                  status: "invalid enum type"
+                  status: "invalid enum type",
+                  id_info: %{age: "invalid integer type"}
                 },
                 1 => %{
                   metadata: "invalid map type",
@@ -1386,7 +1397,8 @@ defmodule ParameterTest do
                 "paidAmount" => Decimal.new(1),
                 "idInfo" => %{
                   "number" => 123,
-                  "type" => "identity"
+                  "type" => "identity",
+                  "age" => 32
                 }
               }} == Parameter.dump(UserTestSchema, loaded_schema)
     end
@@ -1433,7 +1445,7 @@ defmodule ParameterTest do
                 "numbers" => [1, 2, 5, 10],
                 "metadata" => nil,
                 "hexAmount" => 0,
-                "idInfo" => %{"number" => nil, "type" => nil, "age" => nil},
+                "idInfo" => %{"number" => nil, "type" => nil, "age" => 32},
                 "info" => [%{"id" => "1", "age" => "32"}]
               }} == Parameter.dump(UserTestSchema, loaded_schema)
     end
@@ -1472,8 +1484,8 @@ defmodule ParameterTest do
                 "paidAmount" => Decimal.new("1"),
                 "numbers" => [1, 2],
                 "metadata" => %{key: "value", other_key: nil},
-                "idInfo" => %{"number" => 25},
-                "info" => [%{"id" => "1"}],
+                "idInfo" => %{"number" => 25, "age" => 32},
+                "info" => [%{"id" => "1", "age" => "32"}],
                 "hexAmount" => "0"
               }} == Parameter.dump(UserTestSchema, params, ignore_nil: true)
     end
@@ -1502,7 +1514,8 @@ defmodule ParameterTest do
                  numbers: "invalid array type",
                  other_addresses: %{
                    0 => %{number: "invalid integer type"}
-                 }
+                 },
+                 id_info: %{age: "invalid integer type"}
                }
              } == Parameter.dump(UserTestSchema, loaded_schema)
     end
@@ -1538,7 +1551,8 @@ defmodule ParameterTest do
                 "numbers" => [1, 2, 5, 10],
                 "hexAmount" => 0,
                 "idInfo" => %{
-                  "number" => 123_456
+                  "number" => 123_456,
+                  "age" => 32
                 }
               }} ==
                Parameter.dump(UserTestSchema, loaded_schema,
@@ -1588,7 +1602,7 @@ defmodule ParameterTest do
         %{
           first_name: "John",
           last_name: "Doe",
-          age: 32,
+          age: 11,
           main_address: %{city: "John City", street: "John street", number: 15},
           other_addresses: [
             %{city: "John City", street: "John street", number: 15},
@@ -1623,7 +1637,7 @@ defmodule ParameterTest do
                 %{
                   "firstName" => "John",
                   "lastName" => "Doe",
-                  "age" => 32,
+                  "age" => 11,
                   "mainAddress" => %{
                     "city" => "John City",
                     "street" => "John street",
@@ -1640,7 +1654,8 @@ defmodule ParameterTest do
                   "paidAmount" => Decimal.new(1),
                   "idInfo" => %{
                     "number" => 123,
-                    "type" => "identity"
+                    "type" => "identity",
+                    "age" => 11
                   }
                 },
                 %{
@@ -1663,7 +1678,8 @@ defmodule ParameterTest do
                   "paidAmount" => Decimal.new(5),
                   "idInfo" => %{
                     "number" => 123,
-                    "type" => "identity"
+                    "type" => "identity",
+                    "age" => 32
                   }
                 }
               ]} == Parameter.dump(UserTestSchema, loaded_schema, many: true)
@@ -1711,7 +1727,8 @@ defmodule ParameterTest do
                 },
                 1 => %{
                   age: "invalid integer type",
-                  other_addresses: %{0 => %{number: "invalid integer type"}}
+                  other_addresses: %{0 => %{number: "invalid integer type"}},
+                  id_info: %{age: "invalid integer type"}
                 }
               }} == Parameter.dump(UserTestSchema, loaded_schema, many: true)
     end
