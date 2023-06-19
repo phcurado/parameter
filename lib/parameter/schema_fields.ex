@@ -122,35 +122,6 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  def field_handler(
-        %Meta{parent_input: parent_input, operation: :load} = meta,
-        %Field{on_load: on_load} = field,
-        value,
-        opts
-      )
-      when not is_nil(on_load) do
-    case on_load.(value, parent_input) do
-      {:ok, value} ->
-        operation_handler(meta, field, value, opts)
-
-      error ->
-        error
-    end
-  end
-
-  def field_handler(
-        %Meta{parent_input: parent_input, operation: :dump} = meta,
-        %Field{on_dump: on_dump} = field,
-        value,
-        opts
-      )
-      when not is_nil(on_dump) do
-    case on_dump.(value, parent_input) do
-      {:ok, value} -> operation_handler(meta, field, value, opts)
-      error -> error
-    end
-  end
-
   def field_handler(meta, %Field{type: _type} = field, value, opts) do
     operation_handler(meta, field, value, opts)
   end
@@ -265,17 +236,11 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-
-  defp fetch_and_verify_input(meta, %Field{on_load: on_load, on_dump: on_dump} = field, opts) do
-    case fetch_input(meta, field) do
+  defp fetch_and_verify_input(meta, field, opts) do
+    case fetch_input(meta, field, opts) do
       :error ->
-        cond do
-          on_load && meta.operation == :load ->
-            field_handler(meta, field, nil, opts)
-          on_dump && meta.operation == :dump ->
-            field_handler(meta, field, nil, opts)
-          true -> check_required(field, :ignore, meta.operation)
-        end
+        check_required(field, :ignore, meta.operation)
+
       {:ok, nil} ->
         check_nil(meta, field, opts)
 
@@ -290,36 +255,67 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  defp fetch_input(%Meta{input: input, operation: :load}, field) do
-    fetched_input = Map.fetch(input, field.key)
-
-    if to_string(field.name) == field.key do
-      verify_double_key(fetched_input, field, input)
+  defp fetch_input(%Meta{input: input} = meta, field, opts) do
+    if has_double_key?(field, input) do
+      {:error, "field is present as atom and string keys"}
     else
-      fetched_input
+      do_fetch_input(meta, field, opts)
     end
   end
 
-  defp fetch_input(%Meta{input: input}, field) do
-    Map.fetch(input, field.name)
+  defp has_double_key?(field, input) do
+    to_string(field.name) == field.key and Map.has_key?(input, field.name) and
+      Map.has_key?(input, field.key)
   end
 
-  defp verify_double_key(:error, field, input) do
-    Map.fetch(input, field.name)
-  end
+  defp do_fetch_input(
+         %Meta{operation: :load, input: input, parent_input: parent_input} = meta,
+         %Field{on_load: on_load} = field,
+         opts
+       )
+       when not is_nil(on_load) do
+    value = get_from_key_or_name(input, field)
 
-  defp verify_double_key(fetched_input, field, input) do
-    case Map.fetch(input, field.name) do
-      {:ok, _value} ->
-        {:error, "field is present as atom and string keys"}
+    case on_load.(value, parent_input) do
+      {:ok, value} ->
+        field_handler(meta, field, value, opts)
 
-      _ ->
-        fetched_input
+      error ->
+        error
     end
   end
 
-  # defp check_required(%Field{required: true, on_load: on_load}, value, :load) when not is_nil(on_load)
-  # end
+  defp do_fetch_input(
+         %Meta{operation: :dump, input: input, parent_input: parent_input} = meta,
+         %Field{on_dump: on_dump} = field,
+         opts
+       )
+       when not is_nil(on_dump) do
+    value = get_from_key_or_name(input, field)
+
+    case on_dump.(value, parent_input) do
+      {:ok, value} ->
+        field_handler(meta, field, value, opts)
+
+      error ->
+        error
+    end
+  end
+
+  defp do_fetch_input(%Meta{input: input}, field, _opts) do
+    fetch_from_key_or_name(input, field)
+  end
+
+  defp get_from_key_or_name(input, field) do
+    Map.get(input, field.key) || Map.get(input, field.name)
+  end
+
+  defp fetch_from_key_or_name(input, field) do
+    case Map.fetch(input, field.key) do
+      :error -> Map.fetch(input, field.name)
+      value -> value
+    end
+  end
 
   defp check_required(%Field{required: true, load_default: nil}, value, :load)
        when value in [:ignore, nil] do
