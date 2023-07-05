@@ -188,6 +188,7 @@ defmodule Parameter.Schema do
   """
 
   alias Parameter.Field
+  alias Parameter.Schema.Builder
   alias Parameter.Schema.Compiler
   alias Parameter.Types
 
@@ -319,6 +320,7 @@ defmodule Parameter.Schema do
   end
 
   defdelegate compile!(opts), to: Compiler, as: :compile_schema!
+  defdelegate build!(opts), to: Builder, as: :build!
 
   defp schema(caller, block) do
     precompile =

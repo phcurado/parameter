@@ -1,9 +1,9 @@
-defmodule Parameter.Schema.Compiler do
+defmodule Parameter.Schema.Builder do
   @moduledoc false
   alias Parameter.Field
   alias Parameter.Types
 
-  def compile_schema!(schema) when is_map(schema) do
+  def build!(schema) when is_map(schema) do
     for {name, opts} <- schema do
       {type, opts} = Keyword.pop(opts, :type, :string)
       type = compile_type!(type)
@@ -17,8 +17,8 @@ defmodule Parameter.Schema.Compiler do
     end
   end
 
-  def compile_schema!(schema) when is_atom(schema) do
-    schema
+  def build!(schema) when is_atom(schema) do
+    Parameter.Schema.fields(schema)
   end
 
   defp compile_type!({type, schema}) when is_tuple(schema) do
@@ -27,7 +27,7 @@ defmodule Parameter.Schema.Compiler do
 
   defp compile_type!({type, schema}) do
     if Types.composite_type?(type) do
-      {type, compile_schema!(schema)}
+      {type, build!(schema)}
     else
       raise ArgumentError,
         message:

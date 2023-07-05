@@ -23,25 +23,6 @@ defmodule Parameter.Engine do
             cast_fields: [],
             operation: :load
 
-  def asdf() do
-    %{
-      first_name: [type: :string, key: "firstName", required: true],
-      info: [type: {:map, %{number: [type: {:array, %{number: [type: :integer]}}]}}],
-      address: [type: {:array, %{number: [type: :integer]}}]
-    }
-    |> Schema.compile!()
-    |> load(
-      %{
-        "firstName" => "Ola",
-        "info" => %{
-          "number" => [%{"number" => "2"}, %{"number" => "asdajsh"}, %{"number" => "what"}]
-        }
-      },
-      struct: true
-    )
-    |> apply_operation()
-  end
-
   @spec load(module | list(Field.t()), map(), Keyword.t()) :: t()
   def load(schema_or_fields, params, opts \\ []) do
     fields = Schema.fields(schema_or_fields)
@@ -92,13 +73,18 @@ defmodule Parameter.Engine do
   defp fetch_engine_errors(%__MODULE__{errors: errors, changes: changes}) do
     Enum.reduce(changes, errors, fn
       {field_key, values}, acc when is_list(values) ->
-        values
-        |> Enum.with_index()
-        |> Enum.filter(fn {engine, _index} -> !engine.valid? end)
-        |> Enum.map(fn {engine, index} -> %{index => engine.errors} end)
-        |> then(fn list ->
-          Map.put(acc, field_key, list)
-        end)
+        invalid_data =
+          values |> Enum.with_index() |> Enum.filter(fn {engine, _index} -> !engine.valid? end)
+
+        if Enum.empty?(invalid_data) do
+          acc
+        else
+          invalid_data
+          |> Enum.map(fn {engine, index} -> %{index => engine.errors} end)
+          |> then(fn list ->
+            Map.put(acc, field_key, list)
+          end)
+        end
 
       {field_key, %__MODULE__{valid?: false} = engine}, acc ->
         Map.merge(acc, %{field_key => fetch_engine_errors(engine)})
@@ -286,35 +272,17 @@ defmodule Parameter.Engine do
 
   defp handle_field(engine, %Field{type: {:map, schema}} = field, value, opts)
        when is_map(value) do
-    handle_field(engine, schema, value, opts) |> IO.inspect()
-    # value
-    # |> Enum.reduce(engine, fn {key, value}, engine ->
-    #   case handle_method(engine, schema, value, opts) do
-    #     %__MODULE__{valid?: false} = inner_engine ->
-    #       IO.inspect("whats happening")
-    #       IO.inspect(key)
-    #       IO.inspect(inner_engine)
+    case handle_method(engine, schema, value, opts) do
+      %__MODULE__{valid?: false} = inner_engine ->
+        %__MODULE__{
+          engine
+          | changes: Map.put(engine.changes, field.name, inner_engine),
+            valid?: false
+        }
 
-    #     %__MODULE__{valid?: true} = inner_engine ->
-    #       IO.inspect("Im valid ")
-    #       IO.inspect(key)
-    #       IO.inspect(key)
-    #       IO.inspect(inner_engine)
-    #       # add_change(engine, field.name, inner_engine)
-    #   end
-    # end)
-
-    # case handle_method(engine, schema, value, opts) do
-    #   %__MODULE__{valid?: false} = inner_engine ->
-    #     %__MODULE__{
-    #       engine
-    #       | changes: Map.put(engine.changes, field.name, inner_engine),
-    #         valid?: false
-    #     }
-
-    #   %__MODULE__{valid?: true} = inner_engine ->
-    #     add_change(engine, field.name, inner_engine)
-    # end
+      %__MODULE__{valid?: true} = inner_engine ->
+        add_change(engine, field.name, inner_engine)
+    end
   end
 
   defp handle_field(engine, %Field{name: name, type: {:map, _schema}}, _values, _opts) do
@@ -338,7 +306,6 @@ defmodule Parameter.Engine do
 
   defp handle_method(%__MODULE__{operation: :load}, {:map, schema}, params, opts) do
     load(schema, params, opts)
-    |> IO.inspect()
   end
 
   defp handle_method(%__MODULE__{operation: :load}, schema, params, opts) do
