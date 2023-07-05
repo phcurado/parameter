@@ -26,9 +26,6 @@ defmodule Parameter.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
-      ],
-      dialyzer: [
-        ignore_warnings: ".dialyzer_ignore"
       ]
     ]
   end
