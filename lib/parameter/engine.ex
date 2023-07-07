@@ -11,7 +11,7 @@ defmodule Parameter.Engine do
           changes: map(),
           errors: map(),
           cast_fields: list(atom()),
-          operation: :load | :dump | :validate
+          operation: :load | :dump | :validate | nil
         }
 
   defstruct schema: nil,
@@ -21,19 +21,50 @@ defmodule Parameter.Engine do
             changes: %{},
             errors: %{},
             cast_fields: [],
-            operation: :load
+            operation: nil
 
-  @spec load(module | list(Field.t()), map(), Keyword.t()) :: t()
-  def load(schema_or_fields, params, opts \\ []) do
-    fields = Schema.fields(schema_or_fields)
+  defguard module_or_runtime(param) when is_atom(param) or is_map(param)
+
+  @doc """
+  The cast function is the will be used for getting a schema, parameters and apply the desired operation.
+
+  ## Examples
+        defmodule UserParams do
+          use Parameter.Schema
+
+          import Parameter.Engine
+
+          param do
+            field :first_name, :string
+            field :last_name, :string
+          end
+
+          def load(params) do
+            UserParams
+            |> cast(params)
+            |> load()
+          end
+        end
+  """
+  @spec cast(module | map(), map() | list(map()), Keyword.t()) :: t()
+  def cast(schema, params, opts \\ []) when module_or_runtime(schema) do
+    compiled_schema = Schema.build!(schema)
+    fields = Schema.fields(compiled_schema)
+
+    cast_fields = Keyword.get(opts, :only, infer_cast_fields(fields))
+    cast_fields = select_valid_cast_fields(compiled_schema, cast_fields)
 
     %__MODULE__{
-      schema: Schema.module(schema_or_fields),
+      schema: Schema.module(schema),
       fields: fields,
       data: params,
-      cast_fields: infer_cast_fields(fields),
-      operation: :load
+      cast_fields: cast_fields
     }
+  end
+
+  @spec load(t(), Keyword.t()) :: t()
+  def load(%__MODULE__{} = engine, opts \\ []) do
+    %__MODULE__{engine | operation: :load}
     |> cast_and_load_params(opts)
   end
 
@@ -135,6 +166,29 @@ defmodule Parameter.Engine do
 
   defp infer_cast_fields(fields) do
     Enum.map(fields, & &1.name)
+  end
+
+  defp select_valid_cast_fields(schema, {nested_field_name, fields}) do
+    case Schema.get_field(schema, nested_field_name) do
+      %Field{type: {:map, nested_schema}} -> select_valid_cast_fields(nested_schema, fields)
+      %Field{type: {:array, nested_schema}} -> select_valid_cast_fields(nested_schema, fields)
+      _ -> []
+    end
+  end
+
+  defp select_valid_cast_fields(schema, fields) when is_list(fields) do
+    Enum.reduce(fields, [], fn
+      {field_name, _fields} = nested_field, acc ->
+        [{field_name, select_valid_cast_fields(schema, nested_field)} | acc]
+
+      field_name, acc ->
+        if Schema.get_field(schema, field_name) do
+          [field_name | acc]
+        else
+          acc
+        end
+    end)
+    |> Enum.reverse()
   end
 
   defp fetch_and_verify_input(engine, field, opts) do
@@ -305,11 +359,13 @@ defmodule Parameter.Engine do
   end
 
   defp handle_method(%__MODULE__{operation: :load}, {:map, schema}, params, opts) do
-    load(schema, params, opts)
+    cast(schema, params, opts)
+    |> load()
   end
 
   defp handle_method(%__MODULE__{operation: :load}, schema, params, opts) do
-    load(schema, params, opts)
+    cast(schema, params, opts)
+    |> load()
   end
 end
 

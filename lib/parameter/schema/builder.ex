@@ -17,7 +17,7 @@ defmodule Parameter.Schema.Builder do
     end
   end
 
-  def build!(schema) when is_atom(schema) do
+  def build!(schema) when is_atom(schema) or is_list(schema) do
     Parameter.Schema.fields(schema)
   end
 
