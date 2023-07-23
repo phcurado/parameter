@@ -1,4 +1,5 @@
 defmodule Parameter.Engine do
+  require Parameter.Schema
   alias Parameter.Field
   alias Parameter.Schema
   alias Parameter.Types
@@ -91,7 +92,7 @@ defmodule Parameter.Engine do
           end
         end
   """
-  @spec load(t(), map() | list(map()), Keyword.t()) :: t()
+  @spec load(t() | module() | map(), map() | list(map()), Keyword.t()) :: t()
   def load(engine, params, opts \\ [])
 
   def load(%__MODULE__{} = engine, params, opts) do
@@ -247,7 +248,11 @@ defmodule Parameter.Engine do
     end
   end
 
-  defp fetch_input(%__MODULE__{data: data, operation: :load}, field) do
+  defp fetch_input(%__MODULE__{data: data, operation: operation}, field) do
+    do_fetch_input(data, field, operation)
+  end
+
+  defp do_fetch_input(data, field, :load = _operation) do
     fetched_input = Map.fetch(data, field.key)
 
     if to_string(field.name) == field.key do
@@ -257,7 +262,7 @@ defmodule Parameter.Engine do
     end
   end
 
-  defp fetch_input(%__MODULE__{data: data}, field) do
+  defp do_fetch_input(data, field, _operation) do
     Map.fetch(data, field.name)
   end
 
@@ -339,41 +344,18 @@ defmodule Parameter.Engine do
     engine
   end
 
-  defp handle_field(engine, %Field{type: {:array, nested_fields}} = field, values, opts)
+  defp handle_field(engine, %Field{type: {:array, _nested_fields}} = field, values, opts)
        when is_list(values) do
-    values
-    |> Enum.reverse()
-    |> Enum.reduce(engine, fn value, engine ->
-      case handle_method(engine, {:array, nested_fields}, value, opts) do
-        %__MODULE__{valid?: false} = inner_engine ->
-          field_changes = get_change(engine, field.name) || []
-          engine = add_change(engine, field.name, [inner_engine | field_changes])
-          %__MODULE__{engine | valid?: false}
-
-        %__MODULE__{valid?: true} = inner_engine ->
-          field_changes = get_change(engine, field.name) || []
-          add_change(engine, field.name, [inner_engine | field_changes])
-      end
-    end)
+    do_load_assoc(engine, field, values, opts)
   end
 
   defp handle_field(engine, %Field{name: name, type: {:array, _schema}}, _values, _opts) do
     add_error(engine, name, "invalid array type")
   end
 
-  defp handle_field(engine, %Field{type: {:map, nested_fields}} = field, value, opts)
+  defp handle_field(engine, %Field{type: {:map, _nested_fields}} = field, value, opts)
        when is_map(value) do
-    case handle_method(engine, {:map, nested_fields}, value, opts) do
-      %__MODULE__{valid?: false} = inner_engine ->
-        %__MODULE__{
-          engine
-          | changes: Map.put(engine.changes, field.name, inner_engine),
-            valid?: false
-        }
-
-      %__MODULE__{valid?: true} = inner_engine ->
-        add_change(engine, field.name, inner_engine)
-    end
+    do_load_assoc(engine, field, value, opts)
   end
 
   defp handle_field(engine, %Field{name: name, type: {:map, _schema}}, _values, _opts) do
@@ -395,20 +377,68 @@ defmodule Parameter.Engine do
     end
   end
 
-  defp handle_method(%__MODULE__{operation: :load}, {_nested_type, schema}, params, opts) do
-    fields = Schema.fields(schema)
+  defp do_load_assoc(
+         %__MODULE__{operation: :load} = engine,
+         %Field{type: {:map, nested_fields}} = field,
+         value,
+         opts
+       ) do
+    schema = get_schema_from_nested_assoc(engine, field)
 
     %__MODULE__{
       schema: Schema.module(schema),
-      fields: fields,
-      cast_fields: infer_cast_fields(fields)
+      fields: nested_fields,
+      cast_fields: infer_cast_fields(nested_fields)
     }
-    |> load(params, opts)
+    |> load(value, opts)
+    |> case do
+      %__MODULE__{valid?: false} = inner_engine ->
+        %__MODULE__{
+          engine
+          | changes: Map.put(engine.changes, field.name, inner_engine),
+            valid?: false
+        }
+
+      %__MODULE__{valid?: true} = inner_engine ->
+        add_change(engine, field.name, inner_engine)
+    end
   end
 
-  defp handle_method(%__MODULE__{operation: :load} = engine, schema, params, opts) do
-    engine
-    |> load(params, opts)
+  defp do_load_assoc(
+         %__MODULE__{operation: :load} = engine,
+         %Field{type: {:array, nested_fields}} = field,
+         values,
+         opts
+       ) do
+    schema = get_schema_from_nested_assoc(engine, field)
+
+    values
+    |> Enum.reverse()
+    |> Enum.reduce(engine, fn value, engine ->
+      %__MODULE__{
+        schema: schema,
+        fields: nested_fields,
+        cast_fields: infer_cast_fields(nested_fields)
+      }
+      |> load(value, opts)
+      |> case do
+        %__MODULE__{valid?: false} = inner_engine ->
+          field_changes = get_change(engine, field.name) || []
+          engine = add_change(engine, field.name, [inner_engine | field_changes])
+          %__MODULE__{engine | valid?: false}
+
+        %__MODULE__{valid?: true} = inner_engine ->
+          field_changes = get_change(engine, field.name) || []
+          add_change(engine, field.name, [inner_engine | field_changes])
+      end
+    end)
+  end
+
+  defp get_schema_from_nested_assoc(engine, field) do
+    if runtime_schema = engine.schema && Schema.runtime_schema(engine.schema) do
+      {_nested, schema} = Map.get(runtime_schema, field.name) |> Keyword.get(:type)
+      schema
+    end
   end
 end
 

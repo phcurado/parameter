@@ -93,7 +93,7 @@ defmodule Parameter.EngineTest do
                      schema: NestedSchema.Address,
                      changes: %{street: "some street", number: 4, state: "state"},
                      data: %{"street" => "some street", "number" => 4, "state" => "state"},
-                     cast_fields: [:street, :number, :state],
+                     cast_fields: [:state, :number, :street],
                      fields: Schema.fields(NestedSchema.Address),
                      operation: :load
                    }
