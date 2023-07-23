@@ -6,76 +6,115 @@ defmodule Parameter.EngineTest do
   alias Parameter.Factory.NestedSchema
   alias Parameter.Factory.SimpleSchema
 
-  describe "cast/3" do
-    import Parameter.Engine
-
-    test "cast simple schema" do
-      params = %{}
+  describe "build/1" do
+    test "build %Engine{} with runtime or compile time schemas" do
       field_names = Schema.field_names(SimpleSchema)
       fields = Schema.fields(SimpleSchema)
 
       assert %Engine{
                schema: SimpleSchema,
                cast_fields: field_names,
-               changes: params,
-               data: params,
                fields: fields
-             } == cast(SimpleSchema, params)
+             } == Engine.build(SimpleSchema)
 
       assert %Engine{
                schema: nil,
                cast_fields: field_names,
-               changes: params,
-               data: params,
                fields: fields
-             } == cast(Schema.runtime_schema(SimpleSchema), params)
+             } == Engine.build(Schema.runtime_schema(SimpleSchema))
     end
 
-    test "cast only a few fields" do
-      params = %{}
+    test "create engine with only a few fields" do
+      engine = Engine.build(SimpleSchema)
 
       assert %Engine{cast_fields: [:first_name, :last_name]} =
-               cast(SimpleSchema, params, only: [:first_name, :last_name])
+               Engine.cast_only(engine, [:first_name, :last_name])
 
-      assert %Engine{cast_fields: [:age]} =
-               cast(Schema.runtime_schema(SimpleSchema), params, only: [:age])
+      assert %Engine{cast_fields: [:age]} = Engine.cast_only(engine, [:age])
+      assert %Engine{cast_fields: []} = Engine.cast_only(engine, [:not_a_field])
+    end
+  end
 
-      assert %Engine{cast_fields: []} =
-               cast(Schema.runtime_schema(SimpleSchema), params, only: [:not_a_field])
+  describe "load/3" do
+    import Parameter.Engine
+
+    test "load fields in a simple schema" do
+      field_names = Schema.field_names(SimpleSchema)
+      fields = Schema.fields(SimpleSchema)
+      params = %{"firstName" => "John", "lastName" => "Doe", "age" => "40"}
+
+      assert %Engine{
+               schema: SimpleSchema,
+               changes: %{first_name: "John", last_name: "Doe", age: 40},
+               data: params,
+               cast_fields: field_names,
+               fields: fields,
+               operation: :load
+             } ==
+               SimpleSchema
+               |> build()
+               |> load(params)
     end
 
-    test "cast nested schema" do
-      params = %{}
+    test "filtering fields on simple schema" do
+      fields = Schema.fields(SimpleSchema)
+      params = %{"firstName" => "John", "lastName" => "Doe", "age" => "40"}
+
+      assert %Engine{
+               schema: SimpleSchema,
+               changes: %{first_name: "John", last_name: "Doe"},
+               data: params,
+               cast_fields: [:first_name, :last_name],
+               fields: fields,
+               operation: :load
+             } ==
+               SimpleSchema
+               |> build()
+               |> cast_only([:first_name, :last_name])
+               |> load(params)
+    end
+
+    test "load fields in a nested schema" do
       field_names = Schema.field_names(NestedSchema)
       fields = Schema.fields(NestedSchema)
 
+      params = %{
+        "addresses" => [
+          %{"street" => "some street", "number" => 4, "state" => "state"}
+        ],
+        "phone" => %{"code" => 1, "number" => "123123"}
+      }
+
       assert %Engine{
                schema: NestedSchema,
-               cast_fields: field_names,
-               changes: params,
+               changes: %{
+                 addresses: [
+                   %Engine{
+                     schema: NestedSchema.Address,
+                     changes: %{street: "some street", number: 4, state: "state"},
+                     data: %{"street" => "some street", "number" => 4, "state" => "state"},
+                     cast_fields: [:street, :number, :state],
+                     fields: Schema.fields(NestedSchema.Address),
+                     operation: :load
+                   }
+                 ],
+                 phone: %Engine{
+                   schema: NestedSchema.Phone,
+                   changes: %{code: "1", number: "123123"},
+                   data: %{"code" => 1, "number" => "123123"},
+                   cast_fields: [:code, :number],
+                   fields: Schema.fields(NestedSchema.Phone),
+                   operation: :load
+                 }
+               },
                data: params,
-               fields: fields
-             } == cast(NestedSchema, params)
-
-      assert %Engine{
-               schema: nil,
                cast_fields: field_names,
-               changes: params,
-               data: params,
-               fields: fields
-             } == cast(Schema.runtime_schema(NestedSchema), params)
-    end
-
-    test "cast only a few nested fields" do
-      params = %{}
-
-      assert %Engine{cast_fields: [{:addresses, [:street, :state]}]} =
-               cast(NestedSchema, params, only: [{:addresses, [:street, :state]}])
-
-      assert %Engine{cast_fields: [{:phone, [:number]}]} =
-               cast(Schema.runtime_schema(NestedSchema), params,
-                 only: [{:phone, [:number, :not_a_field]}]
-               )
+               fields: fields,
+               operation: :load
+             } ==
+               NestedSchema
+               |> build()
+               |> load(params)
     end
   end
 end

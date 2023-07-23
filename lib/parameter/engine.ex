@@ -7,7 +7,7 @@ defmodule Parameter.Engine do
           schema: module() | nil,
           fields: list(Field.t()),
           valid?: boolean(),
-          data: map(),
+          data: map() | nil,
           changes: map(),
           errors: map(),
           cast_fields: list(atom()),
@@ -26,9 +26,54 @@ defmodule Parameter.Engine do
   defguard module_or_runtime(param) when is_atom(param) or is_map(param)
 
   @doc """
-  The cast function is the will be used for getting a schema, parameters and apply the desired operation.
+  Build compiles the schema and automatically fetch which fields will be casted during the
+  `load`, `dump` or `validate` functions.
+
+  It can be used as the starting point for building your schema logic.
 
   ## Examples
+
+  Using the given schema as example on how to load parameters and modifying the logic
+  to only load the `:first_name` field.
+
+        defmodule UserSchema do
+          use Parameter.Schema
+          import Parameter.Engine
+
+          param do
+            field :first_name, :string
+            field :last_name, :string
+          end
+
+          def load(params \\ %{}) do
+            __MODULE__
+            |> build()
+            |> cast_only([:first_name])
+            |> load(params)
+          end
+        end
+
+  """
+  @spec build(module | map()) :: t()
+  def build(schema) when module_or_runtime(schema) do
+    compiled_schema = Schema.build!(schema)
+    fields = Schema.fields(compiled_schema)
+
+    %__MODULE__{
+      schema: Schema.module(schema),
+      fields: fields,
+      cast_fields: infer_cast_fields(fields)
+    }
+  end
+
+  @spec cast_only(t(), list(atom() | tuple())) :: t()
+  def cast_only(%__MODULE__{} = engine, fields) when is_list(fields) do
+    cast_fields = select_valid_cast_fields(engine.fields, fields)
+    %__MODULE__{engine | cast_fields: cast_fields}
+  end
+
+  @doc """
+    ## Example
         defmodule UserParams do
           use Parameter.Schema
 
@@ -41,31 +86,23 @@ defmodule Parameter.Engine do
 
           def load(params) do
             UserParams
-            |> cast(params)
-            |> load()
+            |> build()
+            |> load(params)
           end
         end
   """
-  @spec cast(module | map(), map() | list(map()), Keyword.t()) :: t()
-  def cast(schema, params, opts \\ []) when module_or_runtime(schema) do
-    compiled_schema = Schema.build!(schema)
-    fields = Schema.fields(compiled_schema)
+  @spec load(t(), map() | list(map()), Keyword.t()) :: t()
+  def load(engine, params, opts \\ [])
 
-    cast_fields = Keyword.get(opts, :only, infer_cast_fields(fields))
-    cast_fields = select_valid_cast_fields(compiled_schema, cast_fields)
-
-    %__MODULE__{
-      schema: Schema.module(schema),
-      fields: fields,
-      data: params,
-      cast_fields: cast_fields
-    }
+  def load(%__MODULE__{} = engine, params, opts) do
+    %__MODULE__{engine | data: params, operation: :load}
+    |> cast_and_load_params(opts)
   end
 
-  @spec load(t(), Keyword.t()) :: t()
-  def load(%__MODULE__{} = engine, opts \\ []) do
-    %__MODULE__{engine | operation: :load}
-    |> cast_and_load_params(opts)
+  def load(schema, params, opts) when module_or_runtime(schema) do
+    schema
+    |> build()
+    |> load(params, opts)
   end
 
   def apply_operation(%__MODULE__{} = engine) do
@@ -159,13 +196,13 @@ defmodule Parameter.Engine do
 
   defp cast_params(%__MODULE__{fields: fields, cast_fields: cast_fields} = engine, opts) do
     Enum.reduce(cast_fields, engine, fn field_name, engine ->
-      field = Enum.find(fields, &(&1.name == field_name))
+      field = Schema.get_field(fields, field_name)
       fetch_and_verify_input(engine, field, opts)
     end)
   end
 
   defp infer_cast_fields(fields) do
-    Enum.map(fields, & &1.name)
+    Schema.field_names(fields)
   end
 
   defp select_valid_cast_fields(schema, {nested_field_name, fields}) do
@@ -302,12 +339,12 @@ defmodule Parameter.Engine do
     engine
   end
 
-  defp handle_field(engine, %Field{type: {:array, schema}} = field, values, opts)
+  defp handle_field(engine, %Field{type: {:array, nested_fields}} = field, values, opts)
        when is_list(values) do
     values
     |> Enum.reverse()
     |> Enum.reduce(engine, fn value, engine ->
-      case handle_method(engine, schema, value, opts) do
+      case handle_method(engine, {:array, nested_fields}, value, opts) do
         %__MODULE__{valid?: false} = inner_engine ->
           field_changes = get_change(engine, field.name) || []
           engine = add_change(engine, field.name, [inner_engine | field_changes])
@@ -324,9 +361,9 @@ defmodule Parameter.Engine do
     add_error(engine, name, "invalid array type")
   end
 
-  defp handle_field(engine, %Field{type: {:map, schema}} = field, value, opts)
+  defp handle_field(engine, %Field{type: {:map, nested_fields}} = field, value, opts)
        when is_map(value) do
-    case handle_method(engine, schema, value, opts) do
+    case handle_method(engine, {:map, nested_fields}, value, opts) do
       %__MODULE__{valid?: false} = inner_engine ->
         %__MODULE__{
           engine
@@ -358,14 +395,20 @@ defmodule Parameter.Engine do
     end
   end
 
-  defp handle_method(%__MODULE__{operation: :load}, {:map, schema}, params, opts) do
-    cast(schema, params, opts)
-    |> load()
+  defp handle_method(%__MODULE__{operation: :load}, {_nested_type, schema}, params, opts) do
+    fields = Schema.fields(schema)
+
+    %__MODULE__{
+      schema: Schema.module(schema),
+      fields: fields,
+      cast_fields: infer_cast_fields(fields)
+    }
+    |> load(params, opts)
   end
 
-  defp handle_method(%__MODULE__{operation: :load}, schema, params, opts) do
-    cast(schema, params, opts)
-    |> load()
+  defp handle_method(%__MODULE__{operation: :load} = engine, schema, params, opts) do
+    engine
+    |> load(params, opts)
   end
 end
 

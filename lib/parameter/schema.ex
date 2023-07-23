@@ -430,7 +430,7 @@ defmodule Parameter.Schema do
   end
 
   def field_names(fields) when is_list(fields) do
-    Enum.map(fields, & &1.names)
+    Enum.map(fields, & &1.name)
   end
 
   def runtime_schema(module) when is_atom(module) do
