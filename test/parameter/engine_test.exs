@@ -117,4 +117,70 @@ defmodule Parameter.EngineTest do
                |> load(params)
     end
   end
+
+  describe "apply_operation/1" do
+    import Parameter.Engine
+
+    test "load operation on SimpleSchema" do
+      params = %{"firstName" => "John", "lastName" => "Doe", "age" => "22"}
+
+      assert {:ok, %{first_name: "John", last_name: "Doe", age: 22}} ==
+               SimpleSchema
+               |> load(params)
+               |> apply_operation()
+    end
+
+    test "validate on SimpleSchema" do
+      params = %{"lastName" => "Doe", "age" => "22a"}
+
+      assert {:error, %{first_name: "is required", age: "invalid integer type"}} ==
+               SimpleSchema
+               |> load(params)
+               |> apply_operation()
+    end
+
+    test "load operation on NestedSchema" do
+      params = %{
+        "addresses" => [
+          %{"street" => "some street", "number" => 1, "state" => "some state"},
+          %{"street" => "other street", "number" => 5, "state" => "other state"}
+        ],
+        "phone" => %{"code" => 55, "number" => "123555"}
+      }
+
+      assert {:ok,
+              %{
+                addresses: [
+                  %{state: "some state", number: 1, street: "some street"},
+                  %{state: "other state", number: 5, street: "other street"}
+                ],
+                phone: %{code: "55", number: "123555"}
+              }} ==
+               NestedSchema
+               |> load(params)
+               |> apply_operation()
+    end
+
+    test "validate on NestedSchema" do
+      params = %{
+        "addresses" => [
+          %{"street" => "some street", "number" => "1A"},
+          %{"number" => 5, "state" => "other state"}
+        ],
+        "phone" => %{"code" => 55}
+      }
+
+      assert {:error,
+              %{
+                addresses: [
+                  %{0 => %{number: "invalid integer type"}},
+                  %{1 => %{street: "is required"}}
+                ],
+                phone: %{number: "is required"}
+              }} ==
+               NestedSchema
+               |> load(params)
+               |> apply_operation()
+    end
+  end
 end
