@@ -15,12 +15,12 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: '1.14'
-              otp: '24.3'
-            lint: lint
-          - pair:
               elixir: '1.15'
               otp: '25.3'
+            lint: lint
+          - pair:
+              elixir: '1.16'
+              otp: '26.1'
             lint: lint
 
     runs-on: ubuntu-latest
