@@ -1,4 +1,105 @@
 defmodule Parameter.Engine do
+  @moduledoc """
+  `Parameter.Engine` are the building blocks for the serializing and deserializing parameters.
+  `Parameter.load/3`, `Parameter.validate/3` and `Parameter.dump/3` functions are powered by the
+  functions of this module. The main `Parameter` API will be enough for most of the cases but for a more
+  declarative and custom approach, `Parameter.Engine` is highly recommended.
+
+  Let's use `Parameter.Engine` for a given schema:
+
+      defmodule MyApp.UserParams do
+        use Parameter.Schema
+
+        param do
+          field :first_name, :string, required: true
+          field :last_name, :string, required: true
+          field :age, :integer, default: 0
+          has_one :address, AddressParam, required: true do
+            field :street, :string, required: true
+            field :number, :integer
+          end
+        end
+      end
+
+  This schema is straightforward to understand how it should behave when parsing but it's also very strict since it
+  doesn't allow any customization. For example imagine we want to use the same schema but with different parsing logic,
+  like in a Phoenix application where it's API have one endpoint where `first_name` is a required field but another
+  endpoint the same schema should have the `first_name` as an optional field. This is possible to do with the Runtime
+  Schemas by manually modifying a map schema to put required `true` or `false`. It would work but it's not the most
+  straightforward solution. `Parameter.Engine` helps by making it declarative how the schema should be parsed.
+
+  ## Example
+  Considering the above example, we can make a more generic schema by dropping the required and default keys:
+
+        defmodule MyApp.UserParams do
+          use Parameter.Schema
+
+          alias Parameter.Engine
+
+          param do
+            field :first_name, :string
+            field :last_name, :string
+            field :age, :integer
+            has_one :address, AddressParam do
+              field :street, :string
+              field :number, :integer
+            end
+          end
+
+          def load(params) do
+            __MODULE__
+            |> Engine.load_params(params)
+            |> Engine.validate_required([:first_name, :last_name])
+            |> Engine.add_default(:age, 0)
+            |> Engine.load_nested_param(:address, &load_address/1)
+            |> Engine.load()
+          end
+
+          defp load_address(params) do
+            __MODULE__.AddressParam
+            |> Engine.load_params(params)
+            |> Engine.validate_required([:street])
+            |> Engine.load()
+          end
+        end
+
+
+  You can also customize a schema with the `required` or `default` options with the declarative approach and the `Parameter.Engine`
+  will use what's declared under the schema unless it's explicit set in the `Engine` to change the behaviour like
+  having conflicting `default` option in the schema and in the `Engine`. Parameter will favour what is declared in the `Engine`
+  when there is conflicting options.
+
+  The example below shows the usage of the `MyApp.UserParams` in a Phoenix controller:
+
+        defmodule MyAppWeb.UserController do
+          use MyAppWeb, :controller
+
+          alias MyApp.UserParams
+          alias MyApp.Users
+
+          def create(conn, %{"user" => user_params}) do
+            with {:ok, user_loaded_params} <- UserParams.load(user_params),
+                 {:ok, user} <- Users.create(user_loaded_params) do
+
+                  json(conn
+                  |> put_status(:created)
+                  |> json(%{user: user})
+
+            else
+              {:error, %Ecto.Changeset{}} = error ->
+                # Changeset errors
+                error
+              {:error, reason} ->
+                # Parameter errors
+                {:error, reason}
+            end
+          end
+        end
+
+  In case we need different ways for loading in different controllers, this is also possible by implementing
+  the `Engine` parsing logic in the module that requires thhe specific logic.
+
+  """
   require Parameter.Schema
   alias Parameter.Field
   alias Parameter.Schema
