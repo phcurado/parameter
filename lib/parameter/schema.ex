@@ -406,6 +406,18 @@ defmodule Parameter.Schema do
         param do
           unquote(block)
         end
+
+        @doc false
+        @spec load(map() | list(map()), Keyword.t()) :: {:ok, any()} | {:error, any()}
+        def load(input, opts \\ []), do: Parameter.load(__MODULE__, input, opts)
+
+        @doc false
+        @spec dump(map() | list(map), Keyword.t()) :: {:ok, any()} | {:error, any()}
+        def dump(input, opts \\ []), do: Parameter.dump(__MODULE__, input, opts)
+
+        @doc false
+        @spec validate(map() | list(map), Keyword.t()) :: :ok | {:error, any()}
+        def validate(input, opts \\ []), do: Parameter.load(__MODULE__, input, opts)
       end
 
     module_name = Module.concat(env.module, module_name)

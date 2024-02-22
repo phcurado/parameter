@@ -111,11 +111,30 @@ defmodule Parameter.SchemaTest do
     import Parameter.Schema
 
     param ModuleSchema do
-      field :first_name, :string
+      field :first_name, :string, required: true
     end
 
     test "module schema schema fields" do
       assert [%Parameter.Field{}] = Schema.fields(__MODULE__.ModuleSchema)
+    end
+
+    test "module schema has validate/1 and validate/2" do
+      assert {:ok, %{first_name: "aaron"}} ==
+               __MODULE__.ModuleSchema.validate(%{"first_name" => "aaron"}, [])
+
+      assert {:error, %{first_name: "is required"}} == __MODULE__.ModuleSchema.validate(%{})
+    end
+
+    test "module schema has load/1 and load/2" do
+      assert {:ok, %__MODULE__.ModuleSchema{first_name: "aaron"}} ==
+               __MODULE__.ModuleSchema.load(%{"first_name" => "aaron"}, struct: true)
+
+      assert {:error, %{first_name: "is required"}} == __MODULE__.ModuleSchema.load(%{})
+    end
+
+    test "module schema has dump/2" do
+      assert {:ok, %{"first_name" => "aaron"}} ==
+               __MODULE__.ModuleSchema.dump(%{first_name: "aaron"}, [])
     end
 
     test "runtime schema fields" do
