@@ -46,11 +46,11 @@ defmodule Parameter.Field do
   defstruct [
     :name,
     :key,
-    :default,
-    :load_default,
-    :dump_default,
     :on_load,
     :on_dump,
+    default: :ignore,
+    load_default: :ignore,
+    dump_default: :ignore,
     type: :string,
     required: false,
     validator: nil,
@@ -95,9 +95,9 @@ defmodule Parameter.Field do
 
   defp do_new(opts) do
     name = Keyword.fetch!(opts, :name)
-    default = Keyword.get(opts, :default)
-    load_default = Keyword.get(opts, :load_default)
-    dump_default = Keyword.get(opts, :dump_default)
+    default = Keyword.get(opts, :default, :ignore)
+    load_default = Keyword.get(opts, :load_default, :ignore)
+    dump_default = Keyword.get(opts, :dump_default, :ignore)
     on_load = Keyword.get(opts, :on_load)
     on_dump = Keyword.get(opts, :on_dump)
     required = Keyword.get(opts, :required, false)
@@ -130,7 +130,7 @@ defmodule Parameter.Field do
     end
   end
 
-  defp fetch_default(opts, default, nil, nil) when not is_nil(default) do
+  defp fetch_default(opts, default, :ignore, :ignore) when default != :ignore do
     opts =
       opts
       |> Keyword.put(:load_default, default)
@@ -139,7 +139,7 @@ defmodule Parameter.Field do
     {:ok, opts}
   end
 
-  defp fetch_default(opts, nil, _load_default, _dump_default) do
+  defp fetch_default(opts, :ignore, _load_default, _dump_default) do
     {:ok, opts}
   end
 

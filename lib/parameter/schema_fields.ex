@@ -317,21 +317,21 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  defp check_required(%Field{required: true, load_default: nil}, value, :load)
+  defp check_required(%Field{required: true, load_default: :ignore}, value, :load)
        when value in [:ignore, nil] do
     {:error, "is required"}
   end
 
-  defp check_required(%Field{required: true, dump_default: nil}, value, :validate)
+  defp check_required(%Field{required: true, dump_default: :ignore}, value, :validate)
        when value in [:ignore, nil] do
     {:error, "is required"}
   end
 
-  defp check_required(%Field{load_default: default}, :ignore, :load) when not is_nil(default) do
+  defp check_required(%Field{load_default: default}, :ignore, :load) when default != :ignore do
     {:ok, default}
   end
 
-  defp check_required(%Field{dump_default: default}, :ignore, :dump) when not is_nil(default) do
+  defp check_required(%Field{dump_default: default}, :ignore, :dump) when default != :ignore do
     {:ok, default}
   end
 

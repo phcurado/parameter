@@ -16,9 +16,9 @@ defmodule Parameter.SchemaTest do
         %Field{
           name: :first_name,
           key: "firstName",
-          default: nil,
-          load_default: nil,
-          dump_default: nil,
+          default: :ignore,
+          load_default: :ignore,
+          dump_default: :ignore,
           type: :string,
           required: true,
           validator: nil,
@@ -27,18 +27,18 @@ defmodule Parameter.SchemaTest do
         %Field{
           name: :address,
           key: "address",
-          default: nil,
-          load_default: nil,
-          dump_default: nil,
+          default: :ignore,
+          load_default: :ignore,
+          dump_default: :ignore,
           type:
             {:map,
              [
                %Field{
                  name: :street,
                  key: "street",
-                 default: nil,
-                 load_default: nil,
-                 dump_default: nil,
+                 default: :ignore,
+                 load_default: :ignore,
+                 dump_default: :ignore,
                  type: :string,
                  required: true,
                  validator: nil,
@@ -52,18 +52,18 @@ defmodule Parameter.SchemaTest do
         %Field{
           name: :phones,
           key: "phones",
-          default: nil,
-          load_default: nil,
-          dump_default: nil,
+          default: :ignore,
+          load_default: :ignore,
+          dump_default: :ignore,
           type:
             {:array,
              [
                %Field{
                  name: :country,
                  key: "country",
-                 default: nil,
-                 load_default: nil,
-                 dump_default: nil,
+                 default: :ignore,
+                 load_default: :ignore,
+                 dump_default: :ignore,
                  type: :string,
                  required: true,
                  validator: nil,

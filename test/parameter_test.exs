@@ -1303,6 +1303,27 @@ defmodule ParameterTest do
       assert {:error, %{name: "this input will always load error"}} ==
                Parameter.load(schema, %{name: "name"})
     end
+
+    test "different nil values as defaults behaviour" do
+      schema =
+        %{
+          no_default: [
+            type: :string
+          ],
+          first_name_nil: [
+            type: :string,
+            default: nil
+          ],
+          last_name_empty: [
+            type: :string,
+            default: ""
+          ]
+        }
+        |> Schema.compile!()
+
+      assert {:ok, %{first_name_nil: nil, last_name_empty: ""}} ==
+               Parameter.load(schema, %{})
+    end
   end
 
   describe "dump/3" do

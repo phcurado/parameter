@@ -47,7 +47,7 @@ defmodule Parameter.Schema.Compiler do
          do: validate_default(field, dump_default)
   end
 
-  defp validate_default(_field, nil) do
+  defp validate_default(_field, default) when default in [nil, :ignore] do
     :ok
   end
 
