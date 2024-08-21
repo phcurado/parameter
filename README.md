@@ -8,14 +8,14 @@
 [![HexDocs.pm](https://img.shields.io/badge/Docs-HexDocs-blue)](https://hexdocs.pm/parameter)
 [![License](https://img.shields.io/hexpm/l/parameter.svg)](https://hex.pm/packages/parameter)
 
-
 `Parameter` helps you shape data from external sources into Elixir internal types. Use it to deal with any external data in general, such as API integrations, parsing user input, or validating data that comes into your system.
 
-  `Parameter` offers the following helpers:
-  - Schema creation and validation
-  - Input data validation
-  - Deserialization
-  - Serialization
+`Parameter` offers the following helpers:
+
+- Schema creation and validation
+- Input data validation
+- Deserialization
+- Serialization
 
 ## Examples
 
@@ -79,13 +79,12 @@ Parameter offers a similar Schema model from [Ecto](https://github.com/elixir-ec
 
 ## Installation
 
-
 Add `parameter` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:parameter, "~> 0.13"}
+    {:parameter, "~> 0.14"}
   ]
 end
 ```
@@ -145,7 +144,7 @@ defmodule MyProjectWeb.UserController do
 
   def create(conn, params) do
     with {:ok, user_request} <- Parameter.load(__MODULE__.UserCreateRequest, params),
-          {:ok, %User{} = user} <- Accounts.create_user(user_request), 
+          {:ok, %User{} = user} <- Accounts.create_user(user_request),
           {:ok, user_response} <- Parameter.dump(__MODULE__.UserCreateResponse, user) do
 
         conn
@@ -172,7 +171,6 @@ schema = %{
 Parameter.load(schema, %{"firstName" => "John"})
 {:ok, %{first_name: "John"}}
 ```
-
 
 The same API can also be evaluated on compile time by using module attributes:
 
@@ -254,3 +252,4 @@ For more info on how to create schemas, check the [schema documentation](https:/
 Copyright (c) 2022, Paulo Curado.
 
 Parameter source code is licensed under the Apache 2.0 License.
+
