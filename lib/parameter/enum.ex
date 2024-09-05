@@ -26,6 +26,12 @@ defmodule Parameter.Enum do
       Parameter.dump(MyApp.UserParam, %{first_name: "John", status: :user_online})
       {:ok, %{"firstName" => "John", "status" => "userOnline"}}
 
+
+  > #### `Using enum` {: .info}
+  >
+  > When you use the `enum` macro, `Parameter` creates a module under the hood, injecting under the current module.
+  > For this reason, when referencing the enum in a Parameter field, it's required to use the full module name as shown in the examples.
+
     Enum also supports a shorter version if the key and value are already the same:
 
       defmodule MyApp.UserParam do
