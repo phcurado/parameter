@@ -78,6 +78,43 @@ defmodule Parameter.Enum do
     And the short version:
 
       enum values: [:user_online,  :user_offline]
+
+
+  ## Dump and validate
+
+  Enums can also be used for validate and dump the data. The `Parameter.validate/3` function will do strict validation, checking if the value correspond to the enum values, which are internally stored as atoms.
+  `Parameter.dump/3` will stringify the enum atom value. By design the `Parameter.dump/3` doesn't perform strict validations but for enums, it checks at least if the value exists in the enum definition before dumping.
+
+  Consider the following `Parameter.Enum` implementation:
+
+      defmodule Currency do
+        use Parameter.Schema
+        enum Currencies, values: [:EUR, :USD]
+        
+        param do
+          field :currency, __MODULE__.Currencies
+        end
+      end
+
+  It's possible to check if the value provided it's a valid enum in parameter:
+
+      iex> Parameter.validate(Currency, %{currency: :EUR})
+      :ok
+      iex> Parameter.validate(Currency, %{currency: :BRL})
+      {:error, %{currency: "invalid enum type"}}
+      # Using the string version should also return an error since it's expected enum values to be atoms
+      iex> Parameter.validate(Currency, %{currency: "EUR"})
+      {:error, %{currency: "invalid enum type"}}
+
+  And for dump the data:
+
+      iex> Parameter.dump(Currency, %{currency: :EUR})
+      {:ok, %{"currency" => "EUR"}}
+      iex> Parameter.dump(Currency, %{currency: :BRL})
+      {:error, %{currency: "invalid enum type"}}
+      # Using the string version should also return an error since it's expected enum values to be atoms
+      iex> Parameter.dump(Currency, %{currency: "EUR"})
+      {:error, %{currency: "invalid enum type"}}
   """
 
   @doc false
