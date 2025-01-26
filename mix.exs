@@ -9,6 +9,7 @@ defmodule Parameter.MixProject do
       app: :parameter,
       version: @version,
       elixir: "~> 1.13",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
 
@@ -35,6 +36,9 @@ defmodule Parameter.MixProject do
       extra_applications: [:logger]
     ]
   end
+
+  defp elixirc_paths(env) when env in [:test], do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   defp deps do
     [
