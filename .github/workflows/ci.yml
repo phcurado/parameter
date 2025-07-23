@@ -15,12 +15,11 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: '1.15'
-              otp: '25.3'
-            lint: lint
+              elixir: "1.16"
+              otp: "26.1"
           - pair:
-              elixir: '1.16'
-              otp: '26.1'
+              elixir: "1.18"
+              otp: "27.2"
             lint: lint
 
     runs-on: ubuntu-latest
@@ -33,7 +32,7 @@ jobs:
           otp-version: ${{matrix.pair.otp}}
           elixir-version: ${{matrix.pair.elixir}}
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: |
             deps

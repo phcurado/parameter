@@ -164,7 +164,7 @@ defmodule ParameterTest do
       field :email, :string, validator: &Validators.email/1
       field :age, :integer, validator: {&Validators.length/2, min: 18, max: 72}
       field :code, :string, validator: {&Validators.regex/2, regex: ~r/code/}
-      field :user_code, :string, validator: {&__MODULE__.is_equal/2, to: "0000"}
+      field :user_code, :string, validator: {&__MODULE__.equal?/2, to: "0000"}
 
       field :status, __MODULE__.Status,
         required: true,
@@ -180,7 +180,7 @@ defmodule ParameterTest do
       end
     end
 
-    def is_equal(value, to: to_value) do
+    def equal?(value, to: to_value) do
       if value == to_value do
         :ok
       else
