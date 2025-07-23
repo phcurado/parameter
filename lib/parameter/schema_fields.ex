@@ -109,12 +109,12 @@ defmodule Parameter.SchemaFields do
     case operation_handler(meta, field, value, opts) do
       {:ok, value} ->
         validator
-        |> run_validator(value)
+        |> run_validator(value, meta.parent_input)
         |> parse_validator_result(operation)
 
       :ok ->
         validator
-        |> run_validator(value)
+        |> run_validator(value, meta.parent_input)
         |> parse_validator_result(operation)
 
       error ->
@@ -178,15 +178,27 @@ defmodule Parameter.SchemaFields do
     end
   end
 
-  defp run_validator({func, args}, value) do
-    case apply(func, [value | [args]]) do
+  defp run_validator({func, args}, value, _parent_input) when is_function(func, 2),
+    do: do_run_validator(func, [value | [args]])
+
+  defp run_validator({func, args}, value, parent_input) when is_function(func, 3),
+    do: do_run_validator(func, [value, parent_input | [args]])
+
+  defp run_validator(func, value, _parent_input) when is_function(func, 1),
+    do: do_run_validator(func, [value])
+
+  defp run_validator(func, value, parent_input) when is_function(func, 2),
+    do: do_run_validator(func, [value, parent_input])
+
+  defp run_validator(func, value, parent_input) do
+    case func.(value, parent_input) do
       :ok -> {:ok, value}
       error -> error
     end
   end
 
-  defp run_validator(func, value) do
-    case func.(value) do
+  defp do_run_validator(validator, [value | _] = args) do
+    case apply(validator, args) do
       :ok -> {:ok, value}
       error -> error
     end
