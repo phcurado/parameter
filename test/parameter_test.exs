@@ -189,6 +189,68 @@ defmodule ParameterTest do
     end
   end
 
+  defmodule CrossFieldValidatorSchema do
+    use Parameter.Schema
+    alias Parameter.Validators
+
+    enum Breed do
+      value :polar, key: "polar"
+      value :grizzly, key: "grizzly"
+      value :american_black, key: "americanBlack"
+      value :asian_black, key: "asianBlack"
+      value :stuffed, key: "stuffed"
+    end
+
+    enum Color do
+      value :black, key: "black"
+      value :white, key: "white"
+      value :brown, key: "brown"
+      value :yellow, key: "yellow"
+    end
+
+    param do
+      field :bear_name, :string, validator: &__MODULE__.starts_with_capital_letter/1
+      field :age, :integer, validator: {&__MODULE__.pooh_must_be_old/3, min: 100}
+      field :color, __MODULE__.Color, validator: &__MODULE__.color_validator/2
+
+      field :breed, __MODULE__.Breed, required: true
+    end
+
+    def starts_with_capital_letter(value) do
+      if Regex.match?(~r/^[A-Z]/, value) do
+        :ok
+      else
+        {:error, "must start with a capital letter"}
+      end
+    end
+
+    def pooh_must_be_old(value, %{"bear_name" => "Pooh"}, min: min) do
+      if value >= min do
+        :ok
+      else
+        {:error, "pooh must be at least #{min} years old"}
+      end
+    end
+
+    def pooh_must_be_old(value, _input, _opts) do
+      {:ok, value}
+    end
+
+    def color_validator(:yellow, %{"breed" => :stuffed}), do: :ok
+    def color_validator(:yellow, _), do: {:error, "yellow bears can only be stuffed"}
+    def color_validator(:brown, %{"breed" => :grizzly}), do: :ok
+    def color_validator(:brown, _), do: {:error, "brown bears can only be grizzly"}
+    def color_validator(:white, %{"breed" => :polar}), do: :ok
+    def color_validator(:white, _), do: {:error, "white bears can only be polar"}
+
+    def color_validator(:black, %{"breed" => breed})
+        when breed in [:asian_black, :american_black],
+        do: :ok
+
+    def color_validator(:black, _),
+      do: {:error, "black bears can only be asian_black or american_black"}
+  end
+
   defmodule VirtualFieldTestSchema do
     use Parameter.Schema
     alias Parameter.Validators
@@ -2163,6 +2225,49 @@ defmodule ParameterTest do
                    c: %{val: "not valid"}
                  }
                })
+    end
+
+    test "cross field validation should succeed for correct values" do
+      winnie_the_pooh = %{
+        "bear_name" => "Pooh",
+        "age" => 110,
+        "breed" => :stuffed,
+        "color" => :yellow
+      }
+
+      assert :ok == Parameter.validate(CrossFieldValidatorSchema, winnie_the_pooh)
+    end
+
+    test "cross field validation should fail for incorrect values" do
+      winnie_the_pooh = %{
+        "bear_name" => "Pooh",
+        "age" => 99,
+        "breed" => :stuffed,
+        "color" => :yellow
+      }
+
+      assert {:error, %{age: "pooh must be at least 100 years old"}} ==
+               Parameter.validate(CrossFieldValidatorSchema, winnie_the_pooh)
+
+      grizzly_bear = %{
+        "bear_name" => "Grizzly",
+        "age" => 5,
+        "breed" => :grizzly,
+        "color" => :black
+      }
+
+      assert {:error, %{color: "black bears can only be asian_black or american_black"}} ==
+               Parameter.validate(CrossFieldValidatorSchema, grizzly_bear)
+
+      wrong_name = %{
+        "bear_name" => "wrong",
+        "age" => 5,
+        "breed" => :grizzly,
+        "color" => :brown
+      }
+
+      assert {:error, %{bear_name: "must start with a capital letter"}} ==
+               Parameter.validate(CrossFieldValidatorSchema, wrong_name)
     end
   end
 end
