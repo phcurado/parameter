@@ -57,17 +57,24 @@ defmodule Parameter.Field do
     virtual: false
   ]
 
+  @type validator_type ::
+          (any(), any() -> :ok | {:error, any()})
+          | (any() -> :ok | {:error, any()})
+          | {(any(), list() -> :ok | {:error, any()}), list()}
+          | {(any(), any(), list() -> :ok | {:error, any()}), list()}
+          | nil
+
   @type t :: %__MODULE__{
           name: atom(),
           key: binary(),
           default: any(),
           load_default: any(),
           dump_default: any(),
-          on_load: fun() | nil,
-          on_dump: fun() | nil,
+          on_load: (any(), any() -> {:ok, any()} | {:error, any()}) | nil,
+          on_dump: (any(), any() -> {:ok, any()} | {:error, any()}) | nil,
           type: Types.t(),
           required: boolean(),
-          validator: fun() | nil,
+          validator: validator_type(),
           virtual: boolean()
         }
 
@@ -147,24 +154,30 @@ defmodule Parameter.Field do
     {:error, "`default` opts should not be used with `load_default` or `dump_default`"}
   end
 
-  defp on_load_valid?(on_load) do
-    function_valid?(on_load, 2, "on_load must be a function")
+  defp on_load_valid?(on_load) when is_function(on_load, 2) or is_nil(on_load),
+    do: :ok
+
+  defp on_load_valid?(_on_load) do
+    {:error, "on_load must be a function with 2 arity"}
   end
 
-  defp on_dump_valid?(on_dump) do
-    function_valid?(on_dump, 2, "on_dump must be a function")
+  defp on_dump_valid?(on_dump) when is_function(on_dump, 2) or is_nil(on_dump),
+    do: :ok
+
+  defp on_dump_valid?(_on_dump) do
+    {:error, "on_dump must be a function with 2 arity"}
   end
 
-  defp validator_valid?(validator) do
-    function_valid?(validator, 1, "validator must be a function")
-  end
+  defp validator_valid?({validator, args})
+       when is_list(args) and (is_function(validator, 2) or is_function(validator, 3)),
+       do: :ok
 
-  defp function_valid?(function, arity, _message)
-       when is_function(function, arity) or is_nil(function) or is_tuple(function) do
-    :ok
-  end
+  defp validator_valid?(validator)
+       when is_function(validator, 1) or is_function(validator, 2) or is_nil(validator),
+       do: :ok
 
-  defp function_valid?(_validator, arity, message) do
-    {:error, "#{message} with #{arity} arity"}
-  end
+  defp validator_valid?(_validator),
+    do:
+      {:error,
+       "validator must be a function with arity 1 or 2, or a tuple with a function and arguments"}
 end

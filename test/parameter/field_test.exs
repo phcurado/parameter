@@ -48,6 +48,32 @@ defmodule Parameter.FieldTest do
       assert {:error, "on_load must be a function with 2 arity"} == Field.new(opts)
     end
 
+    test "fails if on_load or on_dump are tuples" do
+      opts = [
+        name: :address,
+        type: :float,
+        key: "mainAddress",
+        required: true
+      ]
+
+      on_load_opts =
+        Keyword.put(
+          opts,
+          :on_load,
+          {fn val -> {:ok, val} end, argument1: "arg1", argument2: "arg2"}
+        )
+
+      on_dump_opts =
+        Keyword.put(
+          opts,
+          :on_dump,
+          {fn val -> {:ok, val} end, argument1: "arg1", argument2: "arg2"}
+        )
+
+      assert {:error, "on_load must be a function with 2 arity"} == Field.new(on_load_opts)
+      assert {:error, "on_dump must be a function with 2 arity"} == Field.new(on_dump_opts)
+    end
+
     test "fails if a default value used at the same time with load_default and dump_default" do
       opts = [
         name: :main_address,
