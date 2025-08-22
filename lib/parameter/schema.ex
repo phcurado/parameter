@@ -187,6 +187,8 @@ defmodule Parameter.Schema do
       {:ok, %{"level" => 0}}
   """
 
+  alias Parameter.Field
+  alias Parameter.Schema.Builder
   alias Parameter.Schema.Compiler
   alias Parameter.Types
 
@@ -318,6 +320,7 @@ defmodule Parameter.Schema do
   end
 
   defdelegate compile!(opts), to: Compiler, as: :compile_schema!
+  defdelegate build!(opts), to: Builder, as: :build!
 
   defp schema(caller, block) do
     precompile =
@@ -336,14 +339,14 @@ defmodule Parameter.Schema do
     compile =
       quote do
         raw_params = Module.get_attribute(__MODULE__, :param_raw_fields)
-        Module.put_attribute(__MODULE__, :param_fields, Parameter.Schema.compile!(raw_params))
+        Module.put_attribute(__MODULE__, :param_fields, Parameter.Schema.build!(raw_params))
       end
 
     postcompile =
       quote unquote: false do
         defstruct Enum.reverse(@param_struct_fields)
 
-        def __param__(:fields), do: Enum.reverse(@param_fields)
+        def __param__(:fields), do: @param_fields
 
         def __param__(:field_names) do
           Enum.map(__param__(:fields), & &1.name)
@@ -360,6 +363,8 @@ defmodule Parameter.Schema do
         def __param__(:field, name: name) do
           Enum.find(__param__(:fields), &(&1.name == name))
         end
+
+        def __param__(:runtime_schema), do: @param_raw_fields
       end
 
     quote do
@@ -369,12 +374,39 @@ defmodule Parameter.Schema do
     end
   end
 
-  def fields(module) when is_atom(module) do
-    module.__param__(:fields)
+  def module(module) when is_atom(module) do
+    module
   end
 
-  def fields(fields) when is_list(fields) do
+  def module(_fields) do
+    nil
+  end
+
+  def fields(module) when is_atom(module) do
+    module.__param__(:fields)
+  rescue
+    _error ->
+      module
+  end
+
+  def fields(fields) do
     fields
+  end
+
+  def get_field(module_or_fields, field_name) do
+    module_or_fields
+    |> fields()
+    |> Enum.find(&(&1.name == field_name))
+  end
+
+  def assoc_fields(module_or_fields) do
+    module_or_fields
+    |> fields()
+    |> Enum.filter(fn
+      %Field{type: {:array, _schema}} -> true
+      %Field{type: {:map, _schema}} -> true
+      _ -> false
+    end)
   end
 
   def field_keys(module) when is_atom(module) do
@@ -391,6 +423,18 @@ defmodule Parameter.Schema do
 
   def field_key(fields, key) when is_list(fields) do
     Enum.find(fields, &(&1.key == key))
+  end
+
+  def field_names(module) when is_atom(module) do
+    module.__param__(:field_names)
+  end
+
+  def field_names(fields) when is_list(fields) do
+    Enum.map(fields, & &1.name)
+  end
+
+  def runtime_schema(module) when is_atom(module) do
+    module.__param__(:runtime_schema)
   end
 
   def __mount_nested_schema__(module_name, env, block) do
