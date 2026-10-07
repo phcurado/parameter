@@ -6,7 +6,7 @@ if Code.ensure_loaded?(Decimal) do
         def deps do
           [
             {:parameter, "~> ..."},
-            {:decimal, "~> 2.0"}
+            {:decimal, "~> 2.0 or ~> 3.0"}
           ]
         end
     """

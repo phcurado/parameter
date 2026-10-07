@@ -2,7 +2,7 @@ defmodule Parameter.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/phcurado/parameter"
-  @version "0.14.0"
+  @version "0.14.1"
 
   def project do
     [
@@ -38,7 +38,7 @@ defmodule Parameter.MixProject do
 
   defp deps do
     [
-      {:decimal, "~> 2.0", optional: true},
+      {:decimal, "~> 2.0 or ~> 3.0", optional: true},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},

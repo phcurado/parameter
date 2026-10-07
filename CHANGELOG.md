@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.14.1 (2026-10-07)
+
+### Enhancements
+
+- Support Decimal 3.x alongside Decimal 2.x.
+- [Parameter] Support cross-field validation with two-argument validators receiving the field value and parent input, and three-argument validators receiving additional configured arguments (#90).
+
+### Bug fixes
+
+- [Parameter.Field] Reject invalid validator tuples and tuple values for `on_load` and `on_dump` when defining fields (#90).
+
+### Documentation
+
+- [Parameter.Enum] Clarify that generated enum modules must be referenced by their full module name.
+- [Parameter.Enum] Add examples for dumping and validating enum values (#72).
+
 ## v0.14.0 (2024-08-21)
 
 ### Bug fixes
